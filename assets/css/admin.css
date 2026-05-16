@@ -446,3 +446,213 @@ body {
     .admin-sidebar.active { transform: translateX(0); }
     .stats-grid { grid-template-columns: 1fr; }
 }
+
+/* Add Product Form Styles */
+.form-container {
+    background-color: var(--admin-card-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 900px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--admin-text-secondary);
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    padding: 15px;
+    background-color: transparent;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    color: var(--admin-text-primary);
+    font-family: var(--admin-font-sans);
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+}
+
+.form-group textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Dropzone Styles */
+.dropzone-container {
+    margin-bottom: 40px;
+}
+
+.dropzone {
+    border: 2px dashed var(--admin-border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fcfcfc;
+}
+
+[data-theme="dark"] .dropzone { background-color: #1a1a1a; }
+
+.dropzone:hover {
+    border-color: var(--admin-accent);
+    background-color: #f5f5f5;
+}
+
+[data-theme="dark"] .dropzone:hover { background-color: #222; }
+
+.dropzone i {
+    font-size: 2.5rem;
+    color: var(--admin-text-secondary);
+    margin-bottom: 15px;
+}
+
+.dropzone p {
+    font-size: 0.9rem;
+    color: var(--admin-text-secondary);
+}
+
+.image-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--admin-border);
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-item .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: background 0.3s ease;
+}
+
+.preview-item .remove-btn:hover {
+    background: var(--primary-red);
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    padding-top: 30px;
+    border-top: 1px solid var(--admin-border);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--admin-border);
+    padding: 15px 30px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: var(--admin-text-secondary);
+}
+
+.btn-publish {
+    background: var(--admin-accent);
+    color: var(--admin-main-bg);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-publish:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status Toasts */
+.toast-container {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    z-index: 2000;
+}
+
+.toast {
+    background: var(--admin-accent);
+    color: var(--admin-main-bg);
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+@media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full-width { grid-column: span 1; }
+    .form-container { padding: 25px; }
+}

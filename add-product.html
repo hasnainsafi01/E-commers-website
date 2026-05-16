@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product | Atelier Admin</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                Atelier Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Add New Product</h1>
+                    <p>Catalog high-end pieces into the collection.</p>
+                </div>
+            </header>
+
+            <form id="addProductForm" class="form-container">
+                <div class="form-grid">
+                    <!-- Title -->
+                    <div class="form-group full-width">
+                        <label for="prodTitle">Product Title</label>
+                        <input type="text" id="prodTitle" placeholder="e.g. Midnight Classic Chronograph" required>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label for="prodCategory">Category</label>
+                        <select id="prodCategory" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Watches">Watches</option>
+                            <option value="Bags">Bags</option>
+                            <option value="Shoes">Shoes</option>
+                        </select>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="form-group">
+                        <label for="prodPrice">Price (€)</label>
+                        <input type="number" id="prodPrice" step="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <!-- Discount -->
+                    <div class="form-group">
+                        <label for="prodDiscount">Discount (%)</label>
+                        <input type="number" id="prodDiscount" placeholder="0">
+                    </div>
+
+                    <!-- Stock -->
+                    <div class="form-group">
+                        <label for="prodStock">Stock Quantity</label>
+                        <input type="number" id="prodStock" placeholder="0" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group full-width">
+                        <label for="prodDesc">Product Description</label>
+                        <textarea id="prodDesc" placeholder="Describe the heritage and craftsmanship of this piece..." required></textarea>
+                    </div>
+                </div>
+
+                <!-- Media Upload -->
+                <div class="dropzone-container">
+                    <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-secondary); margin-bottom: 10px; display: block;">Product Media</label>
+                    <div id="imageDropzone" class="dropzone">
+                        <i class="far fa-images"></i>
+                        <p>Drag and drop images here or <strong>browse files</strong></p>
+                        <input type="file" id="productImages" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div id="previewGrid" class="image-preview-grid">
+                        <!-- Previews injected here -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn-ghost">Save Draft</button>
+                    <button type="submit" id="publishBtn" class="btn-publish">
+                        <i class="fas fa-paper-plane"></i> Publish Product
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="statusToast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span>Product Published!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/add-product.js"></script>
+</body>
+</html>
