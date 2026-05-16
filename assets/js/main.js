@@ -65,4 +65,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial simulation
     updateCartCount(3);
+
+    // 5. Product Card Interactions
+    const productCards = document.querySelectorAll('.product-card');
+
+    productCards.forEach(card => {
+        // Navigate to details on card click
+        card.addEventListener('click', (e) => {
+            // Prevent navigation if clicking buttons inside the card
+            if (e.target.closest('.fav-btn') || e.target.closest('.add-cart-btn')) {
+                return;
+            }
+            const productId = card.getAttribute('data-id');
+            window.location.href = `product-details.html?id=${productId}`;
+        });
+
+        // Favorite Toggle
+        const favBtn = card.querySelector('.fav-btn');
+        if (favBtn) {
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop bubbling to card
+                favBtn.classList.toggle('active');
+                const icon = favBtn.querySelector('i');
+                if (favBtn.classList.contains('active')) {
+                    icon.classList.replace('far', 'fas');
+                    showToast('Added to Wishlist!');
+                } else {
+                    icon.classList.replace('fas', 'far');
+                }
+            });
+        }
+
+        // Add to Cart
+        const addCartBtn = card.querySelector('.add-cart-btn');
+        if (addCartBtn) {
+            addCartBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop bubbling to card
+                let currentCount = parseInt(document.querySelector('.fa-shopping-cart + .badge').innerText);
+                updateCartCount(currentCount + 1);
+                showToast('Item added to cart!');
+                
+                // Button animation
+                addCartBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    addCartBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                }, 2000);
+            });
+        }
+    });
+
+    // Helper: Toast Notification Simulation
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        
+        // Simple styles for toast (usually would be in CSS)
+        Object.assign(toast.style, {
+            position: 'fixed',
+            bottom: '30px',
+            right: '30px',
+            background: 'var(--text-color)',
+            color: 'var(--bg-color)',
+            padding: '12px 25px',
+            borderRadius: '10px',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+            zIndex: '9999',
+            animation: 'fadeInUp 0.3s ease'
+        });
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 });

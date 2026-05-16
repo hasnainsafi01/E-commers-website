@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | CHENARI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .details-container {
+            padding: 150px 8% 50px;
+            display: flex;
+            gap: 50px;
+            min-height: 80vh;
+        }
+        .details-image {
+            flex: 1;
+            background: #f9f9f9;
+            border-radius: 30px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--nav-border);
+        }
+        .details-image img {
+            width: 80%;
+            height: auto;
+            object-fit: contain;
+        }
+        .details-info {
+            flex: 1;
+        }
+        .details-category {
+            font-size: 14px;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .details-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .details-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .details-desc {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        .action-btns {
+            display: flex;
+            gap: 20px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        [data-theme="dark"] .details-image { background: #1a1a1a; }
+        @media (max-width: 900px) {
+            .details-container { flex-direction: column; padding-top: 120px; }
+            .details-title { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-toggle"><i class="fas fa-moon"></i></div>
+                <a href="index.html" class="profile-btn"><i class="fas fa-home"></i> Back to Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="details-container">
+        <div class="details-image">
+            <img src="assets/images/watch.png" alt="Product Image" id="mainImg">
+        </div>
+        <div class="details-info">
+            <span class="details-category" id="prodCat">Premium Collection</span>
+            <h1 class="details-title" id="prodName">Product Details</h1>
+            <div class="details-price" id="prodPrice">$0.00</div>
+            <p class="details-desc">
+                Experience the pinnacle of luxury with this meticulously crafted piece. Designed for the modern individual who values both form and function, this product represents the heritage and innovation of CHENARI.
+            </p>
+            <div class="action-btns">
+                <button class="btn-primary" style="border:none; cursor:pointer;">Add to Cart</button>
+                <button class="btn-secondary" style="cursor:pointer;"><i class="far fa-heart"></i> Wishlist</button>
+            </div>
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+        </div>
+    </main>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        // Simple mock dynamic content based on URL params
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        
+        const products = {
+            '1': { name: 'Chronos Heritage IV', cat: 'Watches', price: '$4,200', img: 'assets/images/watch.png' },
+            '2': { name: 'Atelier Suede Tote', cat: 'Bags', price: '$1,850', img: 'assets/images/bag.png' },
+            '3': { name: 'Linear Low-Top', cat: 'Shoes', price: '$650', img: 'assets/images/shoes.png' }
+        };
+
+        if (id && products[id]) {
+            document.getElementById('prodName').innerText = products[id].name;
+            document.getElementById('prodCat').innerText = products[id].cat;
+            document.getElementById('prodPrice').innerText = products[id].price;
+            document.getElementById('mainImg').src = products[id].img;
+            document.title = products[id].name + " | CHENARI";
+        }
+    </script>
+</body>
+</html>
