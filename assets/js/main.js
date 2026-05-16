@@ -17,15 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 2. Mobile Menu Toggle
-    mobileToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-        const icon = mobileToggle.querySelector('i');
-        if (navLinks.classList.contains('active')) {
-            icon.classList.replace('fa-bars', 'fa-times');
-        } else {
-            icon.classList.replace('fa-times', 'fa-bars');
-        }
-    });
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = mobileToggle.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        });
+    }
 
     // Close menu when clicking links
     document.querySelectorAll('.nav-links a').forEach(link => {
@@ -40,12 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
     body.setAttribute('data-theme', currentTheme);
     updateThemeIcon(currentTheme);
 
-    themeToggle.addEventListener('click', () => {
-        const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
-    });
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+    }
 
     function updateThemeIcon(theme) {
         const icon = themeToggle.querySelector('i');
@@ -142,4 +146,232 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
+
+    // 6. Product Listing Page Logic
+    const productsContainer = document.getElementById('productsList');
+    if (productsContainer) {
+        const productsData = [
+            { id: 1, name: 'Chronos Heritage IV', category: 'Watches', price: 4200, rating: 4.8, img: 'assets/images/watch.png', discount: '-20%' },
+            { id: 2, name: 'Atelier Suede Tote', category: 'Bags', price: 1850, rating: 4.2, img: 'assets/images/bag.png', discount: null },
+            { id: 3, name: 'Linear Low-Top', category: 'Shoes', price: 650, rating: 5.0, img: 'assets/images/shoes.png', discount: '-15%' },
+            { id: 4, name: 'Midnight Classic', category: 'Watches', price: 8200, rating: 4.9, img: 'assets/images/watch_2.png', discount: 'New' },
+            { id: 5, name: 'Portfolio Briefcase', category: 'Bags', price: 2100, rating: 4.7, img: 'assets/images/bag.png', discount: null },
+            { id: 6, name: 'Chelsea Loafer', category: 'Shoes', price: 1250, rating: 4.6, img: 'assets/images/shoes.png', discount: null }
+        ];
+
+        let filteredProducts = [...productsData];
+
+        // Simulation of loading
+        const showSkeletons = () => {
+            productsContainer.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                productsContainer.innerHTML += `
+                    <div class="skeleton-card">
+                        <div class="skeleton-img"></div>
+                        <div class="skeleton-info">
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-text short"></div>
+                            <div class="skeleton-text medium"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const renderProducts = (data) => {
+            productsContainer.innerHTML = '';
+            if (data.length === 0) {
+                productsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 50px;">No products found matching your criteria.</p>';
+                return;
+            }
+            data.forEach(prod => {
+                const discountTag = prod.discount ? `<span class="discount-badge">${prod.discount}</span>` : '';
+                productsContainer.innerHTML += `
+                    <div class="product-card" data-id="${prod.id}" style="animation: fadeInUp 0.5s ease backwards">
+                        <div class="product-image">
+                            ${discountTag}
+                            <button class="fav-btn" title="Add to Wishlist"><i class="far fa-heart"></i></button>
+                            <img src="${prod.img}" alt="${prod.name}">
+                        </div>
+                        <div class="product-info">
+                            <span class="product-category">${prod.category}</span>
+                            <h3 class="product-name">${prod.name}</h3>
+                            <div class="product-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span>(${prod.rating})</span>
+                            </div>
+                            <div class="product-footer">
+                                <div class="product-price">
+                                    <span class="current-price">$${prod.price.toLocaleString()}</span>
+                                </div>
+                                <button class="add-cart-btn"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            // Re-attach event listeners to new elements
+            attachProductListeners();
+        };
+
+        const filterAndRender = () => {
+            const activeCat = document.querySelector('.chip.active').dataset.category;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy = document.getElementById('sortSelect').value;
+
+            filteredProducts = productsData.filter(p => {
+                const matchesCat = activeCat === 'all' || p.category.toLowerCase() === activeCat.toLowerCase();
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+                return matchesCat && matchesSearch;
+            });
+
+            if (sortBy === 'price-low') {
+                filteredProducts.sort((a, b) => a.price - b.price);
+            } else if (sortBy === 'price-high') {
+                filteredProducts.sort((a, b) => b.price - a.price);
+            }
+
+            renderProducts(filteredProducts);
+        };
+
+        // Event Listeners for Filters
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                filterAndRender();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', filterAndRender);
+        document.getElementById('sortSelect').addEventListener('change', filterAndRender);
+
+        // Initial Load
+        showSkeletons();
+        setTimeout(() => {
+            renderProducts(productsData);
+        }, 1500);
+    }
+
+    function attachProductListeners() {
+        const productCards = document.querySelectorAll('.product-card');
+        productCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.fav-btn') || e.target.closest('.add-cart-btn')) return;
+                window.location.href = `product-details.html?id=${card.dataset.id}`;
+            });
+            // (Re-attach fav and cart logic similarly if needed, or use delegation)
+        });
+    }
+
+    // 7. Professional Product Details Page Logic
+    const mainImg = document.getElementById('mainImg');
+    const thumbnails = document.querySelectorAll('.thumb');
+    
+    if (thumbnails.length > 0) {
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                thumbnails.forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+                mainImg.src = thumb.querySelector('img').src;
+            });
+        });
+    }
+
+    // Accordion Logic
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const item = header.parentElement;
+            item.classList.toggle('active');
+        });
+    });
+
+    // 8. Global Auth Modal Logic
+    let simulatedUser = null;
+
+    const injectAuthModal = () => {
+        if (document.querySelector('.auth-modal-overlay')) return;
+
+        const modalHTML = `
+            <div class="auth-modal-overlay">
+                <div class="auth-modal">
+                    <h2 class="serif">Please Login First</h2>
+                    <p>Login to continue your premium shopping experience at CHENARI.</p>
+                    <div class="auth-btn-group">
+                        <button class="auth-btn login">Login</button>
+                        <button class="auth-btn signup">Create Account</button>
+                        <button class="auth-btn cancel">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Attach listeners to newly injected modal
+        const overlay = document.querySelector('.auth-modal-overlay');
+        const loginBtn = overlay.querySelector('.auth-btn.login');
+        const signupBtn = overlay.querySelector('.auth-btn.signup');
+        const cancelBtn = overlay.querySelector('.auth-btn.cancel');
+
+        loginBtn.addEventListener('click', () => {
+            loginBtn.innerText = 'Redirecting...';
+            setTimeout(() => {
+                simulatedUser = { name: 'Guest User' };
+                overlay.classList.remove('active');
+                showToast('Welcome back! You are now logged in.');
+                loginBtn.innerText = 'Login';
+            }, 1000);
+        });
+
+        signupBtn.addEventListener('click', () => {
+            showToast('Signup feature coming soon!');
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            overlay.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.classList.remove('active');
+        });
+    };
+
+    const showAuthModal = () => {
+        injectAuthModal();
+        setTimeout(() => {
+            document.querySelector('.auth-modal-overlay').classList.add('active');
+        }, 10);
+    };
+
+    // Global Event Delegation for Auth-Required Actions
+    document.addEventListener('click', (e) => {
+        const cartBtn = e.target.closest('.add-cart-btn') || e.target.closest('.add-bag-btn');
+        const favBtn = e.target.closest('.fav-btn') || e.target.closest('.save-wishlist-btn');
+
+        if ((cartBtn || favBtn) && !simulatedUser) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAuthModal();
+        } else if (cartBtn && simulatedUser) {
+            // Original logic for logged in users
+            showToast('Item added to your shopping bag!');
+            let currentCount = parseInt(document.querySelector('.fa-shopping-cart + .badge').innerText);
+            updateCartCount(currentCount + 1);
+        } else if (favBtn && simulatedUser) {
+            // Toggle favorite state
+            favBtn.classList.toggle('active');
+            const icon = favBtn.querySelector('i');
+            if (favBtn.classList.contains('active')) {
+                icon.classList.replace('far', 'fas');
+                showToast('Added to Wishlist!');
+            } else {
+                icon.classList.replace('fas', 'far');
+            }
+        }
+    });
 });

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Shopping Bag | CHENARI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
+            </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <div class="nav-actions">
+                <div class="theme-toggle"><i class="fas fa-moon"></i></div>
+                <a href="index.html" class="profile-btn"><i class="fas fa-home"></i> Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Cart Container -->
+    <main class="cart-container">
+        <!-- Cart Items Section -->
+        <section class="cart-items">
+            <h1 class="serif">Your Shopping Bag</h1>
+            <p class="cart-subtitle">3 Items Ready for Delivery</p>
+
+            <div id="cartItemsList">
+                <!-- Item 1: Watch -->
+                <div class="cart-item" data-price="4200">
+                    <div class="cart-item-image">
+                        <img src="assets/images/watch.png" alt="Chronos Heritage">
+                    </div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-header">
+                            <h3 class="serif">Chronos Heritage IV</h3>
+                            <span class="cart-item-price">$4,200.00</span>
+                        </div>
+                        <span class="cart-item-details">Silver / Italian Leather</span>
+                        <p class="cart-item-desc">Limited edition timepiece featuring a sapphire crystal face and custom mechanical movement.</p>
+                        <div class="cart-item-actions">
+                            <div class="quantity-selector">
+                                <button class="qty-btn minus"><i class="fas fa-minus"></i></button>
+                                <span class="qty-val">1</span>
+                                <button class="qty-btn plus"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <button class="remove-btn"><i class="fas fa-trash-alt"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2: Bag -->
+                <div class="cart-item" data-price="1850">
+                    <div class="cart-item-image">
+                        <img src="assets/images/bag.png" alt="Atelier Suede Tote">
+                    </div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-header">
+                            <h3 class="serif">Atelier Suede Tote</h3>
+                            <span class="cart-item-price">$1,850.00</span>
+                        </div>
+                        <span class="cart-item-details">Deep Charcoal / Gold Hardware</span>
+                        <p class="cart-item-desc">Hand-stitched calfskin leather with a luxurious suede lining and internal organization.</p>
+                        <div class="cart-item-actions">
+                            <div class="quantity-selector">
+                                <button class="qty-btn minus"><i class="fas fa-minus"></i></button>
+                                <span class="qty-val">1</span>
+                                <button class="qty-btn plus"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <button class="remove-btn"><i class="fas fa-trash-alt"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 3: Shoes -->
+                <div class="cart-item" data-price="650">
+                    <div class="cart-item-image">
+                        <img src="assets/images/shoes.png" alt="Linear Low-Top">
+                    </div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-header">
+                            <h3 class="serif">Linear Low-Top</h3>
+                            <span class="cart-item-price">$650.00</span>
+                        </div>
+                        <span class="cart-item-details">Ivory / Size 42</span>
+                        <p class="cart-item-desc">The essential sneaker, reimagined through the lens of architectural minimalism and comfort.</p>
+                        <div class="cart-item-actions">
+                            <div class="quantity-selector">
+                                <button class="qty-btn minus"><i class="fas fa-minus"></i></button>
+                                <span class="qty-val">1</span>
+                                <button class="qty-btn plus"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <button class="remove-btn"><i class="fas fa-trash-alt"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Sidebar -->
+        <aside class="cart-summary">
+            <h2 class="summary-title serif">Summary</h2>
+            
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal">$6,700.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span>$45.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Estimated Tax</span>
+                <span>$536.00</span>
+            </div>
+
+            <div class="summary-row total">
+                <span class="serif">Total</span>
+                <span id="grandTotal" class="serif">$7,281.00</span>
+            </div>
+
+            <div class="express-delivery">
+                <i class="fas fa-truck"></i>
+                <span><strong>Express Delivery</strong><br>Estimated arrival in 2-3 business days.</span>
+            </div>
+
+            <button class="checkout-btn">Proceed to Checkout</button>
+            <a href="index.html" class="continue-shopping">Continue Shopping</a>
+
+            <div class="payment-icons">
+                <i class="fab fa-cc-visa"></i>
+                <i class="fab fa-cc-mastercard"></i>
+                <i class="fab fa-cc-apple-pay"></i>
+            </div>
+        </aside>
+    </main>
+
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/navbar-auth.js"></script>
+    <script>
+        // Cart Page Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const qtyBtns = document.querySelectorAll('.qty-btn');
+            const removeBtns = document.querySelectorAll('.remove-btn');
+            
+            qtyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const row = btn.closest('.cart-item');
+                    const qtyVal = row.querySelector('.qty-val');
+                    let currentQty = parseInt(qtyVal.innerText);
+                    
+                    if (btn.classList.contains('plus')) {
+                        currentQty++;
+                    } else if (currentQty > 1) {
+                        currentQty--;
+                    }
+                    
+                    qtyVal.innerText = currentQty;
+                    updateSummary();
+                });
+            });
+
+            removeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const row = btn.closest('.cart-item');
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        updateSummary();
+                    }, 300);
+                });
+            });
+
+            function updateSummary() {
+                const items = document.querySelectorAll('.cart-item');
+                let subtotal = 0;
+                
+                items.forEach(item => {
+                    const price = parseFloat(item.getAttribute('data-price'));
+                    const qty = parseInt(item.querySelector('.qty-val').innerText);
+                    subtotal += price * qty;
+                });
+
+                const tax = subtotal * 0.08; // 8% tax
+                const shipping = items.length > 0 ? 45 : 0;
+                const total = subtotal + tax + shipping;
+
+                document.getElementById('subtotal').innerText = `$${subtotal.toLocaleString()}.00`;
+                document.getElementById('grandTotal').innerText = `$${total.toLocaleString()}.00`;
+                
+                const subtitle = document.querySelector('.cart-subtitle');
+                subtitle.innerText = `${items.length} Item${items.length !== 1 ? 's' : ''} Ready for Delivery`;
+            }
+        });
+    </script>
+</body>
+</html>

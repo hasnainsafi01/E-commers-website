@@ -3,128 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details | CHENARI</title>
+    <title>Chronos Heritage IV | CHENARI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .details-container {
-            padding: 150px 8% 50px;
-            display: flex;
-            gap: 50px;
-            min-height: 80vh;
-        }
-        .details-image {
-            flex: 1;
-            background: #f9f9f9;
-            border-radius: 30px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--nav-border);
-        }
-        .details-image img {
-            width: 80%;
-            height: auto;
-            object-fit: contain;
-        }
-        .details-info {
-            flex: 1;
-        }
-        .details-category {
-            font-size: 14px;
-            color: var(--primary-blue);
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .details-title {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        .details-price {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .details-desc {
-            color: #666;
-            line-height: 1.8;
-            margin-bottom: 40px;
-            font-size: 1.1rem;
-        }
-        .action-btns {
-            display: flex;
-            gap: 20px;
-        }
-        .back-btn {
-            display: inline-block;
-            margin-top: 30px;
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        [data-theme="dark"] .details-image { background: #1a1a1a; }
-        @media (max-width: 900px) {
-            .details-container { flex-direction: column; padding-top: 120px; }
-            .details-title { font-size: 2rem; }
-        }
-    </style>
 </head>
 <body>
+
+    <!-- Navbar -->
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">
                 <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
             </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Collection</a></li>
+                <li><a href="cart.html">Bag</a></li>
+            </ul>
             <div class="nav-actions">
                 <div class="theme-toggle"><i class="fas fa-moon"></i></div>
-                <a href="index.html" class="profile-btn"><i class="fas fa-home"></i> Back to Home</a>
+                <a href="cart.html" title="Shopping Cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="badge">3</span>
+                </a>
             </div>
         </nav>
     </header>
 
+    <!-- Details Container -->
     <main class="details-container">
-        <div class="details-image">
-            <img src="assets/images/watch.png" alt="Product Image" id="mainImg">
-        </div>
-        <div class="details-info">
-            <span class="details-category" id="prodCat">Premium Collection</span>
-            <h1 class="details-title" id="prodName">Product Details</h1>
-            <div class="details-price" id="prodPrice">$0.00</div>
-            <p class="details-desc">
-                Experience the pinnacle of luxury with this meticulously crafted piece. Designed for the modern individual who values both form and function, this product represents the heritage and innovation of CHENARI.
-            </p>
-            <div class="action-btns">
-                <button class="btn-primary" style="border:none; cursor:pointer;">Add to Cart</button>
-                <button class="btn-secondary" style="cursor:pointer;"><i class="far fa-heart"></i> Wishlist</button>
+        <!-- Gallery Section -->
+        <section class="gallery-section">
+            <div class="main-image-wrapper">
+                <img src="assets/images/watch.png" alt="Main Watch View" id="mainImg">
             </div>
-            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
-        </div>
+            <div class="thumbnails-grid">
+                <div class="thumb active"><img src="assets/images/watch.png" alt="View 1"></div>
+                <div class="thumb"><img src="assets/images/watch_2.png" alt="View 2"></div>
+                <!-- Reusing assets for thumbnails as generated ones failed -->
+                <div class="thumb"><img src="assets/images/watch.png" alt="View 3" style="filter: grayscale(1);"></div>
+                <div class="thumb"><img src="assets/images/watch_2.png" alt="View 4" style="filter: contrast(1.5);"></div>
+            </div>
+        </section>
+
+        <!-- Info Section -->
+        <section class="details-info">
+            <div class="breadcrumbs">Watches / Premium Collection / Chronos Heritage</div>
+            <span class="limited-badge">Limited Edition</span>
+            <h1 class="details-title serif" id="prodName">Chronos Heritage IV</h1>
+            <div class="details-price" id="prodPrice">$4,200.00</div>
+
+            <p class="details-desc">
+                A testament to understated elegance. The Chronos Heritage IV series combines historical craftsmanship with contemporary minimalist geometry. Hand-assembled in our Swiss atelier, this timepiece features a monolithic steel case and an in-house automatic movement.
+            </p>
+
+            <h3 class="specs-title serif">Technical Specifications</h3>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <label>Movement</label>
+                    <span>In-house Calibre C.1</span>
+                </div>
+                <div class="spec-item">
+                    <label>Case Diameter</label>
+                    <span>40mm</span>
+                </div>
+                <div class="spec-item">
+                    <label>Water Resistance</label>
+                    <span>5 ATM (50m)</span>
+                </div>
+                <div class="spec-item">
+                    <label>Power Reserve</label>
+                    <span>72 Hours</span>
+                </div>
+            </div>
+
+            <div class="details-actions">
+                <button class="add-bag-btn">Add to Shopping Bag</button>
+                <button class="save-wishlist-btn"><i class="far fa-heart"></i> Save to Wishlist</button>
+            </div>
+
+            <div class="accordion" style="margin-top: 40px;">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>Shipping & Boutique Pickup</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        Complimentary standard delivery on all orders. Boutique pickup available at select locations worldwide.
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>The Craftsmanship Story</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        Each Chronos Heritage is the result of over 200 hours of precision engineering and artisanal finishing.
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <script src="assets/js/main.js"></script>
-    <script>
-        // Simple mock dynamic content based on URL params
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        
-        const products = {
-            '1': { name: 'Chronos Heritage IV', cat: 'Watches', price: '$4,200', img: 'assets/images/watch.png' },
-            '2': { name: 'Atelier Suede Tote', cat: 'Bags', price: '$1,850', img: 'assets/images/bag.png' },
-            '3': { name: 'Linear Low-Top', cat: 'Shoes', price: '$650', img: 'assets/images/shoes.png' }
-        };
+    <!-- Related Items -->
+    <section class="related-section">
+        <h2 class="serif" style="font-size: 2.5rem; margin-bottom: 50px;">Related Items</h2>
+        <div class="product-grid">
+            <div class="product-card" data-id="4">
+                <div class="product-image">
+                    <img src="assets/images/watch_2.png" alt="Watch 2">
+                </div>
+                <div class="product-info">
+                    <span class="product-category">Watches</span>
+                    <h3 class="product-name">Midnight Classic</h3>
+                    <div class="product-footer">
+                        <span class="current-price">$8,200</span>
+                    </div>
+                </div>
+            </div>
+            <div class="product-card" data-id="2">
+                <div class="product-image">
+                    <img src="assets/images/bag.png" alt="Bag">
+                </div>
+                <div class="product-info">
+                    <span class="product-category">Bags</span>
+                    <h3 class="product-name">Atelier Suede Tote</h3>
+                    <div class="product-footer">
+                        <span class="current-price">$1,850</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        if (id && products[id]) {
-            document.getElementById('prodName').innerText = products[id].name;
-            document.getElementById('prodCat').innerText = products[id].cat;
-            document.getElementById('prodPrice').innerText = products[id].price;
-            document.getElementById('mainImg').src = products[id].img;
-            document.title = products[id].name + " | CHENARI";
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/navbar-auth.js"></script>
+    <script>
+        // Override dynamic price/name if ID is found, or use defaults
+        const urlParams = new URLSearchParams(window.location.search);
+        const prodId = urlParams.get('id');
+        if (prodId === '4') {
+            document.getElementById('prodName').innerText = 'Midnight Classic';
+            document.getElementById('prodPrice').innerText = '$8,200.00';
+            document.getElementById('mainImg').src = 'assets/images/watch_2.png';
+            document.title = 'Midnight Classic | CHENARI';
         }
     </script>
 </body>
