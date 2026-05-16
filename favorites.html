@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Wishlist | CHENARI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
+            </a>
+            <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
+            <div class="nav-actions">
+                <div class="theme-toggle"><i class="fas fa-moon"></i></div>
+                
+                <a href="favorites.html" class="active" title="Favorites">
+                    <i class="fas fa-heart"></i>
+                    <span class="badge" style="display:none;">0</span>
+                </a>
+
+                <a href="cart.html" title="Shopping Cart">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="badge" style="display:none;">0</span>
+                </a>
+                
+                <a href="index.html" class="profile-btn"><i class="fas fa-home"></i> Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Favorites Container -->
+    <main class="favorites-container">
+        <div class="favorites-header">
+            <h1 class="serif">Your Wishlist</h1>
+            <p id="favCountDisplay">0 ITEMS SAVED</p>
+        </div>
+
+        <!-- Empty State UI -->
+        <div id="emptyFavoritesUI" class="empty-favorites-ui hidden">
+            <i class="far fa-heart"></i>
+            <h2 class="serif">Nothing saved yet</h2>
+            <p>Save items you love to your wishlist to review or buy them later.</p>
+            <a href="products.html" class="explore-btn">Discover Items</a>
+        </div>
+
+        <!-- Favorites Grid -->
+        <div id="favoritesGrid" class="product-grid hidden">
+            <!-- Dynamic favorite cards will be injected here -->
+        </div>
+    </main>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/cart.js"></script>
+    <script src="assets/js/favorites.js"></script>
+    <script type="module" src="assets/js/navbar-auth.js"></script>
+</body>
+</html>

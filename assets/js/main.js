@@ -384,14 +384,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Item added to your shopping bag!');
             }
         } else if (favBtn && simulatedUser) {
-            // Toggle favorite state
-            favBtn.classList.toggle('active');
-            const icon = favBtn.querySelector('i');
-            if (favBtn.classList.contains('active')) {
-                icon.classList.replace('far', 'fas');
-                showToast('Added to Wishlist!');
+            // Extract product details
+            let product = { id: Date.now(), name: "Premium Item", price: 1000, image: "assets/images/default.png", category: "Accessories", desc: "Exclusive piece from the CHENARI Atelier collection." };
+            
+            const card = favBtn.closest('.product-card');
+            if (card) {
+                product.name = card.querySelector('h3').innerText;
+                product.price = parseFloat(card.querySelector('.current-price').innerText.replace('$', '').replace(',', ''));
+                product.image = card.querySelector('img').src;
+                const catSpan = card.querySelector('.product-category');
+                if (catSpan) product.category = catSpan.innerText;
+                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
+            } else if (document.querySelector('.details-title')) {
+                product.name = document.querySelector('.details-title').innerText;
+                product.price = parseFloat(document.querySelector('.details-price').innerText.replace('$', '').replace(',', ''));
+                product.image = document.querySelector('.main-image-wrapper img').src;
+                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
+            }
+
+            if (window.handleFavClick) {
+                window.handleFavClick(favBtn, product);
             } else {
-                icon.classList.replace('fas', 'far');
+                // Fallback toggle
+                favBtn.classList.toggle('active');
+                const icon = favBtn.querySelector('i');
+                if (favBtn.classList.contains('active')) {
+                    icon.classList.replace('far', 'fas');
+                    showToast('Added to Wishlist!');
+                } else {
+                    icon.classList.replace('fas', 'far');
+                }
             }
         }
     });

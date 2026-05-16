@@ -1873,3 +1873,61 @@ body {
     .cart-item-desc { display: none; }
     .cart-items h1 { font-size: 2.5rem; }
 }
+
+/* Favorites Layout */
+.favorites-container {
+    max-width: 1300px;
+    margin: 100px auto;
+    padding: 0 40px;
+}
+
+.favorites-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.favorites-header h1 {
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+}
+
+.favorites-header p {
+    color: #888;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+.favorite-card.removing {
+    animation: fadeOutScale 0.4s ease forwards;
+}
+
+@keyframes fadeOutScale {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.9); }
+}
+
+/* Reusing .empty-cart-ui styles for favorites, just different text */
+.empty-favorites-ui {
+    text-align: center;
+    padding: 100px 0;
+}
+
+.empty-favorites-ui i {
+    font-size: 4rem;
+    color: var(--primary-red);
+    margin-bottom: 30px;
+    opacity: 0.2;
+}
+
+.empty-favorites-ui h2 {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.empty-favorites-ui p {
+    color: #888;
+    margin-bottom: 40px;
+}
+
+[data-theme="dark"] .empty-favorites-ui i { color: #555; opacity: 1; }
