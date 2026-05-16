@@ -22,7 +22,8 @@ onAuthStateChanged(auth, (user) => {
         authContainer.innerHTML = `
             <div class="user-profile-nav" style="position: relative; cursor: pointer; margin-right: 15px;">
                 <img src="${photoURL}" alt="Profile" style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--primary-blue);">
-                <div class="user-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: var(--bg-color); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px; padding: 10px; min-width: 150px; z-index: 100;">
+                <div class="user-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: var(--bg-color); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px; padding: 10px; min-width: 150px; z-index: 100; border: 1px solid var(--nav-border);">
+                    <a href="profile.html" style="display: block; padding: 10px; color: var(--text-color); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--nav-border); margin-bottom: 5px;">My Account</a>
                     <button id="logoutBtn" style="width: 100%; padding: 10px; background: none; border: none; text-align: left; cursor: pointer; color: var(--primary-red); font-weight: 600;">Logout</button>
                 </div>
             </div>
