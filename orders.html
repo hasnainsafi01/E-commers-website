@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders | CHENARI Admin</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                CHENARI Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="manage-products.html" class="nav-item">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="categories.html" class="nav-item">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a href="orders.html" class="nav-item active">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+
+                <a href="add-product.html" class="add-product-btn" style="display: block; text-align: center; text-decoration: none;">Add Product</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Order Management</h1>
+                    <p id="orderCount">Tracking fulfillment status...</p>
+                </div>
+            </header>
+
+            <!-- Filters -->
+            <div class="manage-header">
+                <div class="search-filter-group">
+                    <div class="admin-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="orderSearch" placeholder="Search by Order ID or Client...">
+                    </div>
+                    <select class="admin-filter" id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="manage-table-container">
+                <table class="admin-table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Orders injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px;">
+            <button class="modal-close" id="closeDetailsModal">&times;</button>
+            <div class="modal-header">
+                <h2 class="serif" id="detailOrderId">Order #ORD-0000</h2>
+                <p id="detailOrderDate">June 14, 2024</p>
+            </div>
+            
+            <div class="order-details-grid">
+                <div class="order-items-section">
+                    <h3 class="serif" style="margin-bottom: 20px;">Items Purchased</h3>
+                    <div class="order-items-list" id="detailItemsList">
+                        <!-- Items injected here -->
+                    </div>
+                    
+                    <div class="customer-info-box">
+                        <h3 class="serif" style="margin-bottom: 15px;">Shipping Information</h3>
+                        <div id="detailCustomerInfo">
+                            <p><strong id="detailCustomerName">Julian De Saint</strong></p>
+                            <p id="detailCustomerAddress">123 Luxury Ave, Suite 500<br>Paris, France</p>
+                            <p id="detailCustomerEmail">julian@example.com</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="order-summary-section">
+                    <div class="order-summary-box">
+                        <h3 class="serif" style="margin-bottom: 20px;">Summary</h3>
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="detailSubtotal">€0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span id="detailShipping">€45.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span id="detailTotal">€0.00</span>
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <label style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Update Status</label>
+                            <select class="admin-filter" id="updateStatusSelect" style="width: 100%;">
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <button class="btn-publish" id="updateStatusBtn" style="width: 100%; margin-top: 15px;">
+                                Update Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="statusToast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span>Action Successful!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/orders.js"></script>
+</body>
+</html>

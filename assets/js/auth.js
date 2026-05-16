@@ -1,6 +1,8 @@
 import { auth, googleProvider } from './firebase-config.js';
 import { 
     signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    updateProfile,
     signInWithPopup, 
     sendPasswordResetEmail,
     onAuthStateChanged 

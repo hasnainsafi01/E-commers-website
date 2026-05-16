@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories | CHENARI Admin</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                CHENARI Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="manage-products.html" class="nav-item">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="categories.html" class="nav-item active">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+
+                <a href="add-product.html" class="add-product-btn" style="display: block; text-align: center; text-decoration: none;">Add Product</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Manage Categories</h1>
+                    <p id="categoryCount">Loading categories...</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-publish" id="addCategoryBtn">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </div>
+            </header>
+
+            <!-- Categories Grid -->
+            <div class="categories-grid" id="categoriesGrid">
+                <!-- Categories injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div id="categoryModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" id="closeCategoryModal">&times;</button>
+            <div class="modal-header">
+                <h2 class="serif" id="modalTitle">Add Category</h2>
+                <p>Define a new segment for your luxury collection.</p>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="catName">Category Name</label>
+                        <input type="text" id="catName" placeholder="e.g. Fine Jewelry" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="catIcon">Icon Class (FontAwesome)</label>
+                        <input type="text" id="catIcon" placeholder="e.g. fas fa-gem" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="catDesc">Description</label>
+                        <textarea id="catDesc" placeholder="Briefly describe the theme of this category..." required></textarea>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top: 30px;">
+                    <button type="button" class="btn-ghost" id="cancelCategory">Cancel</button>
+                    <button type="submit" class="btn-publish">
+                        <i class="fas fa-save"></i> Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="statusToast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span>Action Successful!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/categories.js"></script>
+</body>
+</html>

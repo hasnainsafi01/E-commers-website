@@ -1,9 +1,10 @@
 import { db } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Cloudinary Configuration (Placeholders)
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
-const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+// Cloudinary Configuration
+const CLOUD_NAME = "dqsvcn94y";
+const UPLOAD_PRESET = "ml_default"; // Use an unsigned preset from your Cloudinary settings
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const productForm = document.getElementById('addProductForm');
@@ -11,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('imageDropzone');
     const previewGrid = document.getElementById('previewGrid');
     const publishBtn = document.getElementById('publishBtn');
+    const categorySelect = document.getElementById('prodCategory');
+    
+    // Progress Bar Elements
+    const progressContainer = document.getElementById('uploadProgressContainer');
+    const progressBarFill = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadStatusText');
+    const progressPercentage = document.getElementById('uploadPercentage');
 
     let selectedFiles = [];
 
@@ -65,20 +73,41 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPreviews();
     };
 
-    // 3. Upload to Cloudinary
-    const uploadToCloudinary = async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    // 3. Upload to Cloudinary with Progress Tracking
+    const uploadToCloudinary = (file, currentFileIndex, totalFiles) => {
+        return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
 
-        const response = await fetch(CLOUDINARY_URL, {
-            method: 'POST',
-            body: formData
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', CLOUDINARY_URL, true);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    // Calculate individual file progress
+                    const fileProgress = (e.loaded / e.total) * 100;
+                    // Calculate total overall progress
+                    const totalProgress = ((currentFileIndex / totalFiles) * 100) + (fileProgress / totalFiles);
+                    
+                    progressBarFill.style.width = `${totalProgress}%`;
+                    progressPercentage.innerText = `${Math.round(totalProgress)}%`;
+                    progressText.innerText = `Uploading image ${currentFileIndex + 1} of ${totalFiles}...`;
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    resolve(response.secure_url);
+                } else {
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.send(formData);
         });
-
-        if (!response.ok) throw new Error('Cloudinary upload failed');
-        const data = await response.json();
-        return data.secure_url;
     };
 
     // 4. Handle Form Submission
@@ -92,14 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             publishBtn.disabled = true;
-            publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+            publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            progressContainer.style.display = 'block';
+            progressBarFill.style.width = '0%';
+            progressPercentage.innerText = '0%';
 
             // Upload all images sequentially
             const imageUrls = [];
-            for (const file of selectedFiles) {
-                const url = await uploadToCloudinary(file);
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const url = await uploadToCloudinary(selectedFiles[i], i, selectedFiles.length);
                 imageUrls.push(url);
             }
+
+            progressText.innerText = "Finalizing product...";
 
             // Save to Firestore
             const productData = {
@@ -119,20 +154,50 @@ document.addEventListener('DOMContentLoaded', () => {
             productForm.reset();
             selectedFiles = [];
             renderPreviews();
+            
+            // Hide progress after success
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+            }, 2000);
 
         } catch (error) {
             console.error("Error:", error);
-            showToast('Error: ' + error.message);
+            showToast('Upload Error: ' + error.message);
+            progressText.innerText = "Upload failed.";
         } finally {
             publishBtn.disabled = false;
             publishBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Product';
         }
     });
 
+    // 5. Fetch and Populate Categories
+    const fetchCategories = async () => {
+        try {
+            const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
+            const querySnapshot = await getDocs(q);
+            
+            categorySelect.innerHTML = '<option value="" disabled selected>Select Category</option>';
+            
+            querySnapshot.forEach((doc) => {
+                const cat = doc.data();
+                const option = document.createElement('option');
+                option.value = cat.name;
+                option.innerText = cat.name;
+                categorySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
+    fetchCategories();
+
     function showToast(msg) {
         const toast = document.getElementById('statusToast');
-        toast.querySelector('span').innerText = msg;
-        toast.classList.add('active');
-        setTimeout(() => toast.classList.remove('active'), 4000);
+        if (toast) {
+            toast.querySelector('span').innerText = msg;
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 4000);
+        }
     }
 });

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Collection | CHENARI Admin</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                CHENARI Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="manage-products.html" class="nav-item active">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="categories.html" class="nav-item">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+
+                <a href="add-product.html" class="add-product-btn" style="display: block; text-align: center; text-decoration: none;">Add Product</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Manage Collection</h1>
+                    <p id="manageProductsCount">Loading inventory...</p>
+                </div>
+            </header>
+
+            <!-- Table Controls -->
+            <div class="manage-header">
+                <div class="search-filter-group">
+                    <div class="admin-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adminSearchInput" placeholder="Search by product name...">
+                    </div>
+                    <select id="adminCategoryFilter" class="admin-filter">
+                        <option value="all">All Categories</option>
+                        <option value="Watches">Watches</option>
+                        <option value="Bags">Bags</option>
+                        <option value="Shoes">Shoes</option>
+                    </select>
+                </div>
+                <div class="table-actions">
+                    <button class="btn-icon" title="Download CSV"><i class="fas fa-file-export"></i></button>
+                    <button class="btn-icon" title="Refresh Table" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="manage-table-container">
+                <table class="admin-table manage-table">
+                    <thead>
+                        <tr>
+                            <th>Product Details</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock Status</th>
+                            <th>Added Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- Products injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <span class="page-info" id="paginationInfo">Showing 1 to 10 of 24 pieces</span>
+                <div class="page-controls">
+                    <button class="btn-page" id="prevPage" disabled>Previous</button>
+                    <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+                    <button class="btn-page" id="nextPage">Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" id="closeEditModal">&times;</button>
+            <div class="modal-header">
+                <h2 class="serif">Edit Product</h2>
+                <p>Modify the details of this collection piece.</p>
+            </div>
+            <form id="editProductForm">
+                <input type="hidden" id="editProdId">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="editProdTitle">Product Title</label>
+                        <input type="text" id="editProdTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProdCategory">Category</label>
+                        <select id="editProdCategory" required>
+                            <option value="Watches">Watches</option>
+                            <option value="Bags">Bags</option>
+                            <option value="Shoes">Shoes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProdPrice">Price (€)</label>
+                        <input type="number" id="editProdPrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProdStock">Stock Quantity</label>
+                        <input type="number" id="editProdStock" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProdDiscount">Discount (%)</label>
+                        <input type="number" id="editProdDiscount">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="editProdDesc">Product Description</label>
+                        <textarea id="editProdDesc" required></textarea>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top: 30px;">
+                    <button type="button" class="btn-ghost" id="cancelEdit">Cancel</button>
+                    <button type="submit" class="btn-publish">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="previewModal" class="modal-overlay">
+        <div class="modal-content preview-modal-content">
+            <button class="modal-close" id="closePreviewModal" style="color: white; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; top: 10px; right: 10px;">&times;</button>
+            <div class="preview-image-container">
+                <img src="" id="previewFullImage" alt="Preview">
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="statusToast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span>Action Successful!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/manage-products.js"></script>
+</body>
+</html>
