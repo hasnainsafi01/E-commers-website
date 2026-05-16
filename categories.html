@@ -91,12 +91,15 @@
                         <input type="text" id="catName" placeholder="e.g. Fine Jewelry" required>
                     </div>
                     <div class="form-group full-width">
-                        <label for="catIcon">Icon Class (FontAwesome)</label>
-                        <input type="text" id="catIcon" placeholder="e.g. fas fa-gem" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="catDesc">Description</label>
-                        <textarea id="catDesc" placeholder="Briefly describe the theme of this category..." required></textarea>
+                        <label>Category Image</label>
+                        <div id="catImageDropzone" class="dropzone" style="height: 150px;">
+                            <i class="far fa-image"></i>
+                            <p>Upload Category Image</p>
+                            <input type="file" id="catImage" accept="image/*" style="display: none;">
+                        </div>
+                        <div id="catImagePreview" style="margin-top: 10px; display: none;">
+                            <img src="" alt="Preview" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px;">
+                        </div>
                     </div>
                 </div>
                 <div class="form-actions" style="margin-top: 30px;">

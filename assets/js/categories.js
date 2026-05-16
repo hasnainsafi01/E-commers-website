@@ -1,5 +1,10 @@
 import { db } from './firebase-config.js';
-import { collection, getDocs, deleteDoc, doc, setDoc, updateDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, deleteDoc, doc, setDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Cloudinary Configuration
+const CLOUD_NAME = "dqsvcn94y";
+const UPLOAD_PRESET = "ml_default";
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const categoriesGrid = document.getElementById('categoriesGrid');
@@ -10,17 +15,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeCategoryModal = document.getElementById('closeCategoryModal');
     const cancelCategory = document.getElementById('cancelCategory');
     const modalTitle = document.getElementById('modalTitle');
+    
+    // Image Upload Elements
+    const catImageInput = document.getElementById('catImage');
+    const catImageDropzone = document.getElementById('catImageDropzone');
+    const catImagePreview = document.getElementById('catImagePreview');
+    const catPreviewImg = catImagePreview.querySelector('img');
 
     let allCategories = [];
+    let selectedFile = null;
+    let currentImageUrl = '';
 
     // 1. Initialize Defaults if Collection is Empty
     const initDefaults = async () => {
         const querySnapshot = await getDocs(collection(db, 'categories'));
         if (querySnapshot.empty) {
             const defaults = [
-                { name: 'Watches', icon: 'fas fa-clock', desc: 'Exquisite timepieces from world-renowned horologists.', createdAt: new Date() },
-                { name: 'Bags', icon: 'fas fa-shopping-bag', desc: 'Premium leather bags and designer carryalls.', createdAt: new Date() },
-                { name: 'Shoes', icon: 'fas fa-shoe-prints', desc: 'Luxury footwear for every occasion.', createdAt: new Date() }
+                { name: 'Watches', image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1000&q=80', createdAt: serverTimestamp() },
+                { name: 'Bags', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=80', createdAt: serverTimestamp() },
+                { name: 'Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=80', createdAt: serverTimestamp() }
             ];
 
             for (const cat of defaults) {
@@ -56,18 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
         allCategories.forEach(cat => {
             const card = `
                 <div class="category-card" data-id="${cat.id}">
-                    <div class="category-icon">
-                        <i class="${cat.icon || 'fas fa-tag'}"></i>
+                    <div class="category-img-container">
+                        <img src="${cat.image}" alt="${cat.name}">
                     </div>
                     <div class="category-details">
                         <h3>${cat.name}</h3>
-                        <p>${cat.desc || 'No description provided.'}</p>
-                    </div>
-                    <div class="category-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">--</span>
-                            <span class="stat-label">Products</span>
-                        </div>
                     </div>
                     <div class="category-actions">
                         <button class="btn-icon" onclick="openEditModal('${cat.id}')" title="Edit Category">
@@ -83,16 +89,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // 4. Modal Logic
+    // 4. Image Upload Handling
+    catImageDropzone.onclick = () => catImageInput.click();
+    
+    catImageInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                catPreviewImg.src = e.target.result;
+                catImagePreview.style.display = 'block';
+                catImageDropzone.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const uploadToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        const response = await fetch(CLOUDINARY_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error('Cloudinary upload failed');
+        const data = await response.json();
+        return data.secure_url;
+    };
+
+    // 5. Modal Logic
     const openModal = (edit = false, id = null) => {
+        selectedFile = null;
+        currentImageUrl = '';
+        catImagePreview.style.display = 'none';
+        catImageDropzone.style.display = 'flex';
+
         if (edit) {
             const cat = allCategories.find(c => c.id === id);
             if (!cat) return;
             modalTitle.innerText = 'Edit Category';
             document.getElementById('categoryId').value = cat.id;
             document.getElementById('catName').value = cat.name;
-            document.getElementById('catIcon').value = cat.icon;
-            document.getElementById('catDesc').value = cat.desc;
+            
+            if (cat.image) {
+                currentImageUrl = cat.image;
+                catPreviewImg.src = cat.image;
+                catImagePreview.style.display = 'block';
+                catImageDropzone.style.display = 'none';
+            }
         } else {
             modalTitle.innerText = 'Add Category';
             categoryForm.reset();
@@ -110,33 +158,38 @@ document.addEventListener('DOMContentLoaded', () => {
     closeCategoryModal.onclick = closeModal;
     cancelCategory.onclick = closeModal;
 
-    // 5. Submit Handler (Add/Edit)
+    // 6. Submit Handler
     categoryForm.onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('categoryId').value;
         const name = document.getElementById('catName').value;
-        const icon = document.getElementById('catIcon').value;
-        const desc = document.getElementById('catDesc').value;
-
-        const catData = {
-            name,
-            icon,
-            desc,
-            updatedAt: new Date()
-        };
 
         try {
             const submitBtn = categoryForm.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
+            let imageUrl = currentImageUrl;
+            if (selectedFile) {
+                imageUrl = await uploadToCloudinary(selectedFile);
+            }
+
+            if (!imageUrl) {
+                showToast('Please select an image.');
+                return;
+            }
+
+            const catData = {
+                name,
+                image: imageUrl,
+                updatedAt: serverTimestamp()
+            };
+
             if (id) {
-                // Edit
                 await updateDoc(doc(db, 'categories', id), catData);
-                showToast('Category updated successfully!');
+                showToast('Category updated!');
             } else {
-                // Add
-                catData.createdAt = new Date();
+                catData.createdAt = serverTimestamp();
                 const newDocRef = doc(collection(db, 'categories'));
                 await setDoc(newDocRef, catData);
                 showToast('New category added!');
@@ -144,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             closeModal();
         } catch (error) {
-            console.error("Error saving category:", error);
+            console.error("Save Error:", error);
             showToast('Error saving category.');
         } finally {
             const submitBtn = categoryForm.querySelector('button[type="submit"]');
@@ -153,11 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 6. Global Handlers (Delete & Edit)
+    // 7. Global Handlers
     window.openEditModal = (id) => openModal(true, id);
 
     window.deleteCategory = async (id) => {
-        if (confirm('Are you sure you want to delete this category? Products in this category will not be deleted but may become unclassified.')) {
+        if (confirm('Are you sure you want to delete this category?')) {
             try {
                 await deleteDoc(doc(db, 'categories', id));
                 showToast('Category deleted.');
@@ -168,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 7. Utility
     function showToast(msg) {
         const toast = document.getElementById('statusToast');
         if (toast) {
