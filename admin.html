@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atelier Admin | CHENARI Performance</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                Atelier Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+
+                <button class="add-product-btn">Add Product</button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Performance Overview</h1>
+                    <p>Metrics for the current fiscal period.</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="notification-bell">
+                        <i class="far fa-bell"></i>
+                    </div>
+                    <div class="admin-profile">
+                        <div class="profile-info">
+                            <span class="name">Admin User</span>
+                            <span class="role">Chief Curator</span>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <!-- Sales Stat -->
+                <div class="stat-card">
+                    <span class="trend positive">+12.5%</span>
+                    <div class="icon-box"><i class="far fa-credit-card"></i></div>
+                    <span class="label">Total Sales</span>
+                    <div class="value">€482,900</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div>
+                </div>
+
+                <!-- Orders Stat -->
+                <div class="stat-card">
+                    <span class="trend positive">+4.2%</span>
+                    <div class="icon-box"><i class="fas fa-shopping-bag"></i></div>
+                    <span class="label">New Orders</span>
+                    <div class="value">1,240</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
+                </div>
+
+                <!-- Users Stat -->
+                <div class="stat-card">
+                    <span class="trend negative">-8.1%</span>
+                    <div class="icon-box"><i class="fas fa-users"></i></div>
+                    <span class="label">Active Users</span>
+                    <div class="value">18.4K</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 90%;"></div></div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <!-- Main Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h2 class="serif">Sales Trends</h2>
+                        <p>Last 6 Months Revenue</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Trending Items -->
+                <div class="trending-card">
+                    <div class="card-header">
+                        <h2 class="serif">Trending Items</h2>
+                    </div>
+                    <ul class="trending-list">
+                        <li class="trending-item">
+                            <img src="assets/images/watch.png" alt="Watch">
+                            <div class="info">
+                                <h3>Calatrava Heritage 5227</h3>
+                                <p>€34,200</p>
+                            </div>
+                        </li>
+                        <li class="trending-item">
+                            <img src="assets/images/bag.png" alt="Bag">
+                            <div class="info">
+                                <h3>Florence Leather Tote</h3>
+                                <p>€2,850</p>
+                            </div>
+                        </li>
+                        <li class="trending-item">
+                            <img src="assets/images/shoes.png" alt="Shoes">
+                            <div class="info">
+                                <h3>Avant-Garde Runner X1</h3>
+                                <p>€890</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <button class="view-inventory-btn">View Inventory</button>
+                </div>
+            </div>
+
+            <!-- Recent Acquisitions -->
+            <div class="recent-acquisitions">
+                <div class="table-header">
+                    <h2 class="serif">Recent Acquisitions</h2>
+                    <div class="table-actions">
+                        <i class="fas fa-sliders-h"></i>
+                        <i class="fas fa-download"></i>
+                    </div>
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Client</th>
+                            <th>Item</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ATL-9021</td>
+                            <td>
+                                <div class="client-cell">
+                                    <div class="client-avatar">JD</div>
+                                    Julian De Saint
+                                </div>
+                            </td>
+                            <td>Patek Philippe 5270P</td>
+                            <td>Jun 14, 2024</td>
+                            <td>€185,000</td>
+                            <td><span class="status-badge status-dispatched">Dispatched</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ATL-9020</td>
+                            <td>
+                                <div class="client-cell">
+                                    <div class="client-avatar">EM</div>
+                                    Elena Moretti
+                                </div>
+                            </td>
+                            <td>Hermès Birkin 25</td>
+                            <td>Jun 14, 2024</td>
+                            <td>€24,500</td>
+                            <td><span class="status-badge status-processing">Processing</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ATL-9019</td>
+                            <td>
+                                <div class="client-cell">
+                                    <div class="client-avatar">MK</div>
+                                    Marcus Knight
+                                </div>
+                            </td>
+                            <td>Louis Vuitton Keepall</td>
+                            <td>Jun 13, 2024</td>
+                            <td>€3,200</td>
+                            <td><span class="status-badge status-delivered">Delivered</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="#" class="view-ledger">View Full Ledger</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin JS -->
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
