@@ -358,10 +358,31 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             showAuthModal();
         } else if (cartBtn && simulatedUser) {
-            // Original logic for logged in users
-            showToast('Item added to your shopping bag!');
-            let currentCount = parseInt(document.querySelector('.fa-shopping-cart + .badge').innerText);
-            updateCartCount(currentCount + 1);
+            // Extract product details based on page context
+            let product = { id: Date.now(), name: "Premium Item", price: 1000, image: "assets/images/default.png", category: "Accessories", desc: "Exclusive piece from the CHENARI Atelier collection." };
+            
+            const card = cartBtn.closest('.product-card');
+            if (card) {
+                // We are on product listing page
+                product.name = card.querySelector('h3').innerText;
+                product.price = parseFloat(card.querySelector('.current-price').innerText.replace('$', '').replace(',', ''));
+                product.image = card.querySelector('img').src;
+                const catSpan = card.querySelector('.product-category');
+                if (catSpan) product.category = catSpan.innerText;
+                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
+            } else if (document.querySelector('.details-title')) {
+                // We are on product details page
+                product.name = document.querySelector('.details-title').innerText;
+                product.price = parseFloat(document.querySelector('.details-price').innerText.replace('$', '').replace(',', ''));
+                product.image = document.querySelector('.main-image-wrapper img').src;
+                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
+            }
+
+            if (window.addToCart) {
+                window.addToCart(product);
+            } else {
+                showToast('Item added to your shopping bag!');
+            }
         } else if (favBtn && simulatedUser) {
             // Toggle favorite state
             favBtn.classList.toggle('active');
