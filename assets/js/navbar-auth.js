@@ -1,52 +1,66 @@
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-onAuthStateChanged(auth, (user) => {
-    const navActions = document.querySelector('.nav-actions');
-    if (!navActions) return;
+document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, async (user) => {
+        const navActions = document.querySelector('.nav-actions');
+        if (!navActions) return;
 
-    // Check if we already have a profile btn or login btn
-    let authContainer = document.getElementById('navbarAuth');
-    if (!authContainer) {
-        authContainer = document.createElement('div');
-        authContainer.id = 'navbarAuth';
-        authContainer.style.display = 'flex';
-        authContainer.style.alignItems = 'center';
-        // Insert before the theme toggle or at the start of nav-actions
-        navActions.prepend(authContainer);
-    }
+        let authContainer = document.getElementById('navbarAuth');
+        if (!authContainer) {
+            authContainer = document.createElement('div');
+            authContainer.id = 'navbarAuth';
+            authContainer.className = 'nav-auth-group';
+            navActions.prepend(authContainer);
+        }
 
-    if (user) {
-        // User is signed in
-        const photoURL = user.photoURL || 'https://ui-avatars.com/api/?name=' + (user.displayName || user.email);
-        authContainer.innerHTML = `
-            <div class="user-profile-nav" style="position: relative; cursor: pointer; margin-right: 15px;">
-                <img src="${photoURL}" alt="Profile" style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--primary-blue);">
-                <div class="user-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: var(--bg-color); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px; padding: 10px; min-width: 150px; z-index: 100; border: 1px solid var(--nav-border);">
-                    <a href="profile.html" style="display: block; padding: 10px; color: var(--text-color); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--nav-border); margin-bottom: 5px;">My Account</a>
-                    <button id="logoutBtn" style="width: 100%; padding: 10px; background: none; border: none; text-align: left; cursor: pointer; color: var(--primary-red); font-weight: 600;">Logout</button>
+        if (user) {
+            // Fetch real profile data from Firestore (optional but more robust)
+            const userRef = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userRef);
+            const userData = userSnap.exists() ? userSnap.data() : null;
+            
+            const photoURL = userData?.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
+            const userName = userData?.displayName || user.displayName || 'User';
+
+            authContainer.innerHTML = `
+                <div class="user-profile-nav">
+                    <img src="${photoURL}" alt="Profile" class="nav-avatar">
+                    <div class="user-dropdown">
+                        <div class="dropdown-header">
+                            <strong>${userName}</strong>
+                            <span>${user.email}</span>
+                        </div>
+                        <a href="profile.html"><i class="far fa-user"></i> My Profile</a>
+                        <a href="orders.html"><i class="fas fa-shopping-bag"></i> My Orders</a>
+                        <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        // Toggle dropdown
-        const profile = authContainer.querySelector('.user-profile-nav');
-        const dropdown = authContainer.querySelector('.user-dropdown');
-        profile.addEventListener('click', () => {
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-        });
+            // Dropdown Toggle Logic
+            const profileNav = authContainer.querySelector('.user-profile-nav');
+            const dropdown = authContainer.querySelector('.user-dropdown');
+            
+            profileNav.onclick = (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            };
 
-        // Logout logic
-        authContainer.querySelector('#logoutBtn').addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await signOut(auth);
-            window.location.reload();
-        });
+            document.addEventListener('click', () => dropdown.classList.remove('active'));
 
-    } else {
-        // User is signed out
-        authContainer.innerHTML = `
-            <a href="login.html" class="login-nav-btn" style="margin-right: 15px; font-weight: 600; color: var(--text-color); text-decoration: none;">Login</a>
-        `;
-    }
+            // Logout Logic
+            authContainer.querySelector('#logoutBtn').onclick = async () => {
+                await signOut(auth);
+                window.location.href = 'index.html';
+            };
+
+        } else {
+            authContainer.innerHTML = `
+                <a href="login.html" class="nav-login-btn">Login</a>
+                <a href="signup.html" class="nav-signup-btn">Sign Up</a>
+            `;
+        }
+    });
 });

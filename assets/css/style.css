@@ -2474,3 +2474,270 @@ body {
     
     .cat-img { height: 350px; width: 100%; }
 }
+
+/* Authentication UI */
+.nav-auth-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 20px;
+}
+
+.nav-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-blue);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-avatar:hover {
+    transform: scale(1.05);
+}
+
+.user-profile-nav {
+    position: relative;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    width: 220px;
+    background: var(--bg-color);
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 1px solid var(--nav-border);
+    padding: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.user-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--nav-border);
+    margin-bottom: 8px;
+}
+
+.dropdown-header strong {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+
+.dropdown-header span {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.user-dropdown a, .user-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    width: 100%;
+    text-align: left;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: var(--transition);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.user-dropdown a:hover, .user-dropdown button:hover {
+    background: var(--nav-border);
+}
+
+.user-dropdown button {
+    color: var(--primary-red);
+}
+
+.nav-login-btn {
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.nav-signup-btn {
+    background: var(--primary-blue);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.nav-signup-btn:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Auth Modal Styles */
+.auth-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
+
+.auth-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.auth-modal-content {
+    background: var(--bg-color);
+    width: 90%;
+    max-width: 450px;
+    padding: 50px 40px;
+    border-radius: 30px;
+    position: relative;
+    text-align: center;
+    transform: translateY(30px);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--nav-border);
+}
+
+.auth-modal-overlay.active .auth-modal-content {
+    transform: translateY(0);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-color);
+    opacity: 0.5;
+    transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+    opacity: 1;
+}
+
+.auth-modal-header h2 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+}
+
+.auth-modal-header p {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 35px;
+}
+
+.auth-modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.auth-opt-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: var(--transition);
+    border: 1px solid var(--nav-border);
+    cursor: pointer;
+}
+
+.auth-opt-btn.google {
+    background: white;
+    color: #333;
+    border-color: #ddd;
+}
+
+.auth-opt-btn.google img {
+    width: 20px;
+}
+
+.auth-opt-btn.email {
+    background: #1a1a1a;
+    color: white;
+    border: none;
+}
+
+.auth-opt-btn.signup {
+    background: transparent;
+    color: var(--text-color);
+}
+
+.auth-opt-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.auth-divider {
+    margin: 10px 0;
+    position: relative;
+    height: 1px;
+    background: var(--nav-border);
+}
+
+.auth-divider span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-color);
+    padding: 0 10px;
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.modal-cancel-btn {
+    margin-top: 25px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+[data-theme="dark"] .auth-opt-btn.google {
+    background: #2a2a2a;
+    color: white;
+    border-color: #444;
+}
+
+[data-theme="dark"] .auth-opt-btn.email {
+    background: white;
+    color: #1a1a1a;
+}

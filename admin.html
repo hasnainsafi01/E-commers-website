@@ -167,54 +167,15 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
                             <th>Client</th>
-                            <th>Item</th>
+                            <th>Items</th>
                             <th>Date</th>
                             <th>Amount</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ATL-9021</td>
-                            <td>
-                                <div class="client-cell">
-                                    <div class="client-avatar">JD</div>
-                                    Julian De Saint
-                                </div>
-                            </td>
-                            <td>Patek Philippe 5270P</td>
-                            <td>Jun 14, 2024</td>
-                            <td>€185,000</td>
-                            <td><span class="status-badge status-dispatched">Dispatched</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ATL-9020</td>
-                            <td>
-                                <div class="client-cell">
-                                    <div class="client-avatar">EM</div>
-                                    Elena Moretti
-                                </div>
-                            </td>
-                            <td>Hermès Birkin 25</td>
-                            <td>Jun 14, 2024</td>
-                            <td>€24,500</td>
-                            <td><span class="status-badge status-processing">Processing</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ATL-9019</td>
-                            <td>
-                                <div class="client-cell">
-                                    <div class="client-avatar">MK</div>
-                                    Marcus Knight
-                                </div>
-                            </td>
-                            <td>Louis Vuitton Keepall</td>
-                            <td>Jun 13, 2024</td>
-                            <td>€3,200</td>
-                            <td><span class="status-badge status-delivered">Delivered</span></td>
-                        </tr>
+                    <tbody id="recentOrdersBody">
+                        <!-- Dynamic orders injected here -->
                     </tbody>
                 </table>
                 <a href="#" class="view-ledger">View Full Ledger</a>
@@ -223,6 +184,6 @@
     </div>
 
     <!-- Admin JS -->
-    <script src="assets/js/admin.js"></script>
+    <script type="module" src="assets/js/admin.js"></script>
 </body>
 </html>

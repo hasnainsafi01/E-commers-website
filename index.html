@@ -106,100 +106,8 @@
                 <a href="#all-products" class="btn-secondary">View All</a>
             </div>
 
-            <div class="product-grid">
-                <!-- Product 1: Watch -->
-                <div class="product-card" data-id="1">
-                    <div class="product-image">
-                        <span class="discount-badge">-20%</span>
-                        <button class="fav-btn" title="Add to Wishlist">
-                            <i class="far fa-heart"></i>
-                        </button>
-                        <img src="assets/images/watch.png" alt="Chronos Heritage">
-                    </div>
-                    <div class="product-info">
-                        <span class="product-category">Watches</span>
-                        <h3 class="product-name">Chronos Heritage IV</h3>
-                        <div class="product-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span>(4.8)</span>
-                        </div>
-                        <div class="product-footer">
-                            <div class="product-price">
-                                <span class="current-price">$4,200</span>
-                                <span class="old-price">$5,250</span>
-                            </div>
-                            <button class="add-cart-btn" title="Add to Cart">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product 2: Bag -->
-                <div class="product-card" data-id="2">
-                    <div class="product-image">
-                        <button class="fav-btn" title="Add to Wishlist">
-                            <i class="far fa-heart"></i>
-                        </button>
-                        <img src="assets/images/bag.png" alt="Suede Tote">
-                    </div>
-                    <div class="product-info">
-                        <span class="product-category">Bags</span>
-                        <h3 class="product-name">Atelier Suede Tote</h3>
-                        <div class="product-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <span>(4.2)</span>
-                        </div>
-                        <div class="product-footer">
-                            <div class="product-price">
-                                <span class="current-price">$1,850</span>
-                            </div>
-                            <button class="add-cart-btn" title="Add to Cart">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product 3: Shoes -->
-                <div class="product-card" data-id="3">
-                    <div class="product-image">
-                        <span class="discount-badge">-15%</span>
-                        <button class="fav-btn" title="Add to Wishlist">
-                            <i class="far fa-heart"></i>
-                        </button>
-                        <img src="assets/images/shoes.png" alt="Linear Low-Top">
-                    </div>
-                    <div class="product-info">
-                        <span class="product-category">Shoes</span>
-                        <h3 class="product-name">Linear Low-Top</h3>
-                        <div class="product-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>(5.0)</span>
-                        </div>
-                        <div class="product-footer">
-                            <div class="product-price">
-                                <span class="current-price">$650</span>
-                                <span class="old-price">$765</span>
-                            </div>
-                            <button class="add-cart-btn" title="Add to Cart">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="product-grid" id="featuredProducts">
+                <!-- Products dynamically loaded from Firestore -->
             </div>
         </section>
 
@@ -356,7 +264,7 @@
     </footer>
 
     <!-- Custom JS -->
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script src="assets/js/cart.js"></script>
     <script src="assets/js/favorites.js"></script>
     <script type="module" src="assets/js/navbar-auth.js"></script>

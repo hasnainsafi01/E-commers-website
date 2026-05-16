@@ -1,4 +1,6 @@
-/* CHENARI E-commerce Navbar Logic */
+import { db, auth, googleProvider } from './firebase-config.js';
+import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const navbar = document.querySelector('.navbar');
@@ -7,414 +9,256 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.querySelector('.theme-toggle');
     const body = document.body;
 
-    // 1. Sticky Navbar Effect on Scroll
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
+    let currentUser = null;
+    let pendingAction = null;
+
+    // Listen for Auth State
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user && pendingAction) {
+            executePendingAction();
         }
     });
 
-    // 2. Mobile Menu Toggle
+    // 1. Sticky Navbar
+    window.addEventListener('scroll', () => {
+        if (navbar) {
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        }
+    });
+
+    // 2. Mobile Menu
     if (mobileToggle) {
         mobileToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
             const icon = mobileToggle.querySelector('i');
-            if (navLinks.classList.contains('active')) {
-                icon.classList.replace('fa-bars', 'fa-times');
-            } else {
-                icon.classList.replace('fa-times', 'fa-bars');
-            }
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
         });
     }
 
-    // Close menu when clicking links
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
-            mobileToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
-        });
-    });
-
-    // 3. Theme Switcher (Dark/Light)
+    // 3. Theme
     const currentTheme = localStorage.getItem('theme') || 'light';
     body.setAttribute('data-theme', currentTheme);
-    updateThemeIcon(currentTheme);
-
     if (themeToggle) {
+        const icon = themeToggle.querySelector('i');
+        if (currentTheme === 'dark') icon.classList.replace('fa-moon', 'fa-sun');
+        
         themeToggle.addEventListener('click', () => {
             const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             body.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
         });
     }
 
-    function updateThemeIcon(theme) {
-        const icon = themeToggle.querySelector('i');
-        if (theme === 'dark') {
-            icon.classList.replace('fa-moon', 'fa-sun');
-        } else {
-            icon.classList.replace('fa-sun', 'fa-moon');
-        }
-    }
-
-    // 4. Cart/Favorite Simulation (Optional but requested)
-    // You can update the .badge text here dynamically
-    function updateCartCount(count) {
-        const cartBadge = document.querySelector('.fa-shopping-cart + .badge');
-        if (cartBadge) cartBadge.innerText = count;
-    }
-
-    // Initial simulation
-    updateCartCount(3);
-
-    // 5. Product Card Interactions
-    const productCards = document.querySelectorAll('.product-card');
-
-    productCards.forEach(card => {
-        // Navigate to details on card click
-        card.addEventListener('click', (e) => {
-            // Prevent navigation if clicking buttons inside the card
-            if (e.target.closest('.fav-btn') || e.target.closest('.add-cart-btn')) {
-                return;
-            }
-            const productId = card.getAttribute('data-id');
-            window.location.href = `product-details.html?id=${productId}`;
-        });
-
-        // Favorite Toggle
-        const favBtn = card.querySelector('.fav-btn');
-        if (favBtn) {
-            favBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Stop bubbling to card
-                favBtn.classList.toggle('active');
-                const icon = favBtn.querySelector('i');
-                if (favBtn.classList.contains('active')) {
-                    icon.classList.replace('far', 'fas');
-                    showToast('Added to Wishlist!');
-                } else {
-                    icon.classList.replace('fas', 'far');
-                }
-            });
-        }
-
-        // Add to Cart
-        const addCartBtn = card.querySelector('.add-cart-btn');
-        if (addCartBtn) {
-            addCartBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Stop bubbling to card
-                let currentCount = parseInt(document.querySelector('.fa-shopping-cart + .badge').innerText);
-                updateCartCount(currentCount + 1);
-                showToast('Item added to cart!');
-                
-                // Button animation
-                addCartBtn.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => {
-                    addCartBtn.innerHTML = '<i class="fas fa-plus"></i>';
-                }, 2000);
-            });
-        }
-    });
-
-    // Helper: Toast Notification Simulation
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'toast-notification';
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        
-        // Simple styles for toast (usually would be in CSS)
-        Object.assign(toast.style, {
-            position: 'fixed',
-            bottom: '30px',
-            right: '30px',
-            background: 'var(--text-color)',
-            color: 'var(--bg-color)',
-            padding: '12px 25px',
-            borderRadius: '10px',
-            boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-            zIndex: '9999',
-            animation: 'fadeInUp 0.3s ease'
-        });
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    // 6. Product Listing Page Logic
-    const productsContainer = document.getElementById('productsList');
-    if (productsContainer) {
-        const productsData = [
-            { id: 1, name: 'Chronos Heritage IV', category: 'Watches', price: 4200, rating: 4.8, img: 'assets/images/watch.png', discount: '-20%' },
-            { id: 2, name: 'Atelier Suede Tote', category: 'Bags', price: 1850, rating: 4.2, img: 'assets/images/bag.png', discount: null },
-            { id: 3, name: 'Linear Low-Top', category: 'Shoes', price: 650, rating: 5.0, img: 'assets/images/shoes.png', discount: '-15%' },
-            { id: 4, name: 'Midnight Classic', category: 'Watches', price: 8200, rating: 4.9, img: 'assets/images/watch_2.png', discount: 'New' },
-            { id: 5, name: 'Portfolio Briefcase', category: 'Bags', price: 2100, rating: 4.7, img: 'assets/images/bag.png', discount: null },
-            { id: 6, name: 'Chelsea Loafer', category: 'Shoes', price: 1250, rating: 4.6, img: 'assets/images/shoes.png', discount: null }
-        ];
-
-        let filteredProducts = [...productsData];
-
-        // Simulation of loading
-        const showSkeletons = () => {
-            productsContainer.innerHTML = '';
-            for (let i = 0; i < 6; i++) {
-                productsContainer.innerHTML += `
-                    <div class="skeleton-card">
-                        <div class="skeleton-img"></div>
-                        <div class="skeleton-info">
-                            <div class="skeleton-text"></div>
-                            <div class="skeleton-text short"></div>
-                            <div class="skeleton-text medium"></div>
-                        </div>
-                    </div>
-                `;
-            }
-        };
-
-        const renderProducts = (data) => {
-            productsContainer.innerHTML = '';
-            if (data.length === 0) {
-                productsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 50px;">No products found matching your criteria.</p>';
-                return;
-            }
-            data.forEach(prod => {
-                const discountTag = prod.discount ? `<span class="discount-badge">${prod.discount}</span>` : '';
-                productsContainer.innerHTML += `
-                    <div class="product-card" data-id="${prod.id}" style="animation: fadeInUp 0.5s ease backwards">
-                        <div class="product-image">
-                            ${discountTag}
-                            <button class="fav-btn" title="Add to Wishlist"><i class="far fa-heart"></i></button>
-                            <img src="${prod.img}" alt="${prod.name}">
-                        </div>
-                        <div class="product-info">
-                            <span class="product-category">${prod.category}</span>
-                            <h3 class="product-name">${prod.name}</h3>
-                            <div class="product-rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
-                                <span>(${prod.rating})</span>
-                            </div>
-                            <div class="product-footer">
-                                <div class="product-price">
-                                    <span class="current-price">$${prod.price.toLocaleString()}</span>
-                                </div>
-                                <button class="add-cart-btn"><i class="fas fa-plus"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            // Re-attach event listeners to new elements
-            attachProductListeners();
-        };
-
-        const filterAndRender = () => {
-            const activeCat = document.querySelector('.chip.active').dataset.category;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const sortBy = document.getElementById('sortSelect').value;
-
-            filteredProducts = productsData.filter(p => {
-                const matchesCat = activeCat === 'all' || p.category.toLowerCase() === activeCat.toLowerCase();
-                const matchesSearch = p.name.toLowerCase().includes(searchTerm);
-                return matchesCat && matchesSearch;
-            });
-
-            if (sortBy === 'price-low') {
-                filteredProducts.sort((a, b) => a.price - b.price);
-            } else if (sortBy === 'price-high') {
-                filteredProducts.sort((a, b) => b.price - a.price);
-            }
-
-            renderProducts(filteredProducts);
-        };
-
-        // Event Listeners for Filters
-        document.querySelectorAll('.chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                filterAndRender();
-            });
-        });
-
-        document.getElementById('searchInput').addEventListener('input', filterAndRender);
-        document.getElementById('sortSelect').addEventListener('change', filterAndRender);
-
-        // Initial Load
-        showSkeletons();
-        setTimeout(() => {
-            renderProducts(productsData);
-        }, 1500);
-    }
-
-    function attachProductListeners() {
-        const productCards = document.querySelectorAll('.product-card');
-        productCards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.fav-btn') || e.target.closest('.add-cart-btn')) return;
-                window.location.href = `product-details.html?id=${card.dataset.id}`;
-            });
-            // (Re-attach fav and cart logic similarly if needed, or use delegation)
-        });
-    }
-
-    // 7. Professional Product Details Page Logic
-    const mainImg = document.getElementById('mainImg');
-    const thumbnails = document.querySelectorAll('.thumb');
-    
-    if (thumbnails.length > 0) {
-        thumbnails.forEach(thumb => {
-            thumb.addEventListener('click', () => {
-                thumbnails.forEach(t => t.classList.remove('active'));
-                thumb.classList.add('active');
-                mainImg.src = thumb.querySelector('img').src;
-            });
-        });
-    }
-
-    // Accordion Logic
-    const accordionHeaders = document.querySelectorAll('.accordion-header');
-    accordionHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const item = header.parentElement;
-            item.classList.toggle('active');
-        });
-    });
-
-    // 8. Global Auth Modal Logic
-    let simulatedUser = null;
-
+    // 4. Auth Modal Logic
     const injectAuthModal = () => {
-        if (document.querySelector('.auth-modal-overlay')) return;
-
+        if (document.getElementById('authModal')) return;
         const modalHTML = `
-            <div class="auth-modal-overlay">
-                <div class="auth-modal">
-                    <h2 class="serif">Please Login First</h2>
-                    <p>Login to continue your premium shopping experience at CHENARI.</p>
-                    <div class="auth-btn-group">
-                        <button class="auth-btn login">Login</button>
-                        <button class="auth-btn signup">Create Account</button>
-                        <button class="auth-btn cancel">Maybe Later</button>
+            <div id="authModal" class="auth-modal-overlay">
+                <div class="auth-modal-content">
+                    <button class="modal-close-btn">&times;</button>
+                    <div class="auth-modal-header">
+                        <h2 class="serif">Join the CHENARI Circle</h2>
+                        <p>Authenticate to continue your premium shopping experience and sync your selections across all devices.</p>
                     </div>
+                    <div class="auth-modal-options">
+                        <button id="modalGoogleBtn" class="auth-opt-btn google">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listview/google.svg" alt="Google">
+                            Continue with Google
+                        </button>
+                        <div class="auth-divider"><span>OR</span></div>
+                        <a href="login.html" class="auth-opt-btn email">
+                            <i class="fas fa-envelope"></i> Login with Email
+                        </a>
+                        <a href="signup.html" class="auth-opt-btn signup">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </a>
+                    </div>
+                    <button class="modal-cancel-btn">Maybe Later</button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        // Attach listeners to newly injected modal
-        const overlay = document.querySelector('.auth-modal-overlay');
-        const loginBtn = overlay.querySelector('.auth-btn.login');
-        const signupBtn = overlay.querySelector('.auth-btn.signup');
-        const cancelBtn = overlay.querySelector('.auth-btn.cancel');
+        const modal = document.getElementById('authModal');
+        const closeBtn = modal.querySelector('.modal-close-btn');
+        const cancelBtn = modal.querySelector('.modal-cancel-btn');
+        const googleBtn = modal.querySelector('#modalGoogleBtn');
 
-        loginBtn.addEventListener('click', () => {
-            loginBtn.innerText = 'Redirecting...';
-            setTimeout(() => {
-                simulatedUser = { name: 'Guest User' };
-                overlay.classList.remove('active');
-                showToast('Welcome back! You are now logged in.');
-                loginBtn.innerText = 'Login';
-            }, 1000);
-        });
+        const closeModal = () => modal.classList.remove('active');
+        closeBtn.onclick = closeModal;
+        cancelBtn.onclick = closeModal;
+        modal.onclick = (e) => { if(e.target === modal) closeModal(); };
 
-        signupBtn.addEventListener('click', () => {
-            showToast('Signup feature coming soon!');
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            overlay.classList.remove('active');
-        });
-
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.classList.remove('active');
-        });
+        googleBtn.onclick = async () => {
+            try {
+                googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+                await signInWithPopup(auth, googleProvider);
+                closeModal();
+            } catch (error) {
+                console.error("Modal Google Login Error:", error);
+                googleBtn.innerHTML = '<img src="..." alt="Google"> Continue with Google';
+            }
+        };
     };
 
-    const showAuthModal = () => {
+    const showAuthModal = (action) => {
+        pendingAction = action;
         injectAuthModal();
-        setTimeout(() => {
-            document.querySelector('.auth-modal-overlay').classList.add('active');
-        }, 10);
+        setTimeout(() => document.getElementById('authModal').classList.add('active'), 10);
     };
 
-    // Global Event Delegation for Auth-Required Actions
-    document.addEventListener('click', (e) => {
-        const cartBtn = e.target.closest('.add-cart-btn') || e.target.closest('.add-bag-btn');
-        const favBtn = e.target.closest('.fav-btn') || e.target.closest('.save-wishlist-btn');
-
-        if ((cartBtn || favBtn) && !simulatedUser) {
-            e.preventDefault();
-            e.stopPropagation();
-            showAuthModal();
-        } else if (cartBtn && simulatedUser) {
-            // Extract product details based on page context
-            let product = { id: Date.now(), name: "Premium Item", price: 1000, image: "assets/images/default.png", category: "Accessories", desc: "Exclusive piece from the CHENARI Atelier collection." };
-            
-            const card = cartBtn.closest('.product-card');
-            if (card) {
-                // We are on product listing page
-                product.name = card.querySelector('h3').innerText;
-                product.price = parseFloat(card.querySelector('.current-price').innerText.replace('$', '').replace(',', ''));
-                product.image = card.querySelector('img').src;
-                const catSpan = card.querySelector('.product-category');
-                if (catSpan) product.category = catSpan.innerText;
-                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
-            } else if (document.querySelector('.details-title')) {
-                // We are on product details page
-                product.name = document.querySelector('.details-title').innerText;
-                product.price = parseFloat(document.querySelector('.details-price').innerText.replace('$', '').replace(',', ''));
-                product.image = document.querySelector('.main-image-wrapper img').src;
-                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
-            }
-
-            if (window.addToCart) {
-                window.addToCart(product);
-            } else {
-                showToast('Item added to your shopping bag!');
-            }
-        } else if (favBtn && simulatedUser) {
-            // Extract product details
-            let product = { id: Date.now(), name: "Premium Item", price: 1000, image: "assets/images/default.png", category: "Accessories", desc: "Exclusive piece from the CHENARI Atelier collection." };
-            
-            const card = favBtn.closest('.product-card');
-            if (card) {
-                product.name = card.querySelector('h3').innerText;
-                product.price = parseFloat(card.querySelector('.current-price').innerText.replace('$', '').replace(',', ''));
-                product.image = card.querySelector('img').src;
-                const catSpan = card.querySelector('.product-category');
-                if (catSpan) product.category = catSpan.innerText;
-                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
-            } else if (document.querySelector('.details-title')) {
-                product.name = document.querySelector('.details-title').innerText;
-                product.price = parseFloat(document.querySelector('.details-price').innerText.replace('$', '').replace(',', ''));
-                product.image = document.querySelector('.main-image-wrapper img').src;
-                product.id = product.name.replace(/\s+/g, '-').toLowerCase();
-            }
-
-            if (window.handleFavClick) {
-                window.handleFavClick(favBtn, product);
-            } else {
-                // Fallback toggle
-                favBtn.classList.toggle('active');
-                const icon = favBtn.querySelector('i');
-                if (favBtn.classList.contains('active')) {
-                    icon.classList.replace('far', 'fas');
-                    showToast('Added to Wishlist!');
-                } else {
-                    icon.classList.replace('fas', 'far');
-                }
-            }
+    const executePendingAction = () => {
+        if (!pendingAction) return;
+        const { type, data } = pendingAction;
+        if (type === 'cart') {
+            if (window.addToCart) window.addToCart(data);
+            else window.showToast(`Added ${data.title} to your bag!`);
+        } else if (type === 'fav') {
+            if (window.handleFavClick) window.handleFavClick(data.btn, data.prod);
+            else window.showToast(`Saved ${data.prod.title} to your wishlist!`);
         }
-    });
+        pendingAction = null;
+    };
+
+    // 5. Shared Product Renderer
+    const renderProductCard = (prod) => {
+        const img = prod.images && prod.images.length > 0 ? prod.images[0] : 'assets/images/default.png';
+        const discountTag = prod.discount > 0 ? `<span class="discount-badge">-${prod.discount}%</span>` : '';
+        
+        return `
+            <div class="product-card" data-id="${prod.id}" style="animation: fadeInUp 0.5s ease backwards">
+                <div class="product-image">
+                    ${discountTag}
+                    <button class="fav-btn" title="Add to Wishlist"><i class="far fa-heart"></i></button>
+                    <img src="${img}" alt="${prod.title}">
+                </div>
+                <div class="product-info">
+                    <span class="product-category">${prod.category}</span>
+                    <h3 class="product-name">${prod.title}</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <div class="product-footer">
+                        <div class="product-price">
+                            <span class="current-price">$${prod.price.toLocaleString()}</span>
+                        </div>
+                        <button class="add-cart-btn"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    const attachListeners = (container) => {
+        container.querySelectorAll('.product-card').forEach(card => {
+            // Navigate to details
+            card.onclick = (e) => {
+                if (e.target.closest('.fav-btn') || e.target.closest('.add-cart-btn')) return;
+                window.location.href = `product-details.html?id=${card.dataset.id}`;
+            };
+
+            // Fav Click
+            const favBtn = card.querySelector('.fav-btn');
+            favBtn.onclick = (e) => {
+                e.stopPropagation();
+                const prodId = card.dataset.id;
+                const prodTitle = card.querySelector('.product-name').innerText;
+                if (!currentUser) {
+                    showAuthModal({ type: 'fav', data: { btn: favBtn, prod: { id: prodId, title: prodTitle } } });
+                } else {
+                    if (window.handleFavClick) window.handleFavClick(favBtn, { id: prodId, title: prodTitle });
+                    else window.showToast(`Saved to wishlist!`);
+                }
+            };
+
+            // Cart Click
+            const cartBtn = card.querySelector('.add-cart-btn');
+            cartBtn.onclick = (e) => {
+                e.stopPropagation();
+                const prodId = card.dataset.id;
+                const prodTitle = card.querySelector('.product-name').innerText;
+                if (!currentUser) {
+                    showAuthModal({ type: 'cart', data: { id: prodId, title: prodTitle } });
+                } else {
+                    if (window.addToCart) window.addToCart({ id: prodId, title: prodTitle });
+                    else window.showToast(`Added to your bag!`);
+                }
+            };
+        });
+    };
+
+    // 6. Load Homepage Featured Products
+    const featuredContainer = document.getElementById('featuredProducts');
+    if (featuredContainer) {
+        const loadFeatured = async () => {
+            try {
+                const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(3));
+                const snapshot = await getDocs(q);
+                featuredContainer.innerHTML = '';
+                snapshot.forEach(doc => {
+                    featuredContainer.innerHTML += renderProductCard({ id: doc.id, ...doc.data() });
+                });
+                attachListeners(featuredContainer);
+            } catch (error) {
+                console.error("Error loading featured:", error);
+            }
+        };
+        loadFeatured();
+    }
+
+    // 7. Load Product Listing Page
+    const productsListContainer = document.getElementById('productsList');
+    if (productsListContainer) {
+        let allProducts = [];
+        const loadAll = async () => {
+            try {
+                const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(q);
+                allProducts = [];
+                snapshot.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+                renderAndFilter();
+            } catch (error) {
+                console.error("Error loading all:", error);
+            }
+        };
+
+        const renderAndFilter = () => {
+            const activeChip = document.querySelector('.chip.active');
+            const activeCat = activeChip ? activeChip.dataset.category : 'all';
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const filtered = allProducts.filter(p => {
+                const matchesCat = activeCat === 'all' || p.category.toLowerCase() === activeCat.toLowerCase();
+                return matchesCat && p.title.toLowerCase().includes(searchTerm);
+            });
+            productsListContainer.innerHTML = filtered.map(p => renderProductCard(p)).join('');
+            attachListeners(productsListContainer);
+        };
+
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                renderAndFilter();
+            };
+        });
+        document.getElementById('searchInput')?.addEventListener('input', renderAndFilter);
+        loadAll();
+    }
+
+    // 8. Global Utility
+    window.showToast = (message) => {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
 });

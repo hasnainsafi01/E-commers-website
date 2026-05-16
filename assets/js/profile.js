@@ -1,44 +1,51 @@
-import { auth } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const userImage = document.getElementById('userProfileImage');
-    const userName = document.getElementById('userProfileName');
-    const userEmail = document.getElementById('userProfileEmail');
-    const cartStat = document.getElementById('cartStatCount');
-    const favStat = document.getElementById('favStatCount');
-    const logoutBtn = document.getElementById('profileLogoutBtn');
-
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            // Redirect to login if not authenticated
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
             return;
         }
 
-        // Populate User Info
-        const photoURL = user.photoURL || 'https://ui-avatars.com/api/?name=' + (user.displayName || user.email);
-        userImage.src = photoURL;
-        userName.innerText = user.displayName || 'Guest User';
-        userEmail.innerText = user.email;
+        // 1. Fetch Real User Data
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
 
-        // Calculate Stats from LocalStorage
-        const cart = JSON.parse(localStorage.getItem('chenari_cart')) || [];
-        const favorites = JSON.parse(localStorage.getItem('chenari_favorites')) || [];
+        // 2. Update Basic Info
+        document.getElementById('userProfileName').innerText = userData.displayName || user.displayName || 'Luxury Connoisseur';
+        document.getElementById('userProfileEmail').innerText = user.email;
+        document.getElementById('userProfileImage').src = userData.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
 
-        cartStat.innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
-        favStat.innerText = favorites.length;
+        // 3. Fetch Real Stats
+        // Cart Count
+        const cartSnap = await getDocs(collection(db, `users/${user.uid}/cart`));
+        document.getElementById('cartStatCount').innerText = cartSnap.size;
+
+        // Favorites Count
+        const favSnap = await getDocs(collection(db, `users/${user.uid}/favorites`));
+        document.getElementById('favStatCount').innerText = favSnap.size;
+
+        // Orders Count
+        // Assuming orders are stored in a top-level collection with customerUid
+        // For now, if no orders collection exists, it will show 0
+        try {
+            const ordersSnap = await getDocs(collection(db, 'orders'));
+            const userOrders = ordersSnap.docs.filter(doc => doc.data().customerUid === user.uid);
+            document.querySelector('.profile-stats .stat-value').innerText = userOrders.length;
+        } catch(e) {
+            console.log("Orders count fetch skipped or failed.");
+        }
     });
 
-    // Logout Logic
+    // Logout
+    const logoutBtn = document.getElementById('profileLogoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                window.location.href = 'index.html';
-            } catch (error) {
-                console.error("Logout Error:", error);
-            }
-        });
+        logoutBtn.onclick = async () => {
+            await auth.signOut();
+            window.location.href = 'index.html';
+        };
     }
 });

@@ -1,132 +1,143 @@
-// CHENARI Favorites Engine
+import { db, auth } from './firebase-config.js';
+import { collection, doc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 document.addEventListener('DOMContentLoaded', () => {
-    let favorites = JSON.parse(localStorage.getItem('chenari_favorites')) || [];
-    
+    let currentUser = null;
+    let favUnsubscribe = null;
+    let userFavs = new Set();
+
     const favoritesGrid = document.getElementById('favoritesGrid');
     const emptyFavoritesUI = document.getElementById('emptyFavoritesUI');
     const favCountDisplay = document.getElementById('favCountDisplay');
 
-    function init() {
-        if (favoritesGrid) {
-            renderFavorites();
-        }
-        updateFavoritesBadge();
-    }
-
-    // Global Add/Remove to Favorites
-    window.toggleFavorite = (product, btnElement) => {
-        const existingIndex = favorites.findIndex(item => item.id === product.id);
-        const icon = btnElement.querySelector('i');
-        
-        if (existingIndex > -1) {
-            // Remove
-            favorites.splice(existingIndex, 1);
-            btnElement.classList.remove('active');
-            if (icon) icon.classList.replace('fas', 'far');
-            showToast('Removed from Wishlist');
-            
-            // If we are on the favorites page, trigger removal animation
-            if (favoritesGrid) {
-                const card = btnElement.closest('.product-card');
-                if (card) {
-                    card.classList.add('removing');
-                    setTimeout(() => renderFavorites(), 400);
-                }
-            }
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            startFavListener(user.uid);
         } else {
-            // Add
-            favorites.push(product);
-            btnElement.classList.add('active');
-            if (icon) icon.classList.replace('far', 'fas');
-            showToast('Added to Wishlist!');
+            if (favUnsubscribe) favUnsubscribe();
+            userFavs.clear();
+            updateUI([]);
         }
-        
-        saveFavorites();
-        updateFavoritesBadge();
+    });
+
+    const startFavListener = (uid) => {
+        const favRef = collection(db, `users/${uid}/favorites`);
+        favUnsubscribe = onSnapshot(favRef, (snapshot) => {
+            const items = [];
+            userFavs.clear();
+            snapshot.forEach(doc => {
+                items.push({ id: doc.id, ...doc.data() });
+                userFavs.add(doc.id);
+            });
+            updateUI(items);
+            syncHeartIcons();
+        });
     };
 
-    function saveFavorites() {
-        localStorage.setItem('chenari_favorites', JSON.stringify(favorites));
-    }
+    const updateUI = (items) => {
+        updateFavoritesBadge(items.length);
+        if (favoritesGrid) renderFavorites(items);
+    };
 
-    function updateFavoritesBadge() {
+    const updateFavoritesBadge = (count) => {
         const badges = document.querySelectorAll('.fa-heart + .badge');
-        const count = favorites.length;
         badges.forEach(badge => {
             badge.innerText = count;
             badge.style.display = count > 0 ? 'block' : 'none';
         });
-        
-        // Update subtitle on favorites page if it exists
-        if (favCountDisplay) {
-            favCountDisplay.innerText = `${count} ITEM${count !== 1 ? 'S' : ''} SAVED`;
-        }
-    }
+        if (favCountDisplay) favCountDisplay.innerText = `${count} ITEM${count !== 1 ? 'S' : ''} SAVED`;
+    };
 
-    function renderFavorites() {
-        if (favorites.length === 0) {
-            emptyFavoritesUI.classList.remove('hidden');
-            favoritesGrid.classList.add('hidden');
+    const syncHeartIcons = () => {
+        document.querySelectorAll('.fav-btn').forEach(btn => {
+            const card = btn.closest('.product-card');
+            if (card) {
+                const id = card.dataset.id;
+                const icon = btn.querySelector('i');
+                if (userFavs.has(id)) {
+                    btn.classList.add('active');
+                    icon.classList.replace('far', 'fas');
+                } else {
+                    btn.classList.remove('active');
+                    icon.classList.replace('fas', 'far');
+                }
+            }
+        });
+    };
+
+    const renderFavorites = (items) => {
+        if (items.length === 0) {
+            emptyFavoritesUI?.classList.remove('hidden');
+            favoritesGrid?.classList.add('hidden');
             return;
         }
 
-        emptyFavoritesUI.classList.add('hidden');
-        favoritesGrid.classList.remove('hidden');
+        emptyFavoritesUI?.classList.add('hidden');
+        favoritesGrid?.classList.remove('hidden');
         favoritesGrid.innerHTML = '';
 
-        favorites.forEach(item => {
+        items.forEach(item => {
             const itemHTML = `
                 <div class="product-card favorite-card" data-id="${item.id}">
                     <div class="product-image">
-                        <button class="fav-btn active" title="Remove from Wishlist" onclick='handleFavClick(this, ${JSON.stringify(item)})'>
+                        <button class="fav-btn active" title="Remove from Wishlist">
                             <i class="fas fa-heart"></i>
                         </button>
-                        <img src="${item.image}" alt="${item.name}">
+                        <img src="${item.image}" alt="${item.title}">
                     </div>
                     <div class="product-info">
                         <span class="product-category">${item.category}</span>
-                        <h3 class="product-name">${item.name}</h3>
+                        <h3 class="product-name">${item.title}</h3>
                         <div class="product-footer" style="margin-top: 15px;">
                             <div class="product-price">
                                 <span class="current-price">$${item.price.toLocaleString()}</span>
                             </div>
-                            <button class="add-cart-btn" title="Move to Cart" onclick='moveToCart(${JSON.stringify(item)})'>
-                                <i class="fas fa-shopping-bag"></i>
-                            </button>
+                            <button class="add-cart-btn" title="Move to Bag"><i class="fas fa-shopping-bag"></i></button>
                         </div>
                     </div>
                 </div>
             `;
             favoritesGrid.insertAdjacentHTML('beforeend', itemHTML);
         });
-    }
 
-    // Global helper for the onclick attribute
-    window.handleFavClick = (btn, productData) => {
-        if (window.toggleFavorite) {
-            window.toggleFavorite(productData, btn);
-        }
+        // Attach listeners
+        favoritesGrid.querySelectorAll('.fav-btn').forEach(btn => {
+            btn.onclick = () => {
+                const card = btn.closest('.product-card');
+                window.handleFavClick(btn, { id: card.dataset.id, title: card.querySelector('.product-name').innerText });
+            };
+        });
+        favoritesGrid.querySelectorAll('.add-cart-btn').forEach(btn => {
+            btn.onclick = () => {
+                const card = btn.closest('.product-card');
+                const id = card.dataset.id;
+                const title = card.querySelector('.product-name').innerText;
+                if (window.addToCart) window.addToCart({ id, title });
+            };
+        });
     };
 
-    // Helper to move item to cart
-    window.moveToCart = (product) => {
-        if (window.addToCart) {
-            window.addToCart(product);
-            // Optionally remove from favorites after adding to cart
-            // window.toggleFavorite(product, document.querySelector(`.favorite-card[data-id="${product.id}"] .fav-btn`));
+    window.handleFavClick = async (btn, product) => {
+        if (!currentUser) return;
+        const favRef = doc(db, `users/${currentUser.uid}/favorites`, product.id);
+        
+        if (userFavs.has(product.id)) {
+            await deleteDoc(favRef);
+            window.showToast('Removed from wishlist.');
         } else {
-            showToast('Shopping Bag engine not loaded!');
+            // Fetch full details if needed
+            let fullProduct = product;
+            if (!product.price) {
+                const pSnap = await getDoc(doc(db, 'products', product.id));
+                if (pSnap.exists()) {
+                    const d = pSnap.data();
+                    fullProduct = { id: product.id, title: d.title, price: d.price, category: d.category, image: d.images[0], addedAt: serverTimestamp() };
+                }
+            }
+            await setDoc(favRef, fullProduct);
+            window.showToast('Saved to your wishlist.');
         }
     };
-
-    // Helper: Toast (if not already defined)
-    function showToast(msg) {
-        if (typeof window.showToast === 'function') {
-            window.showToast(msg);
-        } else {
-            console.log("Toast:", msg);
-        }
-    }
-
-    init();
 });
