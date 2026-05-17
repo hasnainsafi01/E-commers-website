@@ -176,6 +176,23 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal-overlay" style="z-index: 4000;">
+        <div class="modal-content" style="max-width: 450px; padding: 40px; text-align: center; border: 1px solid var(--admin-border);">
+            <div style="width: 60px; height: 60px; background-color: rgba(255, 59, 48, 0.1); display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 25px auto;">
+                <i class="fas fa-trash-alt" style="color: #ff3b38; font-size: 1.8rem;"></i>
+            </div>
+            <h2 class="serif" style="margin-bottom: 12px; font-size: 1.6rem; letter-spacing: 0.5px;">Confirm Deletion</h2>
+            <p style="color: var(--admin-text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 30px;">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button type="button" class="btn-ghost" id="cancelDeleteBtn" style="flex: 1; padding: 12px 20px; font-size: 0.75rem; letter-spacing: 1px;">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" style="flex: 1; padding: 12px 20px; background-color: #ff3b38; color: white; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast-container">
         <div id="statusToast" class="toast">

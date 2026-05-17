@@ -237,19 +237,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 6. Delete Handler
-    window.handleDelete = async (id) => {
-        if (confirm('Are you sure you want to permanently remove this piece from the collection? This action cannot be undone.')) {
+    // 6. Custom Delete Confirmation Modal Handler
+    const deleteModal = document.getElementById('deleteConfirmModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    let productToDeleteId = null;
+
+    window.handleDelete = (id) => {
+        productToDeleteId = id;
+        if (deleteModal) {
+            deleteModal.classList.add('active');
+        }
+    };
+
+    const closeDeleteModal = () => {
+        if (deleteModal) {
+            deleteModal.classList.remove('active');
+        }
+        productToDeleteId = null;
+    };
+
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.onclick = closeDeleteModal;
+    }
+
+    // Close on overlay backdrop click
+    if (deleteModal) {
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.onclick = async () => {
+            if (!productToDeleteId) return;
+            
             try {
-                await deleteDoc(doc(db, 'products', id));
+                confirmDeleteBtn.disabled = true;
+                confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+                await deleteDoc(doc(db, 'products', productToDeleteId));
+                
                 showToast('Product removed from catalog.');
+                closeDeleteModal();
                 fetchProducts();
             } catch (error) {
                 console.error("Delete Error:", error);
                 showToast('Error deleting product.');
+            } finally {
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
             }
-        }
-    };
+        };
+    }
 
     // 7. Image Preview
     window.previewImage = (src) => {
