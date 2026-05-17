@@ -1,5 +1,5 @@
 import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Immediately inject a luxurious loading overlay to prevent flash of restricted content
@@ -145,13 +145,178 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
     }
 };
 
+// Render centered modern curator login popup modal
+const showSecurityCuratorLoginModal = () => {
+    const curtain = document.getElementById('adminSecurityCurtain');
+    if (!curtain) return;
+
+    curtain.innerHTML = `
+        <div class="security-card-modal login-modal" style="
+            max-width: 420px;
+            width: 90%;
+            background: rgba(18, 18, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        ">
+            <div style="
+                width: 70px;
+                height: 70px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 25px auto;
+                color: #fff;
+                font-size: 1.8rem;
+            ">
+                <i class="fas fa-key"></i>
+            </div>
+            <h2 style="
+                font-family: 'Playfair Display', serif;
+                color: #fff;
+                font-size: 1.6rem;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+                font-weight: 400;
+                text-transform: uppercase;
+            ">CHENARI Portal</h2>
+            <p style="
+                color: #888;
+                font-size: 0.75rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                margin-bottom: 30px;
+            ">Curator Verification Required</p>
+            
+            <form id="securityLoginForm" style="text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: #a0a0a0; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Email Address</label>
+                    <input type="email" id="securityEmail" required style="
+                        width: 100%;
+                        padding: 12px 16px;
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 6px;
+                        color: #fff;
+                        font-size: 0.85rem;
+                        font-family: 'Inter', sans-serif;
+                        box-sizing: border-box;
+                        transition: border-color 0.2s;
+                    " placeholder="curator@chenari.com">
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; color: #a0a0a0; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Password</label>
+                    <input type="password" id="securityPassword" required style="
+                        width: 100%;
+                        padding: 12px 16px;
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 6px;
+                        color: #fff;
+                        font-size: 0.85rem;
+                        font-family: 'Inter', sans-serif;
+                        box-sizing: border-box;
+                        transition: border-color 0.2s;
+                    " placeholder="••••••••">
+                </div>
+                
+                <div id="securityLoginError" style="
+                    color: #ff3b30;
+                    font-size: 0.8rem;
+                    margin-bottom: 20px;
+                    text-align: center;
+                    display: none;
+                "></div>
+
+                <button type="submit" id="securityLoginBtn" style="
+                    width: 100%;
+                    padding: 14px 28px;
+                    background: #fff;
+                    color: #000;
+                    border: none;
+                    border-radius: 6px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 1.5px;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: background 0.2s, transform 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                ">Unlock Portal</button>
+            </form>
+        </div>
+        <style>
+            #adminSecurityCurtain {
+                background: rgba(10, 10, 10, 0.8) !important;
+                backdrop-filter: blur(15px) !important;
+            }
+            .security-card-modal input:focus {
+                outline: none;
+                border-color: rgba(255,255,255,0.3) !important;
+            }
+        </style>
+    `;
+
+    // Smooth card scale-up and opacity fade-in
+    const card = curtain.querySelector('.security-card-modal');
+    setTimeout(() => {
+        if (card) {
+            card.style.transform = 'scale(1)';
+            card.style.opacity = '1';
+        }
+    }, 50);
+
+    const loginForm = curtain.querySelector('#securityLoginForm');
+    if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = curtain.querySelector('#securityEmail').value.trim();
+            const password = curtain.querySelector('#securityPassword').value;
+            const errorDiv = curtain.querySelector('#securityLoginError');
+            const submitBtn = curtain.querySelector('#securityLoginBtn');
+
+            try {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                submitBtn.disabled = true;
+                errorDiv.style.display = 'none';
+
+                // Authenticate strictly via Firebase Authentication
+                await signInWithEmailAndPassword(auth, email, password);
+                // On successful authentication, the reactive onAuthStateChanged will handle the rest!
+            } catch (err) {
+                console.error("Popup login failure:", err);
+                let msg = "Invalid email or password.";
+                if (err.code === 'auth/too-many-requests') msg = "Too many attempts. Try again later.";
+                errorDiv.innerText = msg;
+                errorDiv.style.display = 'block';
+                submitBtn.innerHTML = 'Unlock Portal';
+                submitBtn.disabled = false;
+            }
+        };
+    }
+};
+
 // Route Protection Logic
 onAuthStateChanged(auth, async (user) => {
     const curtain = document.getElementById('adminSecurityCurtain');
     
     if (!user) {
-        // Unauthenticated -> redirect to login immediately
-        window.location.href = 'login.html';
+        // Unauthenticated -> Show login popup modal instead of page redirect
+        showSecurityCuratorLoginModal();
         return;
     }
 
