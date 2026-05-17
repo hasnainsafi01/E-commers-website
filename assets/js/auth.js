@@ -19,6 +19,7 @@ const syncUserToFirestore = async (user) => {
         // New user profile
         await setDoc(userRef, {
             uid: user.uid,
+            name: user.displayName || 'Luxury Connoisseur', // Added name
             displayName: user.displayName || 'Luxury Connoisseur',
             email: user.email,
             photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=random`,

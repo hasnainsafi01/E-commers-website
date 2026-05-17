@@ -87,7 +87,7 @@
 
     <!-- Edit Profile Modal -->
     <div id="editProfileModal" class="auth-modal-overlay">
-        <div class="auth-modal-content edit-profile-content">
+        <div class="auth-modal-content edit-profile-content" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);">
             <button id="closeEditProfileBtn" class="modal-close-btn">&times;</button>
             <div class="auth-modal-header" style="margin-bottom: 20px;">
                 <h2 class="serif">Edit Profile</h2>
@@ -99,7 +99,7 @@
                     <label for="profileImageInput" class="upload-circle" style="cursor: pointer; display: inline-block; position: relative;">
                         <img id="editModalImagePreview" src="https://ui-avatars.com/api/?name=User" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--nav-border);">
                         <div style="position: absolute; bottom: 0; right: 0; background: var(--primary-blue); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                            <i class="fas fa-pencil-alt" style="font-size: 12px;"></i>
+                            <i class="fas fa-camera" style="font-size: 12px;"></i>
                         </div>
                     </label>
                     <input type="file" id="profileImageInput" accept="image/jpeg, image/png, image/webp" style="display: none;">
@@ -110,7 +110,15 @@
                     <input type="text" id="editFullName" required>
                 </div>
                 
-                <button type="submit" class="login-btn" style="margin-top: 10px;">Save Changes</button>
+                <div class="form-group">
+                    <label for="editEmail">Email Address</label>
+                    <input type="email" id="editEmail" readonly style="background-color: #f5f5f5; cursor: not-allowed; color: #777;">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="button" id="cancelEditProfileBtn" class="btn-secondary" style="flex: 1; padding: 12px;">Cancel</button>
+                    <button type="submit" class="login-btn" style="flex: 1; margin-top: 0;">Save Changes</button>
+                </div>
             </form>
         </div>
     </div>

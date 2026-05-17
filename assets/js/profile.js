@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Populate edit modal
         document.getElementById('editFullName').value = displayName;
+        document.getElementById('editEmail').value = user.email;
         document.getElementById('editModalImagePreview').src = photoURL;
 
         // 3. Fetch Real Stats
@@ -52,45 +53,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit Profile Modal Logic
     const editModal = document.getElementById('editProfileModal');
-    const openBtn1 = document.getElementById('editProfileSidebarBtn');
-    const openBtn2 = document.getElementById('editAvatarBtn');
-    const closeBtn = document.getElementById('closeEditProfileBtn');
+    
+    // Robust event binding function
+    const bindModalEvents = () => {
+        const openBtn1 = document.getElementById('editProfileSidebarBtn');
+        const openBtn2 = document.getElementById('editAvatarBtn');
+        const closeBtn = document.getElementById('closeEditProfileBtn');
+        const cancelBtn = document.getElementById('cancelEditProfileBtn');
 
-    const openEditProfileModal = () => {
-        if(editModal) editModal.classList.add('active');
+        const openEditProfileModal = () => {
+            if(editModal) editModal.classList.add('active');
+        };
+        
+        const closeEditProfileModal = () => {
+            if(editModal) editModal.classList.remove('active');
+        };
+
+        if(openBtn1) openBtn1.addEventListener('click', openEditProfileModal);
+        if(openBtn2) openBtn2.addEventListener('click', openEditProfileModal);
+        if(closeBtn) closeBtn.addEventListener('click', closeEditProfileModal);
+        if(cancelBtn) cancelBtn.addEventListener('click', closeEditProfileModal);
+
+        // Close on outside click
+        if(editModal) {
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) closeEditProfileModal();
+            });
+        }
     };
     
-    const closeEditProfileModal = () => {
-        if(editModal) editModal.classList.remove('active');
-    };
-
-    if(openBtn1) openBtn1.addEventListener('click', openEditProfileModal);
-    if(openBtn2) openBtn2.addEventListener('click', openEditProfileModal);
-    if(closeBtn) closeBtn.addEventListener('click', closeEditProfileModal);
-
-    // Close on outside click
-    if(editModal) {
-        editModal.onclick = (e) => {
-            if (e.target === editModal) closeEditProfileModal();
-        };
-    }
+    bindModalEvents();
 
     // Handle Image Preview
     const imageInput = document.getElementById('profileImageInput');
     const previewImage = document.getElementById('editModalImagePreview');
     let selectedImageFile = null;
 
-    imageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            selectedImageFile = file;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    // Fallback click handler on overlay to guarantee file input triggers
+    const uploadLabel = document.querySelector('.upload-circle');
+    if (uploadLabel) {
+        uploadLabel.addEventListener('click', (e) => {
+            // Only trigger if click wasn't already on the input to avoid double firing
+            if (e.target !== imageInput) {
+                imageInput.click();
+            }
+        });
+    }
+
+    if (imageInput) {
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedImageFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if (previewImage) previewImage.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
     // Cloudinary Upload Helper
     const uploadToCloudinary = async (file) => {
@@ -136,25 +158,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 photoURL: updatedPhotoURL
             });
 
-            // 3. Update Firestore Document
+            // 3. Update Firestore Document (strict requested structure)
             const userRef = doc(db, 'users', currentAuthUser.uid);
             await setDoc(userRef, {
-                displayName: newName,
+                name: newName,
+                displayName: newName, // Keeping displayName for backwards compatibility
+                email: currentAuthUser.email,
                 photoURL: updatedPhotoURL
             }, { merge: true });
 
             // 4. Update UI instantly
-            document.getElementById('userProfileName').innerText = newName;
-            document.getElementById('userProfileImage').src = updatedPhotoURL;
-            if (document.getElementById('globalNavAvatar')) {
-                document.getElementById('globalNavAvatar').src = updatedPhotoURL;
-            }
-            if (document.getElementById('globalNavName')) {
-                document.getElementById('globalNavName').innerText = newName;
-            }
+            if (document.getElementById('userProfileName')) document.getElementById('userProfileName').innerText = newName;
+            if (document.getElementById('userProfileImage')) document.getElementById('userProfileImage').src = updatedPhotoURL;
+            if (document.getElementById('globalNavAvatar')) document.getElementById('globalNavAvatar').src = updatedPhotoURL;
+            if (document.getElementById('globalNavName')) document.getElementById('globalNavName').innerText = newName;
 
             window.showToast('Profile updated successfully!');
-            closeEditProfileModal();
+            if (editModal) editModal.classList.remove('active');
 
         } catch (error) {
             console.error("Error updating profile:", error);
