@@ -75,21 +75,32 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
                 submitBtn.disabled = true;
+
+                // 1. Firebase Authentication ONLY Verification
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                await syncUserToFirestore(userCredential.user);
-                
-                // Fetch role and redirect dynamically
-                const userRef = doc(db, 'users', userCredential.user.uid);
-                const userSnap = await getDoc(userRef);
-                const role = userSnap.exists() ? userSnap.data().role : 'user';
-                
+
+                // 2. Failsafe Firestore Role Fetch (No Firestore issue will block successful auth login)
+                let role = 'user';
+                try {
+                    await syncUserToFirestore(userCredential.user);
+                    const userRef = doc(db, 'users', userCredential.user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        role = userSnap.data().role || 'user';
+                    }
+                } catch (firestoreErr) {
+                    console.warn("Failsafe Firestore role resolve failed, defaulting to 'user':", firestoreErr);
+                }
+
+                // 3. Dynamic redirection
                 if (role === 'admin') {
                     window.location.href = 'admin.html';
                 } else {
                     window.location.href = 'index.html';
                 }
-            } catch (error) {
-                showAuthError(error.code);
+            } catch (authError) {
+                console.error("Firebase Authentication Failure:", authError);
+                showAuthError(authError.code);
             } finally {
                 submitBtn.innerText = 'Login';
                 submitBtn.disabled = false;
