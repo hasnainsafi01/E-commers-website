@@ -363,3 +363,177 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = 'index.html';
     }
 });
+
+// Centered luxury confirmation logout modal popup
+const showAdminLogoutConfirmationModal = () => {
+    let curtain = document.getElementById('adminSecurityCurtain');
+    if (!curtain) {
+        curtain = document.createElement('div');
+        curtain.id = 'adminSecurityCurtain';
+        curtain.style.position = 'fixed';
+        curtain.style.top = '0';
+        curtain.style.left = '0';
+        curtain.style.width = '100vw';
+        curtain.style.height = '100vh';
+        curtain.style.background = 'rgba(10, 10, 10, 0.8)';
+        curtain.style.backdropFilter = 'blur(15px)';
+        curtain.style.zIndex = '99999';
+        curtain.style.display = 'flex';
+        curtain.style.alignItems = 'center';
+        curtain.style.justifyContent = 'center';
+        curtain.style.transition = 'opacity 0.5s ease, visibility 0.5s ease';
+        document.body.appendChild(curtain);
+    } else {
+        curtain.style.opacity = '1';
+        curtain.style.visibility = 'visible';
+    }
+
+    curtain.innerHTML = `
+        <div class="security-card-modal logout-confirm-modal" style="
+            max-width: 400px;
+            width: 90%;
+            background: rgba(18, 18, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+            font-family: 'Inter', sans-serif;
+        ">
+            <div style="
+                width: 70px;
+                height: 70px;
+                background: rgba(255, 59, 48, 0.08);
+                border: 1px solid rgba(255, 59, 48, 0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 25px auto;
+                color: #ff3b30;
+                font-size: 1.8rem;
+            ">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <h2 style="
+                font-family: 'Playfair Display', serif;
+                color: #fff;
+                font-size: 1.6rem;
+                letter-spacing: 0.5px;
+                margin-bottom: 12px;
+                font-weight: 400;
+            ">Confirm Logout</h2>
+            <p style="
+                color: #a0a0a0;
+                font-size: 0.85rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            ">Are you sure you want to fully log out of your administrative CHENARI session?</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="adminConfirmLogoutBtn" style="
+                    flex: 1;
+                    padding: 12px 20px;
+                    background: #ff3b30;
+                    color: #fff;
+                    border: none;
+                    border-radius: 6px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                ">Log Out</button>
+                <button id="adminCancelLogoutBtn" style="
+                    flex: 1;
+                    padding: 12px 20px;
+                    background: rgba(255,255,255,0.08);
+                    color: #fff;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 6px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                ">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    // Smooth card scale-up and opacity fade-in
+    const card = curtain.querySelector('.security-card-modal');
+    setTimeout(() => {
+        if (card) {
+            card.style.transform = 'scale(1)';
+            card.style.opacity = '1';
+        }
+    }, 50);
+
+    const cancelBtn = curtain.querySelector('#adminCancelLogoutBtn');
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            if (card) {
+                card.style.transform = 'scale(0.9)';
+                card.style.opacity = '0';
+            }
+            setTimeout(() => {
+                curtain.style.opacity = '0';
+                curtain.style.visibility = 'hidden';
+            }, 300);
+        };
+    }
+
+    const confirmBtn = curtain.querySelector('#adminConfirmLogoutBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = async () => {
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+            confirmBtn.disabled = true;
+            if (cancelBtn) cancelBtn.disabled = true;
+
+            try {
+                // 1. Fully sign out from Firebase Authentication
+                await signOut(auth);
+
+                // 2. Clear all browser storages
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // 3. Smooth card scale-down and opacity fade-out
+                if (card) {
+                    card.style.transform = 'scale(0.9)';
+                    card.style.opacity = '0';
+                }
+                curtain.style.opacity = '0';
+                curtain.style.visibility = 'hidden';
+
+                // 4. Redirect to homepage
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+
+            } catch (err) {
+                console.error("Administrative logout failure:", err);
+                window.location.href = 'index.html';
+            }
+        };
+    }
+};
+
+// Bind to DOMContentLoaded to capture all admin sidebar footer logout button clicks programmatically
+document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.querySelector('.sidebar-footer a[href="index.html"]');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAdminLogoutConfirmationModal();
+        });
+    }
+});
