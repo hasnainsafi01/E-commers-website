@@ -18,53 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let pendingAction = null;
 
-    // Listen for Auth State
-    onAuthStateChanged(auth, async (user) => {
-        currentUser = user;
-        if (user && pendingAction) {
-            executePendingAction();
-        }
-
-        if (user) {
-            // Prevent repeated popups during the same active browser session
-            const sessionKey = `chenari_greeted_${user.uid}`;
-            if (sessionStorage.getItem(sessionKey)) return;
-
-            try {
-                const userRef = doc(db, 'users', user.uid);
-                const userSnap = await getDoc(userRef);
-                
-                let userName = 'Guest';
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    userName = userData.name || userData.displayName || user.displayName || 'Guest';
-                } else {
-                    userName = user.displayName || 'Guest';
-                }
-
-                // Slice first name for professional luxury personalization
-                if (userName && userName !== 'Guest') {
-                    userName = userName.split(' ')[0];
-                }
-
-                // Check localStorage to determine if first time or returning visitor
-                const returnKey = `chenari_returning_${user.uid}`;
-                const isReturning = localStorage.getItem(returnKey) === 'true';
-
-                // Display dynamic luxury onboarding welcome popup
-                showWelcomePopup(userName, !isReturning);
-
-                // Set flags to prevent repeated greetings
-                localStorage.setItem(returnKey, 'true');
-                sessionStorage.setItem(sessionKey, 'true');
-
-            } catch (e) {
-                console.error("Welcome popup system resolve error:", e);
-            }
-        }
-    });
-
-    // Welcome Popup Implementation
+    // Welcome Popup Implementation (Declared at the top to prevent temporal dead zone ReferenceErrors)
     const showWelcomePopup = (userName, isFirstVisit) => {
         const greeting = isFirstVisit 
             ? `Welcome to CHENARI, ${userName}`
@@ -163,17 +117,87 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.visibility = 'visible';
             card.style.transform = 'translateY(0) scale(1)';
             card.style.opacity = '1';
+            console.log("Welcome Popup Rendered Successfully - Target Greeting:", greeting);
         }, 100);
 
-        // Auto close after 2.8 seconds
+        // Auto close after 2.5 seconds
         setTimeout(() => {
             card.style.transform = 'translateY(-15px) scale(0.97)';
             card.style.opacity = '0';
             overlay.style.opacity = '0';
             overlay.style.visibility = 'hidden';
             setTimeout(() => overlay.remove(), 600);
-        }, 2800);
+            console.log("Welcome Popup Closed Automatically.");
+        }, 2500);
     };
+
+    // Listen for Auth State
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (user && pendingAction) {
+            executePendingAction();
+        }
+
+        if (user) {
+            // Prevent repeated popups during the same active browser session
+            const sessionKey = `chenari_greeted_${user.uid}`;
+            if (sessionStorage.getItem(sessionKey)) {
+                console.log("User already greeted this session - Greet Blocked. UID:", user.uid);
+                return;
+            }
+
+            console.log("Auth state loaded successfully. Welcome Popup checks running - UID:", user.uid);
+
+            try {
+                // Fetch dynamic name with secure fallback tree:
+                // 1. Firestore name/displayName -> 2. Auth displayName -> 3. Email username -> 4. Guest
+                let userName = user.displayName || '';
+                if (!userName && user.email) {
+                    userName = user.email.split('@')[0];
+                }
+
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        userName = userData.name || userData.displayName || userName || 'Guest';
+                    }
+                } catch (fsErr) {
+                    console.warn("Firestore welcome name check skipped/failed:", fsErr);
+                }
+
+                if (!userName || userName === 'Guest') {
+                    userName = 'Guest';
+                }
+
+                // Slice first name for dynamic premium onboarding look
+                if (userName && userName !== 'Guest') {
+                    userName = userName.split(' ')[0];
+                }
+
+                console.log("Welcome Popup Target User Name Resolved:", userName);
+
+                // Check localStorage using required visitedUser_UID flag format
+                const returnKey = `visitedUser_${user.uid}`;
+                const isFirstVisit = !localStorage.getItem(returnKey);
+
+                console.log("Welcome Popup First Visit Status:", isFirstVisit ? "FIRST TIME" : "RETURNING VISIT");
+
+                // Display dynamic luxury welcome popup modal
+                showWelcomePopup(userName, isFirstVisit);
+
+                // Set visited flags to prevent duplicate greetings
+                localStorage.setItem(returnKey, 'true');
+                sessionStorage.setItem(sessionKey, 'true');
+
+            } catch (e) {
+                console.error("Welcome popup system trigger failed:", e);
+            }
+        } else {
+            console.log("Auth State Changed: Guest user (No authenticated session).");
+        }
+    });
 
     // 1. Sticky Navbar
     window.addEventListener('scroll', () => {
