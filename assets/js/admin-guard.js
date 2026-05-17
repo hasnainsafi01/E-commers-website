@@ -23,7 +23,7 @@ const injectSecurityCurtain = () => {
         <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
             <h2 style="font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 20px; font-weight: 400; text-transform: uppercase;">Atelier CHENARI</h2>
             <div class="security-spinner" style="width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; margin: 0 auto; animation: securitySpin 1s linear infinite;"></div>
-            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px;">Verifying Curator Credentials...</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px;">Checking permissions...</p>
         </div>
         <style>
             @keyframes securitySpin {
@@ -339,7 +339,10 @@ onAuthStateChanged(auth, async (user) => {
             const userData = userSnap.data();
             
             if (userData.role === 'admin') {
-                // Admin authorized -> Fade out security curtain
+                // Admin authorized -> Add authenticated reveal class to body
+                document.body.classList.add('authenticated-admin');
+                
+                // Fade out security curtain
                 if (curtain) {
                     curtain.style.opacity = '0';
                     curtain.style.visibility = 'hidden';

@@ -40,7 +40,11 @@ body {
 }
 
 .admin-wrapper {
-    display: flex;
+    display: none !important;
+}
+
+body.authenticated-admin .admin-wrapper {
+    display: flex !important;
     min-height: 100vh;
 }
 
