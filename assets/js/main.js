@@ -1,5 +1,5 @@
 import { db, auth, googleProvider } from './firebase-config.js';
-import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, limit, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,12 +13,59 @@ document.addEventListener('DOMContentLoaded', () => {
     let pendingAction = null;
 
     // Listen for Auth State
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         if (user && pendingAction) {
             executePendingAction();
         }
+
+        if (user) {
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    if (!userData.welcomeShown) {
+                        showWelcomeModal();
+                        await updateDoc(userRef, { welcomeShown: true });
+                    }
+                }
+            } catch(e) {
+                console.error("Error checking welcome status:", e);
+            }
+        }
     });
+
+    // Welcome Modal Implementation
+    const showWelcomeModal = () => {
+        const modalHTML = `
+            <div id="welcomeModal" class="auth-modal-overlay">
+                <div class="auth-modal-content" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);">
+                    <div style="margin-bottom: 20px;">
+                        <h1 class="serif" style="font-size: 2rem; letter-spacing: 5px; color: #111;">CHENARI</h1>
+                    </div>
+                    <h2 class="serif" style="font-size: 2.5rem; color: #111; margin-bottom: 10px;">Welcome</h2>
+                    <p style="color: #555; font-size: 1.1rem; margin-bottom: 20px;">Enjoy your premium shopping experience.</p>
+                    <button id="closeWelcomeBtn" class="btn-primary" style="background: #111; color: white; width: 100%; border-radius: 12px; padding: 15px;">Start Shopping</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = document.getElementById('welcomeModal');
+        
+        // Auto show with animation
+        setTimeout(() => modal.classList.add('active'), 500);
+
+        const closeWelcome = () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 500);
+        };
+
+        document.getElementById('closeWelcomeBtn').onclick = closeWelcome;
+        
+        // Auto close after 5 seconds
+        setTimeout(closeWelcome, 5000);
+    };
 
     // 1. Sticky Navbar
     window.addEventListener('scroll', () => {

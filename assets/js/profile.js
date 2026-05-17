@@ -52,19 +52,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit Profile Modal Logic
     const editModal = document.getElementById('editProfileModal');
-    
-    window.openEditProfileModal = () => {
-        editModal.classList.add('active');
+    const openBtn1 = document.getElementById('editProfileSidebarBtn');
+    const openBtn2 = document.getElementById('editAvatarBtn');
+    const closeBtn = document.getElementById('closeEditProfileBtn');
+
+    const openEditProfileModal = () => {
+        if(editModal) editModal.classList.add('active');
     };
     
-    window.closeEditProfileModal = () => {
-        editModal.classList.remove('active');
+    const closeEditProfileModal = () => {
+        if(editModal) editModal.classList.remove('active');
     };
 
+    if(openBtn1) openBtn1.addEventListener('click', openEditProfileModal);
+    if(openBtn2) openBtn2.addEventListener('click', openEditProfileModal);
+    if(closeBtn) closeBtn.addEventListener('click', closeEditProfileModal);
+
     // Close on outside click
-    editModal.onclick = (e) => {
-        if (e.target === editModal) closeEditProfileModal();
-    };
+    if(editModal) {
+        editModal.onclick = (e) => {
+            if (e.target === editModal) closeEditProfileModal();
+        };
+    }
 
     // Handle Image Preview
     const imageInput = document.getElementById('profileImageInput');

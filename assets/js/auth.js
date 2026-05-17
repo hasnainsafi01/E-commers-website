@@ -23,6 +23,7 @@ const syncUserToFirestore = async (user) => {
             email: user.email,
             photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=random`,
             role: 'user', // default role
+            welcomeShown: false,
             createdAt: serverTimestamp(),
             lastLogin: serverTimestamp(),
             bio: 'Welcome to your premium CHENARI profile.'
@@ -154,21 +155,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Reset Password
     if (forgotBtn) {
-        forgotBtn.addEventListener('click', async (e) => {
+        forgotBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const email = prompt("Enter your registered email address:");
-            if (email) {
+            const modal = document.getElementById('forgotPasswordModal');
+            if(modal) {
+                modal.classList.add('active');
+            }
+        });
+
+        const forgotForm = document.getElementById('forgotPasswordForm');
+        if(forgotForm) {
+            forgotForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = forgotForm.resetEmail.value.trim();
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                     return window.showToast("Invalid email format.", "error");
                 }
+                
+                const submitBtn = forgotForm.querySelector('button[type="submit"]');
                 try {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                    submitBtn.disabled = true;
                     await sendPasswordResetEmail(auth, email);
                     window.showToast("A reset link has been sent to your email.");
+                    document.getElementById('forgotPasswordModal').classList.remove('active');
+                    forgotForm.reset();
                 } catch (error) {
                     showAuthError(error.code);
+                } finally {
+                    submitBtn.innerText = 'Send Reset Link';
+                    submitBtn.disabled = false;
                 }
-            }
-        });
+            });
+        }
+        
+        // Close modal logic
+        const closeForgotBtn = document.getElementById('closeForgotModal');
+        if(closeForgotBtn) {
+            closeForgotBtn.onclick = (e) => {
+                e.preventDefault();
+                document.getElementById('forgotPasswordModal').classList.remove('active');
+            };
+        }
     }
 
     function showAuthError(code) {

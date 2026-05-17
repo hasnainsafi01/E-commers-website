@@ -59,7 +59,26 @@
     </div>
 
     <!-- Scripts -->
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="auth-modal-overlay">
+        <div class="auth-modal-content">
+            <button id="closeForgotModal" class="modal-close-btn">&times;</button>
+            <div class="auth-modal-header" style="margin-bottom: 20px;">
+                <h2 class="serif">Reset Password</h2>
+                <p>Enter your email to receive a password reset link.</p>
+            </div>
+            <form id="forgotPasswordForm" class="auth-form" style="text-align: left;">
+                <div class="form-group">
+                    <label for="resetEmail">Email Address</label>
+                    <input type="email" id="resetEmail" required>
+                </div>
+                <button type="submit" class="login-btn" style="margin-top: 10px;">Send Reset Link</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
     <script>
         // Simple Theme Check for Login Page
         const currentTheme = localStorage.getItem('theme') || 'light';
