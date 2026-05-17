@@ -149,4 +149,139 @@ document.addEventListener('DOMContentLoaded', () => {
         await deleteDoc(itemRef);
         window.showToast('Removed from collection.');
     };
+
+    // Atomic Checkout and Stock Deduction Listener
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', async () => {
+            if (!currentUser) {
+                window.showToast('Please login to place an order.', 'error');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                return;
+            }
+
+            // Get items currently in the cart
+            const cartRef = collection(db, `users/${currentUser.uid}/cart`);
+            const cartSnap = await getDocs(cartRef);
+            const cartItems = [];
+            cartSnap.forEach(docSnap => {
+                cartItems.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            if (cartItems.length === 0) {
+                window.showToast('Your shopping bag is empty.', 'error');
+                return;
+            }
+
+            try {
+                checkoutBtn.disabled = true;
+                checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Order...';
+
+                // 1. Verify and transactionally check stock for all products
+                const { writeBatch } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+                const batch = writeBatch(db);
+
+                for (const item of cartItems) {
+                    const productRef = doc(db, 'products', item.id);
+                    const productSnap = await getDoc(productRef);
+                    if (!productSnap.exists()) {
+                        throw new Error(`Product ${item.title} no longer exists in the collection.`);
+                    }
+
+                    const productData = productSnap.data();
+                    const currentStock = productData.stock || 0;
+                    if (currentStock < item.quantity) {
+                        throw new Error(`Insufficient stock for "${item.title}". Only ${currentStock} remaining.`);
+                    }
+
+                    // Calculate updated stocks and sales
+                    const newStock = currentStock - item.quantity;
+                    const newSold = (productData.sold || 0) + item.quantity;
+
+                    // Queue updates in writeBatch
+                    batch.update(productRef, {
+                        stock: newStock,
+                        sold: newSold
+                    });
+                }
+
+                // 2. Generate a random unique Order ID
+                const randomId = Math.floor(1000 + Math.random() * 9000);
+                const orderIdStr = `ORD-${randomId}`;
+
+                // Calculate summary details
+                const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const tax = subtotal * 0.08;
+                const shipping = subtotal > 0 ? 45 : 0;
+                const grandTotal = subtotal + tax + shipping;
+
+                // 3. Get user details for order documentation
+                const userRef = doc(db, 'users', currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                const userData = userSnap.exists() ? userSnap.data() : {};
+                const customerName = userData.name || userData.displayName || currentUser.displayName || 'Luxury Client';
+                const customerEmail = userData.email || currentUser.email || 'guest@example.com';
+                const customerAddress = userData.address || 'Atelier Premium Delivery Address';
+
+                // 4. Create Order document in global orders collection
+                const newOrderRef = doc(collection(db, 'orders'));
+                const orderDocData = {
+                    orderId: orderIdStr,
+                    userId: currentUser.uid,
+                    customerName: customerName,
+                    client: {
+                        name: customerName,
+                        email: customerEmail,
+                        address: customerAddress
+                    },
+                    items: cartItems.map(item => ({
+                        productId: item.id,
+                        title: item.title,
+                        price: item.price,
+                        qty: item.quantity,
+                        image: item.image
+                    })),
+                    total: grandTotal,
+                    subtotal: subtotal,
+                    shipping: shipping,
+                    status: 'Pending',
+                    date: new Date(),
+                    createdAt: serverTimestamp()
+                };
+
+                // Queue order creation in writeBatch
+                batch.set(newOrderRef, orderDocData);
+
+                // 5. Queue clearing the cart items
+                for (const item of cartItems) {
+                    const cartItemRef = doc(db, `users/${currentUser.uid}/cart`, item.id);
+                    batch.delete(cartItemRef);
+                }
+
+                // 6. Commit the entire transaction atomically!
+                await batch.commit();
+
+                // 7. Show success feedback
+                window.showToast('Order Placed Successfully! Thank you.');
+                
+                // Clear cart badge
+                const badges = document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge');
+                badges.forEach(badge => {
+                    badge.innerText = '0';
+                    badge.style.display = 'none';
+                });
+
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error("Checkout Failure:", error);
+                window.showToast(error.message || 'Checkout failed. Please try again.', 'error');
+            } finally {
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerHTML = 'Proceed to Checkout';
+            }
+        });
+    }
 });

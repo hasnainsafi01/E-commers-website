@@ -447,6 +447,7 @@ body {
 /* Responsive Styles */
 @media (max-width: 1200px) {
     .charts-row { grid-template-columns: 1fr; }
+    .bottom-row { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 992px) {

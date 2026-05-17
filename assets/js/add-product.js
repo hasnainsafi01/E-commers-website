@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 price: parseFloat(document.getElementById('prodPrice').value),
                 discount: parseFloat(document.getElementById('prodDiscount').value) || 0,
                 stock: parseInt(document.getElementById('prodStock').value),
+                sold: 0, // Default sold count initialized to 0
                 category: document.getElementById('prodCategory').value,
                 description: document.getElementById('prodDesc').value,
                 images: imageUrls,

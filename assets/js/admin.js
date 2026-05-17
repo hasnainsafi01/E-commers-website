@@ -183,6 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Populate Trending Section with Real Top Pieces
             populateTrendingProducts(products.slice(0, 3));
+
+            // Populate Low Stock Alerts dynamically
+            populateLowStockAlerts(products);
         });
 
         // C. Real-Time Users/Members Listener
@@ -258,6 +261,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="info">
                         <h3 style="font-weight: 600;">${prod.title || 'Piece'}</h3>
                         <p>${price}</p>
+                    </div>
+                </li>
+            `;
+        });
+    };
+
+    const populateLowStockAlerts = (products) => {
+        const alertsList = document.getElementById('lowStockAlertsList');
+        if (!alertsList) return;
+
+        // Filter products with stock < 10 (or customize limit)
+        const lowStockItems = products.filter(p => (p.stock !== undefined ? p.stock : 0) < 10);
+
+        if (lowStockItems.length === 0) {
+            alertsList.innerHTML = `
+                <li style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--admin-text-secondary); text-align: center; padding: 40px 0;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; font-size: 2.5rem; margin-bottom: 15px; opacity: 0.8;"></i>
+                    <span style="font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">All Stocks Healthy</span>
+                </li>
+            `;
+            return;
+        }
+
+        alertsList.innerHTML = '';
+        lowStockItems.forEach(prod => {
+            const imageUrl = (prod.images && prod.images.length > 0) ? prod.images[0] : 'https://ui-avatars.com/api/?name=Piece';
+            const stockText = prod.stock === 0 ? 'Out of Stock' : `${prod.stock} left in stock`;
+            const stockColor = prod.stock === 0 ? '#ff3b30' : '#ebac14';
+            alertsList.innerHTML += `
+                <li class="trending-item" style="border-bottom: 1px solid var(--admin-border); padding-bottom: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px;">
+                    <img src="${imageUrl}" alt="${prod.title || 'Product'}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(prod.title || 'Product')}&background=random'" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">
+                    <div class="info" style="flex: 1;">
+                        <h3 style="font-weight: 600; margin: 0 0 5px 0; font-size: 0.9rem;">${prod.title || 'Piece'}</h3>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: ${stockColor}; text-transform: uppercase; letter-spacing: 0.5px;">${stockText}</span>
                     </div>
                 </li>
             `;

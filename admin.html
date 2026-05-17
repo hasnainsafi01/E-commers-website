@@ -151,31 +151,45 @@
                 </div>
             </div>
 
-            <!-- Recent Acquisitions -->
-            <div class="recent-acquisitions">
-                <div class="table-header">
-                    <h2 class="serif">Recent Acquisitions</h2>
-                    <div class="table-actions">
-                        <i class="fas fa-sliders-h"></i>
-                        <i class="fas fa-download"></i>
+            <!-- Bottom Row -->
+            <div class="bottom-row" style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 30px; margin-top: 40px; margin-bottom: 40px;">
+                <!-- Recent Acquisitions -->
+                <div class="recent-acquisitions" style="margin-top: 0;">
+                    <div class="table-header">
+                        <h2 class="serif">Recent Acquisitions</h2>
+                        <div class="table-actions">
+                            <i class="fas fa-sliders-h"></i>
+                            <i class="fas fa-download"></i>
+                        </div>
                     </div>
+
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Items</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersBody">
+                            <!-- Dynamic orders injected here -->
+                        </tbody>
+                    </table>
+                    <a href="orders.html" class="view-ledger">View Full Ledger</a>
                 </div>
 
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Items</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentOrdersBody">
-                        <!-- Dynamic orders injected here -->
-                    </tbody>
-                </table>
-                <a href="#" class="view-ledger">View Full Ledger</a>
+                <!-- Low Stock Alerts -->
+                <div class="trending-card low-stock-card" style="display: flex; flex-direction: column; background-color: var(--admin-card-bg); border: 1px solid var(--admin-border); padding: 30px; border-radius: 12px;">
+                    <div class="card-header" style="margin-bottom: 25px;">
+                        <h2 class="serif" style="margin: 0; font-size: 1.5rem;">Low Stock Alerts</h2>
+                    </div>
+                    <ul class="trending-list" id="lowStockAlertsList" style="list-style: none; padding: 0; margin: 0; flex: 1; min-height: 200px;">
+                        <!-- Dynamic low stock alerts loaded here -->
+                    </ul>
+                    <button class="view-inventory-btn" onclick="window.location.href='manage-products.html'" style="margin-top: 20px;">Restock Collection</button>
+                </div>
             </div>
         </main>
     </div>
