@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const orderDocData = {
                     orderId: orderIdStr,
                     userId: currentUser.uid,
+                    customerUid: currentUser.uid, // Add this for profile.js compatibility
                     customerName: customerName,
                     client: {
                         name: customerName,
