@@ -35,13 +35,16 @@
     <main class="profile-container">
         <!-- Sidebar: User Info -->
         <aside class="profile-sidebar">
-            <div class="profile-avatar">
+            <div class="profile-avatar-container">
                 <img id="userProfileImage" src="https://ui-avatars.com/api/?name=User" alt="User">
+                <div class="avatar-edit-overlay" onclick="openEditProfileModal()">
+                    <i class="fas fa-camera"></i>
+                </div>
             </div>
             <h1 id="userProfileName" class="profile-name serif">Loading...</h1>
             <p id="userProfileEmail" class="profile-email">---</p>
             
-            <button class="edit-profile-btn">Edit Profile</button>
+            <button class="edit-profile-btn" onclick="openEditProfileModal()">Edit Profile</button>
             
             <button id="profileLogoutBtn" class="logout-btn-large">
                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -50,7 +53,7 @@
 
         <!-- Main Content: Stats & History -->
         <section class="profile-main">
-            <h2 class="serif">Dashboard</h2>
+            <h2 class="serif">Your Activity</h2>
             
             <div class="profile-stats">
                 <div class="stat-card">
@@ -81,6 +84,36 @@
             </div>
         </section>
     </main>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="auth-modal-overlay">
+        <div class="auth-modal-content edit-profile-content">
+            <button class="modal-close-btn" onclick="closeEditProfileModal()">&times;</button>
+            <div class="auth-modal-header" style="margin-bottom: 20px;">
+                <h2 class="serif">Edit Profile</h2>
+                <p>Update your personal information.</p>
+            </div>
+            
+            <form id="editProfileForm" class="auth-form" style="text-align: left;">
+                <div class="image-upload-wrapper" style="text-align: center; margin-bottom: 25px;">
+                    <label for="profileImageInput" class="upload-circle" style="cursor: pointer; display: inline-block; position: relative;">
+                        <img id="editModalImagePreview" src="https://ui-avatars.com/api/?name=User" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--nav-border);">
+                        <div style="position: absolute; bottom: 0; right: 0; background: var(--primary-blue); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            <i class="fas fa-pencil-alt" style="font-size: 12px;"></i>
+                        </div>
+                    </label>
+                    <input type="file" id="profileImageInput" accept="image/jpeg, image/png, image/webp" style="display: none;">
+                </div>
+
+                <div class="form-group">
+                    <label for="editFullName">Full Name</label>
+                    <input type="text" id="editFullName" required>
+                </div>
+                
+                <button type="submit" class="login-btn" style="margin-top: 10px;">Save Changes</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="assets/js/main.js"></script>
