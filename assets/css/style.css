@@ -1589,6 +1589,32 @@ body {
 
 .login-btn:hover { background: #333; transform: translateY(-2px); }
 
+.btn-secondary {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background: rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: rgba(255,255,255,0.05);
+}
+
 .divider {
     text-align: center;
     position: relative;

@@ -77,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const photoURL = currentUserDoc.photoURL || currentAuthUser.photoURL || `https://ui-avatars.com/api/?name=${currentAuthUser.email}`;
                 document.getElementById('editFullName').value = displayName;
                 document.getElementById('editModalImagePreview').src = photoURL;
+                
+                const fileInput = document.getElementById('profileImageInput');
+                if (fileInput) fileInput.value = '';
+                
                 selectedImageFile = null;
             }
         }
