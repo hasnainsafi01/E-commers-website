@@ -77,7 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.disabled = true;
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 await syncUserToFirestore(userCredential.user);
-                window.location.href = 'index.html';
+                
+                // Fetch role and redirect dynamically
+                const userRef = doc(db, 'users', userCredential.user.uid);
+                const userSnap = await getDoc(userRef);
+                const role = userSnap.exists() ? userSnap.data().role : 'user';
+                
+                if (role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
             } catch (error) {
                 showAuthError(error.code);
             } finally {
@@ -100,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!email) return window.showToast('Email Address is required.', 'error');
             
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) return window.showToast('Invalid email address format.', 'error');
+            if (!emailRegex.test(email)) return window.showToast('Please enter a valid email address.', 'error');
             
             if (password.length < 6) return window.showToast('Password must be at least 6 characters.', 'error');
             if (password !== confirmPassword) return window.showToast('Passwords do not match.', 'error');
@@ -136,7 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const result = await signInWithPopup(auth, googleProvider);
                 await syncUserToFirestore(result.user);
-                window.location.href = 'index.html';
+                
+                // Fetch role and redirect dynamically
+                const userRef = doc(db, 'users', result.user.uid);
+                const userSnap = await getDoc(userRef);
+                const role = userSnap.exists() ? userSnap.data().role : 'user';
+                
+                if (role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
             } catch (error) {
                 if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                     showAuthError(error.code);
