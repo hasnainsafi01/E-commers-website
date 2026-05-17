@@ -3,7 +3,7 @@ import { collection, getDocs, deleteDoc, doc, setDoc, updateDoc, query, orderBy,
 
 // Cloudinary Configuration
 const CLOUD_NAME = "dqsvcn94y";
-const UPLOAD_PRESET = "ml_default";
+const UPLOAD_PRESET = "E-commerce";
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {

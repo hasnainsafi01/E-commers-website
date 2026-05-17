@@ -3,7 +3,7 @@ import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/fireb
 import { doc, setDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const CLOUD_NAME = "dqsvcn94y";
-const UPLOAD_PRESET = "ml_default";
+const UPLOAD_PRESET = "E-commerce";
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 let currentUserDoc = null;

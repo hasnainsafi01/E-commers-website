@@ -3,7 +3,7 @@ import { collection, addDoc, serverTimestamp, getDocs, query, orderBy } from "ht
 
 // Cloudinary Configuration
 const CLOUD_NAME = "dqsvcn94y";
-const UPLOAD_PRESET = "ml_default"; // Use an unsigned preset from your Cloudinary settings
+const UPLOAD_PRESET = "E-commerce"; // Use an unsigned preset from your Cloudinary settings
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 document.addEventListener('DOMContentLoaded', () => {
