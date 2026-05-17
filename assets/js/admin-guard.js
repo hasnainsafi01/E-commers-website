@@ -1,5 +1,5 @@
 import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Immediately inject a luxurious loading overlay to prevent flash of restricted content
@@ -38,6 +38,113 @@ const injectSecurityCurtain = () => {
 
 injectSecurityCurtain();
 
+// Render centered modern security access denied modal
+const showAccessDeniedModal = (message, forceSignOut = false) => {
+    const curtain = document.getElementById('adminSecurityCurtain');
+    if (!curtain) return;
+
+    curtain.innerHTML = `
+        <div class="security-card-modal" style="
+            max-width: 450px;
+            width: 90%;
+            background: rgba(18, 18, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+            font-family: 'Inter', sans-serif;
+        ">
+            <div style="
+                width: 70px;
+                height: 70px;
+                background: rgba(255, 59, 48, 0.08);
+                border: 1px solid rgba(255, 59, 48, 0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 25px auto;
+                color: #ff3b30;
+                font-size: 2rem;
+                box-shadow: 0 0 20px rgba(255, 59, 48, 0.1);
+            ">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2 style="
+                font-family: 'Playfair Display', serif;
+                color: #fff;
+                font-size: 1.8rem;
+                letter-spacing: 0.5px;
+                margin-bottom: 12px;
+                font-weight: 400;
+            ">Access Denied</h2>
+            <p style="
+                color: #a0a0a0;
+                font-size: 0.9rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            ">${message}</p>
+            <button id="securityHomeBtn" style="
+                width: 100%;
+                padding: 14px 28px;
+                background: #fff;
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                cursor: pointer;
+                transition: background 0.2s, transform 0.2s;
+            ">Go Back Home</button>
+        </div>
+        <style>
+            #adminSecurityCurtain {
+                background: rgba(10, 10, 10, 0.8) !important;
+                backdrop-filter: blur(15px) !important;
+            }
+        </style>
+    `;
+
+    // Smooth card scale-up and opacity fade-in
+    const card = curtain.querySelector('.security-card-modal');
+    setTimeout(() => {
+        if (card) {
+            card.style.transform = 'scale(1)';
+            card.style.opacity = '1';
+        }
+    }, 50);
+
+    const homeBtn = curtain.querySelector('#securityHomeBtn');
+    if (homeBtn) {
+        homeBtn.onmouseover = () => { homeBtn.style.background = '#e5e5e5'; };
+        homeBtn.onmouseout = () => { homeBtn.style.background = '#fff'; };
+        homeBtn.onclick = async () => {
+            // Animate card scale-down and opacity fade-out
+            if (card) {
+                card.style.transform = 'scale(0.9)';
+                card.style.opacity = '0';
+            }
+            curtain.style.opacity = '0';
+            curtain.style.visibility = 'hidden';
+            
+            if (forceSignOut) {
+                await signOut(auth);
+            }
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+        };
+    }
+};
+
 // Route Protection Logic
 onAuthStateChanged(auth, async (user) => {
     const curtain = document.getElementById('adminSecurityCurtain');
@@ -51,9 +158,10 @@ onAuthStateChanged(auth, async (user) => {
     // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
     const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
     if (isGoogleUser) {
-        alert("Access Denied: Google authenticated accounts are strictly prohibited from accessing the curator dashboard. Please sign in using your designated email and password credentials.");
-        await auth.signOut();
-        window.location.href = 'login.html';
+        showAccessDeniedModal(
+            "Google authenticated accounts are strictly prohibited from accessing the curator dashboard. Please sign in using your designated email and password credentials.",
+            true
+        );
         return;
     }
     
@@ -76,9 +184,11 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
         
-        // Non-admin or doc not found -> Redirect to home page immediately
-        alert("Access Denied: Exclusive Atelier Curators Only.");
-        window.location.href = 'index.html';
+        // Non-admin or doc not found -> Show modern Access Denied modal
+        showAccessDeniedModal(
+            "Exclusive Atelier Curators Only. You are not authorized to access this page.",
+            false
+        );
         
     } catch (error) {
         console.error("Route Guard Security Error:", error);
