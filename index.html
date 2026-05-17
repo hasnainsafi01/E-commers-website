@@ -30,7 +30,8 @@
             <!-- Search Bar (Desktop) -->
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search premium items...">
+                <input type="text" id="globalSearchInput" placeholder="Search premium items...">
+                <div id="searchResults" class="search-results-dropdown hidden"></div>
             </div>
 
             <!-- Nav Actions (Icons & Profile) -->
@@ -39,25 +40,17 @@
                     <i class="fas fa-moon"></i>
                 </div>
 
-                <a href="#favorites" title="Favorites">
+                <a href="favorites.html" title="Favorites" class="auth-guarded" data-action="fav">
                     <i class="far fa-heart"></i>
-                    <span class="badge">2</span>
+                    <span class="badge" style="display:none;">0</span>
                 </a>
 
-                <a href="cart.html" title="Shopping Cart">
+                <a href="cart.html" title="Shopping Cart" class="auth-guarded" data-action="cart">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="badge">3</span>
-                </a>
-
-                <!-- Profile / Login (Simulated Logged Out) -->
-                <!-- Toggle between login-btn and user-profile for demo -->
-                <a href="#login" class="profile-btn">
-                    <i class="fas fa-user-circle"></i>
-                    <span>Login</span>
+                    <span class="badge" style="display:none;">0</span>
                 </a>
                 
-                <!-- If logged in (Hidden by default for demo) -->
-                <!-- <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Profile" class="user-profile"> -->
+                <div id="navbarAuth" class="nav-auth-group"></div>
 
                 <!-- Mobile Menu Toggle -->
                 <div class="mobile-toggle">

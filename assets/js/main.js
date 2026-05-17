@@ -67,7 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="auth-modal-options">
                         <button id="modalGoogleBtn" class="auth-opt-btn google">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listview/google.svg" alt="Google">
+                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="google-icon" style="width: 20px; height: 20px; margin-right: 10px;">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                                <path fill="none" d="M0 0h48v48H0z"></path>
+                            </svg>
                             Continue with Google
                         </button>
                         <div class="auth-divider"><span>OR</span></div>
@@ -112,6 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => document.getElementById('authModal').classList.add('active'), 10);
     };
 
+    // Auth-guard for Navbar Links
+    document.querySelectorAll('.auth-guarded').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (!currentUser) {
+                e.preventDefault();
+                showAuthModal({ type: 'nav', data: { url: link.href } });
+            }
+        });
+    });
+
     const executePendingAction = () => {
         if (!pendingAction) return;
         const { type, data } = pendingAction;
@@ -121,6 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'fav') {
             if (window.handleFavClick) window.handleFavClick(data.btn, data.prod);
             else window.showToast(`Saved ${data.prod.title} to your wishlist!`);
+        } else if (type === 'nav') {
+            window.location.href = data.url;
         }
         pendingAction = null;
     };
@@ -250,15 +268,72 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAll();
     }
 
-    // 8. Global Utility
-    window.showToast = (message) => {
-        const toast = document.createElement('div');
-        toast.className = 'toast-notification';
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
+    // 8. Global Search
+    const globalSearchInput = document.getElementById('globalSearchInput');
+    const searchResults = document.getElementById('searchResults');
+    if (globalSearchInput && searchResults) {
+        let allProductsCache = [];
+        let searchTimeout = null;
+
+        const performSearch = async () => {
+            const term = globalSearchInput.value.trim().toLowerCase();
+            if (term.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            if (allProductsCache.length === 0) {
+                const q = query(collection(db, 'products'));
+                const snapshot = await getDocs(q);
+                allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
+
+            const results = allProductsCache.filter(p => 
+                p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
+            ).slice(0, 5);
+
+            if (results.length > 0) {
+                searchResults.innerHTML = results.map(p => `
+                    <a href="product-details.html?id=${p.id}" class="search-result-item">
+                        <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-img">
+                        <div class="search-result-info">
+                            <span class="search-result-title">${p.title}</span>
+                            <span class="search-result-price">$${p.price.toLocaleString()}</span>
+                        </div>
+                    </a>
+                `).join('');
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.innerHTML = `<div class="search-result-item">No items found for "${term}"</div>`;
+                searchResults.classList.remove('hidden');
+            }
+        };
+
+        globalSearchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 300);
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.classList.add('hidden');
+            }
+        });
+    }
+
+    // 9. Global Utility
+    if (!window.showToast) {
+        window.showToast = (message, type = 'success') => {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.style.background = type === 'error' ? 'var(--primary-red)' : '#111';
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+    }
 });
