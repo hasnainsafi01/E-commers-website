@@ -69,43 +69,58 @@
                     <div class="notification-bell">
                         <i class="far fa-bell"></i>
                     </div>
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="name">Admin User</span>
-                            <span class="role">Chief Curator</span>
+                    <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
+                        <div class="profile-info" style="text-align: right;">
+                            <span class="name" id="adminName">Admin User</span>
+                            <span class="role" id="adminRole">Chief Curator</span>
                         </div>
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin">
+                        <label for="adminAvatarInput" style="cursor: pointer; display: inline-block; position: relative;">
+                            <img id="adminAvatarImg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover;">
+                            <div class="avatar-hover-overlay" style="position: absolute; top: 0; left: 0; width: 45px; height: 45px; border-radius: 8px; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.3s ease;">
+                                <i class="fas fa-camera" style="color: white; font-size: 0.8rem;"></i>
+                            </div>
+                        </label>
+                        <input type="file" id="adminAvatarInput" accept="image/jpeg, image/png, image/webp" style="display: none;">
                     </div>
                 </div>
             </header>
 
             <!-- Stats Grid -->
             <div class="stats-grid">
-                <!-- Sales Stat -->
+                <!-- Revenue Stat -->
                 <div class="stat-card">
-                    <span class="trend positive">+12.5%</span>
+                    <span class="trend positive">+10.4%</span>
                     <div class="icon-box"><i class="far fa-credit-card"></i></div>
-                    <span class="label">Total Sales</span>
-                    <div class="value">€482,900</div>
-                    <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div>
+                    <span class="label">Total Revenue</span>
+                    <div class="value">€0</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 65%;"></div></div>
                 </div>
 
                 <!-- Orders Stat -->
                 <div class="stat-card">
-                    <span class="trend positive">+4.2%</span>
+                    <span class="trend positive">+5.2%</span>
                     <div class="icon-box"><i class="fas fa-shopping-bag"></i></div>
-                    <span class="label">New Orders</span>
-                    <div class="value">1,240</div>
+                    <span class="label">Active Orders</span>
+                    <div class="value">0</div>
                     <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
                 </div>
 
-                <!-- Users Stat -->
+                <!-- Products Stat -->
                 <div class="stat-card">
-                    <span class="trend negative">-8.1%</span>
+                    <span class="trend positive">+8.1%</span>
+                    <div class="icon-box"><i class="fas fa-box"></i></div>
+                    <span class="label">Cataloged Pieces</span>
+                    <div class="value">0</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 80%;"></div></div>
+                </div>
+
+                <!-- Members Stat -->
+                <div class="stat-card">
+                    <span class="trend positive">+15.0%</span>
                     <div class="icon-box"><i class="fas fa-users"></i></div>
-                    <span class="label">Active Users</span>
-                    <div class="value">18.4K</div>
-                    <div class="progress-bar"><div class="progress-fill" style="width: 90%;"></div></div>
+                    <span class="label">Exclusive Members</span>
+                    <div class="value">0</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 50%;"></div></div>
                 </div>
             </div>
 
@@ -127,30 +142,10 @@
                     <div class="card-header">
                         <h2 class="serif">Trending Items</h2>
                     </div>
-                    <ul class="trending-list">
-                        <li class="trending-item">
-                            <img src="assets/images/watch.png" alt="Watch">
-                            <div class="info">
-                                <h3>Calatrava Heritage 5227</h3>
-                                <p>€34,200</p>
-                            </div>
-                        </li>
-                        <li class="trending-item">
-                            <img src="assets/images/bag.png" alt="Bag">
-                            <div class="info">
-                                <h3>Florence Leather Tote</h3>
-                                <p>€2,850</p>
-                            </div>
-                        </li>
-                        <li class="trending-item">
-                            <img src="assets/images/shoes.png" alt="Shoes">
-                            <div class="info">
-                                <h3>Avant-Garde Runner X1</h3>
-                                <p>€890</p>
-                            </div>
-                        </li>
+                    <ul class="trending-list" id="trendingProductsList">
+                        <!-- Dynamic items loaded here -->
                     </ul>
-                    <button class="view-inventory-btn">View Inventory</button>
+                    <button class="view-inventory-btn" onclick="window.location.href='manage-products.html'">View Inventory</button>
                 </div>
             </div>
 
