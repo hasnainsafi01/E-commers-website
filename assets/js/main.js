@@ -26,51 +26,153 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (user) {
+            // Prevent repeated popups during the same active browser session
+            const sessionKey = `chenari_greeted_${user.uid}`;
+            if (sessionStorage.getItem(sessionKey)) return;
+
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
+                
+                let userName = 'Guest';
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    if (!userData.welcomeShown) {
-                        showWelcomeModal();
-                        await updateDoc(userRef, { welcomeShown: true });
-                    }
+                    userName = userData.name || userData.displayName || user.displayName || 'Guest';
+                } else {
+                    userName = user.displayName || 'Guest';
                 }
-            } catch(e) {
-                console.error("Error checking welcome status:", e);
+
+                // Slice first name for professional luxury personalization
+                if (userName && userName !== 'Guest') {
+                    userName = userName.split(' ')[0];
+                }
+
+                // Check localStorage to determine if first time or returning visitor
+                const returnKey = `chenari_returning_${user.uid}`;
+                const isReturning = localStorage.getItem(returnKey) === 'true';
+
+                // Display dynamic luxury onboarding welcome popup
+                showWelcomePopup(userName, !isReturning);
+
+                // Set flags to prevent repeated greetings
+                localStorage.setItem(returnKey, 'true');
+                sessionStorage.setItem(sessionKey, 'true');
+
+            } catch (e) {
+                console.error("Welcome popup system resolve error:", e);
             }
         }
     });
 
-    // Welcome Modal Implementation
-    const showWelcomeModal = () => {
-        const modalHTML = `
-            <div id="welcomeModal" class="auth-modal-overlay">
-                <div class="auth-modal-content" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);">
-                    <div style="margin-bottom: 20px;">
-                        <h1 class="serif" style="font-size: 2rem; letter-spacing: 5px; color: #111;">CHENARI</h1>
+    // Welcome Popup Implementation
+    const showWelcomePopup = (userName, isFirstVisit) => {
+        const greeting = isFirstVisit 
+            ? `Welcome to CHENARI, ${userName}`
+            : `Welcome Back to CHENARI, ${userName}`;
+
+        const popupHTML = `
+            <div id="chenariWelcomeOverlay" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(10, 10, 10, 0.4);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                z-index: 100000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            ">
+                <div class="welcome-card" style="
+                    background: rgba(255, 255, 255, 0.85);
+                    border: 1px solid rgba(255, 255, 255, 0.4);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    border-radius: 20px;
+                    padding: 50px 60px;
+                    width: 90%;
+                    max-width: 480px;
+                    text-align: center;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+                    transform: translateY(20px) scale(0.95);
+                    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                    opacity: 0;
+                    box-sizing: border-box;
+                ">
+                    <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+                    <div style="font-size: 2.6rem; font-weight: 700; letter-spacing: 6px; display: inline-flex; margin-bottom: 25px; font-family: 'Playfair Display', serif;">
+                        <span style="color: #4285F4;">C</span>
+                        <span style="color: #ea4335; margin-left: 2px;">H</span>
+                        <span style="color: #34a853; margin-left: 2px;">E</span>
+                        <span style="color: #fbbc05; margin-left: 2px;">N</span>
+                        <span style="color: #ff5a5f; margin-left: 2px;">A</span>
+                        <span style="color: #1b5e20; margin-left: 2px;">R</span>
+                        <span style="color: #1565c0; margin-left: 2px;">I</span>
                     </div>
-                    <h2 class="serif" style="font-size: 2.5rem; color: #111; margin-bottom: 10px;">Welcome</h2>
-                    <p style="color: #555; font-size: 1.1rem; margin-bottom: 20px;">Enjoy your premium shopping experience.</p>
-                    <button id="closeWelcomeBtn" class="btn-primary" style="background: #111; color: white; width: 100%; border-radius: 12px; padding: 15px;">Start Shopping</button>
+
+                    <!-- Welcome Title -->
+                    <h2 class="serif" style="
+                        color: #111;
+                        font-size: 1.8rem;
+                        line-height: 1.3;
+                        margin: 0 0 12px 0;
+                        font-weight: 400;
+                        letter-spacing: 0.5px;
+                    ">${greeting}</h2>
+
+                    <!-- Subtitle -->
+                    <p style="
+                        color: #666;
+                        font-size: 0.88rem;
+                        font-family: 'Inter', sans-serif;
+                        line-height: 1.6;
+                        margin: 0;
+                        letter-spacing: 0.5px;
+                        font-weight: 500;
+                        text-transform: uppercase;
+                    ">Your luxury shopping destination awaits</p>
                 </div>
             </div>
+            <style>
+                [data-theme="dark"] #chenariWelcomeOverlay .welcome-card {
+                    background: rgba(18, 18, 18, 0.85) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
+                }
+                [data-theme="dark"] #chenariWelcomeOverlay h2 {
+                    color: #fff !important;
+                }
+                [data-theme="dark"] #chenariWelcomeOverlay p {
+                    color: #aaa !important;
+                }
+            </style>
         `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modal = document.getElementById('welcomeModal');
-        
-        // Auto show with animation
-        setTimeout(() => modal.classList.add('active'), 500);
 
-        const closeWelcome = () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 500);
-        };
+        document.body.insertAdjacentHTML('beforeend', popupHTML);
+        const overlay = document.getElementById('chenariWelcomeOverlay');
+        const card = overlay.querySelector('.welcome-card');
 
-        document.getElementById('closeWelcomeBtn').onclick = closeWelcome;
-        
-        // Auto close after 5 seconds
-        setTimeout(closeWelcome, 5000);
+        // Trigger smooth fade and scale in
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+            card.style.transform = 'translateY(0) scale(1)';
+            card.style.opacity = '1';
+        }, 100);
+
+        // Auto close after 2.8 seconds
+        setTimeout(() => {
+            card.style.transform = 'translateY(-15px) scale(0.97)';
+            card.style.opacity = '0';
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+            setTimeout(() => overlay.remove(), 600);
+        }, 2800);
     };
 
     // 1. Sticky Navbar
