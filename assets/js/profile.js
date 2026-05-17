@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, setDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const CLOUD_NAME = "dqsvcn94y";
 const UPLOAD_PRESET = "ml_default";
@@ -17,23 +17,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentAuthUser = user;
 
-        // 1. Fetch Real User Data
+        // 1. Real-Time User Data Sync
         const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        currentUserDoc = userSnap.exists() ? userSnap.data() : {};
-
-        const displayName = currentUserDoc.displayName || user.displayName || 'Luxury Connoisseur';
-        const photoURL = currentUserDoc.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
-
-        // 2. Update Basic Info
-        document.getElementById('userProfileName').innerText = displayName;
-        document.getElementById('userProfileEmail').innerText = user.email;
-        document.getElementById('userProfileImage').src = photoURL;
         
-        // Populate edit modal
-        document.getElementById('editFullName').value = displayName;
-        document.getElementById('editEmail').value = user.email;
-        document.getElementById('editModalImagePreview').src = photoURL;
+        onSnapshot(userRef, (userSnap) => {
+            currentUserDoc = userSnap.exists() ? userSnap.data() : {};
+            
+            // Prefer strictly requested 'name', fallback to displayName
+            const displayName = currentUserDoc.name || currentUserDoc.displayName || user.displayName || 'Luxury Connoisseur';
+            const photoURL = currentUserDoc.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
+
+            // 2. Update Basic Info Real-Time
+            if (document.getElementById('userProfileName')) document.getElementById('userProfileName').innerText = displayName;
+            if (document.getElementById('userProfileEmail')) document.getElementById('userProfileEmail').innerText = user.email;
+            if (document.getElementById('userProfileImage')) document.getElementById('userProfileImage').src = photoURL;
+            
+            // Populate edit modal (only if modal is not currently active to prevent typing interruptions)
+            const editModal = document.getElementById('editProfileModal');
+            if (editModal && !editModal.classList.contains('active')) {
+                document.getElementById('editFullName').value = displayName;
+                document.getElementById('editEmail').value = user.email;
+                document.getElementById('editModalImagePreview').src = photoURL;
+            }
+
+            // Sync Navbar instantly if it exists
+            if (document.getElementById('globalNavAvatar')) document.getElementById('globalNavAvatar').src = photoURL;
+            if (document.getElementById('globalNavName')) document.getElementById('globalNavName').innerText = displayName;
+        });
 
         // 3. Fetch Real Stats
         try {
@@ -53,6 +63,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit Profile Modal Logic
     const editModal = document.getElementById('editProfileModal');
+
+    const openEditProfileModal = () => {
+        if(editModal) editModal.classList.add('active');
+    };
+    
+    const closeEditProfileModal = () => {
+        if(editModal) {
+            editModal.classList.remove('active');
+            // Reset form to DB state when closing
+            if (currentUserDoc && currentAuthUser) {
+                const displayName = currentUserDoc.name || currentUserDoc.displayName || currentAuthUser.displayName || '';
+                const photoURL = currentUserDoc.photoURL || currentAuthUser.photoURL || `https://ui-avatars.com/api/?name=${currentAuthUser.email}`;
+                document.getElementById('editFullName').value = displayName;
+                document.getElementById('editModalImagePreview').src = photoURL;
+                selectedImageFile = null;
+            }
+        }
+    };
     
     // Robust event binding function
     const bindModalEvents = () => {
@@ -61,18 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeBtn = document.getElementById('closeEditProfileBtn');
         const cancelBtn = document.getElementById('cancelEditProfileBtn');
 
-        const openEditProfileModal = () => {
-            if(editModal) editModal.classList.add('active');
-        };
-        
-        const closeEditProfileModal = () => {
-            if(editModal) editModal.classList.remove('active');
-        };
-
-        if(openBtn1) openBtn1.addEventListener('click', openEditProfileModal);
-        if(openBtn2) openBtn2.addEventListener('click', openEditProfileModal);
-        if(closeBtn) closeBtn.addEventListener('click', closeEditProfileModal);
-        if(cancelBtn) cancelBtn.addEventListener('click', closeEditProfileModal);
+        if(openBtn1) openBtn1.addEventListener('click', (e) => { e.preventDefault(); openEditProfileModal(); });
+        if(openBtn2) openBtn2.addEventListener('click', (e) => { e.preventDefault(); openEditProfileModal(); });
+        if(closeBtn) closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeEditProfileModal(); });
+        if(cancelBtn) cancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeEditProfileModal(); });
 
         // Close on outside click
         if(editModal) {
@@ -167,20 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 photoURL: updatedPhotoURL
             }, { merge: true });
 
-            // 4. Update UI instantly
-            if (document.getElementById('userProfileName')) document.getElementById('userProfileName').innerText = newName;
-            if (document.getElementById('userProfileImage')) document.getElementById('userProfileImage').src = updatedPhotoURL;
-            if (document.getElementById('globalNavAvatar')) document.getElementById('globalNavAvatar').src = updatedPhotoURL;
-            if (document.getElementById('globalNavName')) document.getElementById('globalNavName').innerText = newName;
-
+            // 4. Update UI instantly (onSnapshot handles this now, but we close modal and show toast)
             window.showToast('Profile updated successfully!');
-            if (editModal) editModal.classList.remove('active');
+            closeEditProfileModal();
 
         } catch (error) {
             console.error("Error updating profile:", error);
             window.showToast('Failed to update profile.', 'error');
         } finally {
-            submitBtn.innerText = 'Save Changes';
+            submitBtn.innerHTML = 'Save Changes';
             submitBtn.disabled = false;
         }
     });

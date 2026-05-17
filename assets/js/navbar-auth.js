@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
@@ -16,20 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (user) {
-            // Fetch real profile data from Firestore (optional but more robust)
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
-            const userData = userSnap.exists() ? userSnap.data() : null;
-            
-            const photoURL = userData?.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
-            const userName = userData?.displayName || user.displayName || 'User';
+            // Render initial standard layout immediately
+            const initialPhotoURL = user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
+            const initialName = user.displayName || 'User';
 
             authContainer.innerHTML = `
                 <div class="user-profile-nav">
-                    <img src="${photoURL}" alt="Profile" class="nav-avatar" id="globalNavAvatar">
+                    <img src="${initialPhotoURL}" alt="Profile" class="nav-avatar" id="globalNavAvatar">
                     <div class="user-dropdown">
                         <div class="dropdown-header">
-                            <strong id="globalNavName">${userName}</strong>
+                            <img src="${initialPhotoURL}" alt="Profile" class="dropdown-avatar" id="globalDropdownAvatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; display: block; border: 2px solid var(--nav-border);">
+                            <strong id="globalNavName">${initialName}</strong>
                             <span>${user.email}</span>
                         </div>
                         <a href="profile.html"><i class="far fa-user"></i> My Profile</a>
@@ -40,6 +37,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
+
+            // Real-Time onSnapshot Sync for Navbar
+            const userRef = doc(db, 'users', user.uid);
+            onSnapshot(userRef, (userSnap) => {
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    const photoURL = userData.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
+                    const userName = userData.name || userData.displayName || user.displayName || 'User';
+
+                    const navAvatar = document.getElementById('globalNavAvatar');
+                    const dropAvatar = document.getElementById('globalDropdownAvatar');
+                    const navName = document.getElementById('globalNavName');
+
+                    if (navAvatar) navAvatar.src = photoURL;
+                    if (dropAvatar) dropAvatar.src = photoURL;
+                    if (navName) navName.innerText = userName;
+                }
+            }, (error) => {
+                console.error("Navbar sync error:", error);
+            });
 
             // Dropdown Toggle Logic
             const profileNav = authContainer.querySelector('.user-profile-nav');
