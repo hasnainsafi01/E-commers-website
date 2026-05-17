@@ -145,18 +145,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 googleBtn.disabled = true;
                 
                 const result = await signInWithPopup(auth, googleProvider);
-                await syncUserToFirestore(result.user);
                 
-                // Fetch role and redirect dynamically
+                // Secure Firestore Role check: Google logins MUST be restricted to standard users ONLY
                 const userRef = doc(db, 'users', result.user.uid);
                 const userSnap = await getDoc(userRef);
-                const role = userSnap.exists() ? userSnap.data().role : 'user';
                 
-                if (role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'index.html';
+                if (userSnap.exists() && userSnap.data().role === 'admin') {
+                    await auth.signOut();
+                    window.showToast('Google logins are prohibited for curator access. Please sign in using your designated email and password credentials.', 'error');
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = originalHtml;
+                    return;
                 }
+                
+                await syncUserToFirestore(result.user);
+                window.location.href = 'index.html';
             } catch (error) {
                 if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                     showAuthError(error.code);

@@ -47,6 +47,15 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = 'login.html';
         return;
     }
+
+    // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
+    const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
+    if (isGoogleUser) {
+        alert("Access Denied: Google authenticated accounts are strictly prohibited from accessing the curator dashboard. Please sign in using your designated email and password credentials.");
+        await auth.signOut();
+        window.location.href = 'login.html';
+        return;
+    }
     
     try {
         // Fetch real role from Firestore (Bulletproof check)
