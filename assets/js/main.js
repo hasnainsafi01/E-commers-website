@@ -2,6 +2,12 @@ import { db, auth, googleProvider } from './firebase-config.js';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// Clean URL routing redirect for admin routes
+const pathname = window.location.pathname.toLowerCase();
+if (pathname.endsWith('/admin') || pathname.endsWith('/admin/') || pathname.includes('/admin-dashboard')) {
+    window.location.href = 'admin.html';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const navbar = document.querySelector('.navbar');
     const mobileToggle = document.querySelector('.mobile-toggle');

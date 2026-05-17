@@ -312,13 +312,51 @@ const showSecurityCuratorLoginModal = () => {
 
 // Route Protection Logic
 onAuthStateChanged(auth, async (user) => {
-    const curtain = document.getElementById('adminSecurityCurtain');
+    let curtain = document.getElementById('adminSecurityCurtain');
+    if (!curtain) {
+        curtain = document.createElement('div');
+        curtain.id = 'adminSecurityCurtain';
+        curtain.style.position = 'fixed';
+        curtain.style.top = '0';
+        curtain.style.left = '0';
+        curtain.style.width = '100vw';
+        curtain.style.height = '100vh';
+        curtain.style.background = '#0b0b0b';
+        curtain.style.zIndex = '99999';
+        curtain.style.display = 'flex';
+        curtain.style.flexDirection = 'column';
+        curtain.style.alignItems = 'center';
+        curtain.style.justifyContent = 'center';
+        curtain.style.transition = 'opacity 0.5s ease, visibility 0.5s ease';
+        document.documentElement.appendChild(curtain);
+    }
     
     if (!user) {
         // Unauthenticated -> Show login popup modal instead of page redirect
         showSecurityCuratorLoginModal();
         return;
     }
+
+    // Authenticated: transition login modal back to active loading curator verification curtain
+    curtain.style.opacity = '1';
+    curtain.style.visibility = 'visible';
+    curtain.innerHTML = `
+        <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
+            <h2 style="font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 20px; font-weight: 400; text-transform: uppercase;">Atelier CHENARI</h2>
+            <div class="security-spinner" style="width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; margin: 0 auto; animation: securitySpin 1s linear infinite;"></div>
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px;">Verifying Curator Status...</p>
+        </div>
+        <style>
+            @keyframes securitySpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            #adminSecurityCurtain {
+                background: #0b0b0b !important;
+                backdrop-filter: none !important;
+            }
+        </style>
+    `;
 
     // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
     const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
@@ -355,7 +393,7 @@ onAuthStateChanged(auth, async (user) => {
         // Non-admin or doc not found -> Show modern Access Denied modal
         showAccessDeniedModal(
             "Exclusive Atelier Curators Only. You are not authorized to access this page.",
-            false
+            true // Force sign out standard users from active Firebase session
         );
         
     } catch (error) {
