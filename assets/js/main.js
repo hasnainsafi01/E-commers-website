@@ -134,6 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for Auth State
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Authenticating Account...");
+        }
         if (user && pendingAction) {
             executePendingAction();
         }
@@ -143,6 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const sessionKey = `chenari_greeted_${user.uid}`;
             if (sessionStorage.getItem(sessionKey)) {
                 console.log("User already greeted this session - Greet Blocked. UID:", user.uid);
+                if (window.hideChenariLoader) {
+                    window.hideChenariLoader();
+                }
                 return;
             }
 
@@ -193,9 +199,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (e) {
                 console.error("Welcome popup system trigger failed:", e);
+            } finally {
+                if (window.hideChenariLoader) {
+                    window.hideChenariLoader();
+                }
             }
         } else {
             console.log("Auth State Changed: Guest user (No authenticated session).");
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         }
     });
 
@@ -393,6 +406,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const featuredContainer = document.getElementById('featuredProducts');
     if (featuredContainer) {
         const loadFeatured = async () => {
+            if (window.updateChenariLoaderText) {
+                window.updateChenariLoaderText("Curating Premium Collection...");
+            }
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(3));
                 const snapshot = await getDocs(q);
@@ -403,6 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 attachListeners(featuredContainer);
             } catch (error) {
                 console.error("Error loading featured:", error);
+            } finally {
+                if (window.hideChenariLoader) {
+                    window.hideChenariLoader();
+                }
             }
         };
         loadFeatured();
@@ -413,6 +433,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (productsListContainer) {
         let allProducts = [];
         const loadAll = async () => {
+            if (window.updateChenariLoaderText) {
+                window.updateChenariLoaderText("Curating Premium Collection...");
+            }
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(q);
@@ -421,6 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAndFilter();
             } catch (error) {
                 console.error("Error loading all:", error);
+            } finally {
+                if (window.hideChenariLoader) {
+                    window.hideChenariLoader();
+                }
             }
         };
 

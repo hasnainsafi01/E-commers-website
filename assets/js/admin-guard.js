@@ -11,7 +11,7 @@ const injectSecurityCurtain = () => {
     curtain.style.left = '0';
     curtain.style.width = '100vw';
     curtain.style.height = '100vh';
-    curtain.style.background = '#0b0b0b';
+    curtain.style.background = '#080808';
     curtain.style.zIndex = '99999';
     curtain.style.display = 'flex';
     curtain.style.flexDirection = 'column';
@@ -21,14 +21,40 @@ const injectSecurityCurtain = () => {
     
     curtain.innerHTML = `
         <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <h2 style="font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 20px; font-weight: 400; text-transform: uppercase;">Atelier CHENARI</h2>
-            <div class="security-spinner" style="width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; margin: 0 auto; animation: securitySpin 1s linear infinite;"></div>
-            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px;">Checking permissions...</p>
+            <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+            <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
+                <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
+                <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
+                <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
+                <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
+                <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
+                <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
+                <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
+            </div>
+            
+            <!-- Thin Golden Progress Line -->
+            <div class="loader-progress-bar" style="width: 150px; height: 2px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; margin: 10px auto 0 auto;">
+                <div class="loader-progress-fill" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #d4af37, transparent); animation: progressWave 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);"></div>
+            </div>
+
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; margin-top: 25px; font-weight: 500;">Securing Curator Portal...</p>
         </div>
         <style>
-            @keyframes securitySpin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+            @keyframes securityLetterGlow {
+                0%, 100% {
+                    opacity: 0.25;
+                    transform: translateY(0) scale(1);
+                    filter: drop-shadow(0 0 2px rgba(255,255,255,0.05));
+                }
+                50% {
+                    opacity: 1;
+                    transform: translateY(-8px) scale(1.08);
+                    filter: drop-shadow(0 0 12px currentColor);
+                }
+            }
+            @keyframes progressWave {
+                0% { left: -100%; }
+                100% { left: 100%; }
             }
         </style>
     `;
@@ -342,17 +368,43 @@ onAuthStateChanged(auth, async (user) => {
     curtain.style.visibility = 'visible';
     curtain.innerHTML = `
         <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <h2 style="font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 20px; font-weight: 400; text-transform: uppercase;">Atelier CHENARI</h2>
-            <div class="security-spinner" style="width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #fff; border-radius: 50%; margin: 0 auto; animation: securitySpin 1s linear infinite;"></div>
-            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px;">Verifying Curator Status...</p>
+            <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+            <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
+                <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
+                <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
+                <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
+                <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
+                <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
+                <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
+                <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
+            </div>
+            
+            <!-- Thin Golden Progress Line -->
+            <div class="loader-progress-bar" style="width: 150px; height: 2px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; margin: 10px auto 0 auto;">
+                <div class="loader-progress-fill" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #d4af37, transparent); animation: progressWave 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);"></div>
+            </div>
+
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; margin-top: 25px; font-weight: 500;">Verifying Curator Status...</p>
         </div>
         <style>
-            @keyframes securitySpin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+            @keyframes securityLetterGlow {
+                0%, 100% {
+                    opacity: 0.25;
+                    transform: translateY(0) scale(1);
+                    filter: drop-shadow(0 0 2px rgba(255,255,255,0.05));
+                }
+                50% {
+                    opacity: 1;
+                    transform: translateY(-8px) scale(1.08);
+                    filter: drop-shadow(0 0 12px currentColor);
+                }
+            }
+            @keyframes progressWave {
+                0% { left: -100%; }
+                100% { left: 100%; }
             }
             #adminSecurityCurtain {
-                background: #0b0b0b !important;
+                background: #080808 !important;
                 backdrop-filter: none !important;
             }
         </style>
