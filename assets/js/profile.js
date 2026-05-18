@@ -17,6 +17,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentAuthUser = user;
 
+        // Synchronously load cached user data to prevent profile layout reset/flicker
+        const cachedUserString = localStorage.getItem('chenari_logged_in_user');
+        if (cachedUserString) {
+            try {
+                const cachedUser = JSON.parse(cachedUserString);
+                if (document.getElementById('userProfileName')) {
+                    document.getElementById('userProfileName').innerText = cachedUser.displayName || 'Luxury Connoisseur';
+                }
+                if (document.getElementById('userProfileEmail')) {
+                    document.getElementById('userProfileEmail').innerText = cachedUser.email;
+                }
+                if (document.getElementById('userProfileImage')) {
+                    document.getElementById('userProfileImage').src = cachedUser.photoURL;
+                }
+                if (document.getElementById('editFullName')) {
+                    document.getElementById('editFullName').value = cachedUser.displayName || 'Luxury Connoisseur';
+                }
+                if (document.getElementById('editEmail')) {
+                    document.getElementById('editEmail').value = cachedUser.email;
+                }
+                if (document.getElementById('editModalImagePreview')) {
+                    document.getElementById('editModalImagePreview').src = cachedUser.photoURL;
+                }
+            } catch (e) {
+                console.warn("Failed to apply cached profile session:", e);
+            }
+        }
+
         // 1. Real-Time User Data Sync
         const userRef = doc(db, 'users', user.uid);
         
