@@ -138,6 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.updateChenariLoaderText("Authenticating Account...");
         }
 
+        // Live sync mobile drawer auth interface
+        if (window.updateDrawerAuthUI) {
+            window.updateDrawerAuthUI(user);
+        }
+
         if (user) {
             // Check for pending action in localStorage
             const pending = localStorage.getItem('chenari_pending_action');
@@ -258,29 +263,318 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Mobile Menu
-    if (mobileToggle) {
+    // 2. Premium Mobile Menu & Navigation Drawer Injection & Events
+    const injectMobileDrawer = () => {
+        if (document.getElementById('mobileDrawer')) return;
+        const drawerHTML = `
+            <div id="mobileDrawer" class="mobile-drawer-overlay">
+                <div class="mobile-drawer-content">
+                    <div class="drawer-header">
+                        <a href="index.html" class="logo">
+                            <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
+                        </a>
+                        <button class="drawer-close-btn" id="drawerCloseBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="drawer-body">
+                        <!-- Navigation Links -->
+                        <div class="drawer-section">
+                            <h4 class="drawer-section-title">Navigation</h4>
+                            <ul class="drawer-links">
+                                <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                                <li><a href="products.html"><i class="fas fa-th-large"></i> Collection</a></li>
+                                <li><a href="products.html?category=watches"><i class="fas fa-clock"></i> Watches</a></li>
+                                <li><a href="products.html?category=bags"><i class="fas fa-shopping-bag"></i> Bags</a></li>
+                                <li><a href="products.html?category=shoes"><i class="fas fa-shoe-prints"></i> Shoes</a></li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Client Section -->
+                        <div class="drawer-section">
+                            <h4 class="drawer-section-title">Your Account</h4>
+                            <div id="drawerAuthLinks">
+                                <!-- Dynamically populated based on login status -->
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="drawer-section">
+                            <h4 class="drawer-section-title">Preferences</h4>
+                            <div class="drawer-theme-toggle" id="drawerThemeToggle">
+                                <span>Dark Mode</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="drawerThemeCheckbox">
+                                    <label for="drawerThemeCheckbox"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', drawerHTML);
+    };
+
+    injectMobileDrawer();
+
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+    const drawerThemeCheckbox = document.getElementById('drawerThemeCheckbox');
+
+    if (mobileToggle && mobileDrawer) {
         mobileToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            const icon = mobileToggle.querySelector('i');
-            icon.classList.toggle('fa-bars');
-            icon.classList.toggle('fa-times');
+            mobileDrawer.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
         });
     }
 
-    // 3. Theme
+    if (drawerCloseBtn && mobileDrawer) {
+        drawerCloseBtn.addEventListener('click', () => {
+            mobileDrawer.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        mobileDrawer.addEventListener('click', (e) => {
+            if (e.target === mobileDrawer) {
+                mobileDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // 2b. Live Auth Status Renderer for Mobile Drawer
+    window.updateDrawerAuthUI = async (user) => {
+        const container = document.getElementById('drawerAuthLinks');
+        if (!container) return;
+
+        if (user) {
+            let name = user.displayName || user.email?.split('@')[0] || 'Guest';
+            let isAdmin = false;
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const snap = await getDoc(userRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    name = data.name || data.displayName || name;
+                    isAdmin = (data.role === 'admin');
+                }
+            } catch (err) {
+                console.warn("Drawer role fetch failed:", err);
+            }
+
+            container.innerHTML = `
+                <div style="padding: 10px 0; border-bottom: 1px solid var(--nav-border); margin-bottom: 15px;">
+                    <span style="font-size: 0.95rem; color: var(--text-color); opacity: 0.8; font-weight: 500;">Hello, <span style="font-weight: 600; color: var(--icon-hover);">${name}</span></span>
+                </div>
+                
+                ${isAdmin ? `
+                    <a href="admin.html" class="drawer-admin-btn">
+                        <i class="fas fa-crown"></i> Admin Portal
+                    </a>
+                ` : ''}
+                
+                <ul class="drawer-links" style="margin-bottom: 20px;">
+                    <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile Profile</a></li>
+                    <li><a href="cart.html"><i class="fas fa-shopping-basket"></i> View Bag</a></li>
+                    <li><a href="favorites.html"><i class="fas fa-heart-broken"></i> View Favorites</a></li>
+                </ul>
+                
+                <button class="drawer-auth-btn signup" id="drawerLogoutBtn" style="border-color: var(--primary-red); color: var(--primary-red);">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            `;
+
+            const logoutBtn = document.getElementById('drawerLogoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = async () => {
+                    const drawer = document.getElementById('mobileDrawer');
+                    if (drawer) {
+                        drawer.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                    if (window.showLogoutModal) {
+                        window.showLogoutModal();
+                    } else {
+                        await auth.signOut();
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.href = 'index.html';
+                    }
+                };
+            }
+        } else {
+            container.innerHTML = `
+                <a href="login.html" class="drawer-auth-btn login">Login</a>
+                <a href="signup.html" class="drawer-auth-btn signup">Signup</a>
+            `;
+        }
+    };
+
+    // Initialize state mapping
+    if (currentUser) {
+        window.updateDrawerAuthUI(currentUser);
+    }
+
+    // 2c. Premium Mobile Search Overlay Injection & Events
+    const injectMobileSearchOverlay = () => {
+        if (document.getElementById('mobileSearchOverlay')) return;
+        const searchHTML = `
+            <div id="mobileSearchOverlay" class="mobile-search-overlay">
+                <div class="search-overlay-content">
+                    <div class="search-overlay-header">
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon-active"></i>
+                            <input type="text" id="mobileSearchInput" placeholder="Search premium items..." autocomplete="off">
+                            <button id="mobileSearchClear" class="clear-btn hidden" style="background: none; border: none; color: #888; cursor: pointer; padding: 0 5px;"><i class="fas fa-times-circle"></i></button>
+                        </div>
+                        <button class="search-close-btn" id="mobileSearchClose">Cancel</button>
+                    </div>
+                    <div class="search-overlay-body">
+                        <div id="mobileSearchResults" class="search-results-list">
+                            <div class="search-empty-state">
+                                <i class="fas fa-search"></i>
+                                <p>Search for luxury watches, bags, and shoes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', searchHTML);
+    };
+
+    injectMobileSearchOverlay();
+
+    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+    const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+    const mobileSearchClose = document.getElementById('mobileSearchClose');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSearchResults = document.getElementById('mobileSearchResults');
+    const mobileSearchClear = document.getElementById('mobileSearchClear');
+
+    if (mobileSearchBtn && mobileSearchOverlay) {
+        mobileSearchBtn.addEventListener('click', () => {
+            mobileSearchOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => mobileSearchInput.focus(), 150);
+        });
+    }
+
+    if (mobileSearchClose && mobileSearchOverlay) {
+        mobileSearchClose.addEventListener('click', () => {
+            mobileSearchOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+
+    if (mobileSearchInput && mobileSearchResults) {
+        let allProductsCache = [];
+        let searchTimeout = null;
+
+        mobileSearchInput.addEventListener('input', () => {
+            const term = mobileSearchInput.value.trim().toLowerCase();
+            if (term.length > 0) mobileSearchClear.classList.remove('hidden');
+            else mobileSearchClear.classList.add('hidden');
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                if (term.length < 2) {
+                    mobileSearchResults.innerHTML = `
+                        <div class="search-empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>Search for luxury watches, bags, and shoes...</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (allProductsCache.length === 0) {
+                    try {
+                        const q = query(collection(db, 'products'));
+                        const snapshot = await getDocs(q);
+                        allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    } catch (e) {
+                        console.error("Search fetch failed:", e);
+                    }
+                }
+
+                const results = allProductsCache.filter(p => 
+                    p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
+                ).slice(0, 8);
+
+                if (results.length > 0) {
+                    mobileSearchResults.innerHTML = results.map(p => `
+                        <a href="product-details.html?id=${p.id}" class="search-result-row">
+                            <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-row-img">
+                            <div class="search-result-row-info">
+                                <span class="search-result-row-title">${p.title}</span>
+                                <span class="search-result-row-category">${p.category}</span>
+                            </div>
+                            <span class="search-result-row-price">$${p.price.toLocaleString()}</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    `).join('');
+                } else {
+                    mobileSearchResults.innerHTML = `
+                        <div class="search-empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>No results found for "${term}"</p>
+                        </div>
+                    `;
+                }
+            }, 300);
+        });
+
+        mobileSearchClear.onclick = () => {
+            mobileSearchInput.value = '';
+            mobileSearchClear.classList.add('hidden');
+            mobileSearchInput.focus();
+            mobileSearchResults.innerHTML = `
+                <div class="search-empty-state">
+                    <i class="fas fa-search"></i>
+                    <p>Search for luxury watches, bags, and shoes...</p>
+                </div>
+            `;
+        };
+    }
+
+    // 3. Theme Synchronization & Operation
     const currentTheme = localStorage.getItem('theme') || 'light';
     body.setAttribute('data-theme', currentTheme);
-    if (themeToggle) {
-        const icon = themeToggle.querySelector('i');
-        if (currentTheme === 'dark') icon.classList.replace('fa-moon', 'fa-sun');
+    if (drawerThemeCheckbox) {
+        drawerThemeCheckbox.checked = (currentTheme === 'dark');
+    }
+
+    const updateThemeUI = (theme) => {
+        body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
         
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+        
+        if (drawerThemeCheckbox) {
+            drawerThemeCheckbox.checked = (theme === 'dark');
+        }
+    };
+
+    if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            icon.classList.toggle('fa-moon');
-            icon.classList.toggle('fa-sun');
+            updateThemeUI(newTheme);
+        });
+    }
+
+    if (drawerThemeCheckbox) {
+        drawerThemeCheckbox.addEventListener('change', () => {
+            const newTheme = drawerThemeCheckbox.checked ? 'dark' : 'light';
+            updateThemeUI(newTheme);
         });
     }
 
