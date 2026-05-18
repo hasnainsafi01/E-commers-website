@@ -290,13 +290,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            checkoutBtn.disabled = true;
+            checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Order...';
+
             try {
-                // 1. Verify Profile Completion explicitly before continuing
+                // STEP 1: Verify Profile Completion - block checkout if delivery info is missing
                 const userRef = doc(db, 'users', currentUser.uid);
                 const userSnap = await getDoc(userRef);
                 const userData = userSnap.exists() ? userSnap.data() : null;
 
                 if (!userData || !userData.profileCompleted) {
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerHTML = 'Proceed to Checkout';
                     if (window.showCheckoutGuardModal) {
                         window.showCheckoutGuardModal();
                     } else {
@@ -304,27 +309,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         sessionStorage.setItem('chenari_return_to_cart', 'true');
                         setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
                     }
-                    return; // Stop checkout process entirely
+                    return;
                 }
 
-                // Get items currently in the cart
+                // STEP 2: Fetch current cart items
                 const cartRef = collection(db, `cart/${currentUser.uid}/items`);
-            const cartSnap = await getDocs(cartRef);
-            const cartItems = [];
-            cartSnap.forEach(docSnap => {
-                cartItems.push({ id: docSnap.id, ...docSnap.data() });
-            });
+                const cartSnap = await getDocs(cartRef);
+                const cartItems = [];
+                cartSnap.forEach(docSnap => {
+                    cartItems.push({ id: docSnap.id, ...docSnap.data() });
+                });
 
-            if (cartItems.length === 0) {
-                window.showToast('Your shopping bag is empty.', 'error');
-                return;
-            }
+                if (cartItems.length === 0) {
+                    window.showToast('Your shopping bag is empty.', 'error');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerHTML = 'Proceed to Checkout';
+                    return;
+                }
 
-            try {
-                checkoutBtn.disabled = true;
-                checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Order...';
-
-                // 1. Verify and transactionally check stock for all products
+                // STEP 3: Verify stock for all products atomically
                 const { writeBatch } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
                 const batch = writeBatch(db);
 
@@ -332,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const productRef = doc(db, 'products', item.id);
                     const productSnap = await getDoc(productRef);
                     if (!productSnap.exists()) {
-                        throw new Error(`Product ${item.title || item.name} no longer exists in the collection.`);
+                        throw new Error(`Product "${item.title || item.name}" no longer exists in the collection.`);
                     }
 
                     const productData = productSnap.data();
@@ -341,35 +344,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error(`Insufficient stock for "${item.title || item.name}". Only ${currentStock} remaining.`);
                     }
 
-                    // Calculate updated stocks and sales
-                    const newStock = currentStock - item.quantity;
-                    const newSold = (productData.sold || 0) + item.quantity;
-
-                    // Queue updates in writeBatch
                     batch.update(productRef, {
-                        stock: newStock,
-                        sold: newSold
+                        stock: currentStock - item.quantity,
+                        sold: (productData.sold || 0) + item.quantity
                     });
                 }
 
-                // 2. Generate a random unique Order ID
+                // STEP 4: Build order document with full delivery address
                 const randomId = Math.floor(1000 + Math.random() * 9000);
                 const orderIdStr = `ORD-${randomId}`;
 
-                // Calculate summary details
                 const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 const tax = subtotal * 0.08;
                 const shipping = subtotal > 0 ? 45 : 0;
                 const grandTotal = subtotal + tax + shipping;
 
-                // 3. Get verified user details for order documentation
                 const customerName = userData.name || userData.displayName || currentUser.displayName || 'Luxury Client';
                 const customerEmail = userData.email || currentUser.email || 'guest@example.com';
-                const customerAddressStr = `${userData.houseNumber} ${userData.streetAddress}, ${userData.city}, ${userData.country} ${userData.postalCode}`;
+                const customerAddressStr = `${userData.houseNumber || ''} ${userData.streetAddress || ''}, ${userData.city || ''}, ${userData.country || ''} ${userData.postalCode || ''}`.trim();
 
-                // 4. Create Order document in global orders collection
                 const newOrderRef = doc(collection(db, 'orders'));
-                const orderDocData = {
+                batch.set(newOrderRef, {
                     orderId: orderIdStr,
                     userId: currentUser.uid,
                     customerUid: currentUser.uid,
@@ -401,33 +396,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     status: 'Pending',
                     date: new Date(),
                     createdAt: serverTimestamp()
-                };
+                });
 
-                // Queue order creation in writeBatch
-                batch.set(newOrderRef, orderDocData);
-
-                // 5. Queue clearing the cart items
+                // STEP 5: Delete cart items in the same batch
                 for (const item of cartItems) {
-                    const cartItemRef = doc(db, `cart/${currentUser.uid}/items`, item.id);
-                    batch.delete(cartItemRef);
+                    batch.delete(doc(db, `cart/${currentUser.uid}/items`, item.id));
                 }
 
-                // 6. Commit the entire transaction atomically!
+                // STEP 6: Atomic commit
                 await batch.commit();
 
-                // 7. Show success feedback
+                // STEP 7: Success
                 window.showToast('Order Placed Successfully! Thank you.');
-                
-                // Clear cart badge
-                const badges = document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge');
-                badges.forEach(badge => {
+                document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge').forEach(badge => {
                     badge.innerText = '0';
                     badge.style.display = 'none';
                 });
-
-                setTimeout(() => {
-                    window.location.href = 'profile.html';
-                }, 2000);
+                setTimeout(() => { window.location.href = 'profile.html'; }, 2000);
 
             } catch (error) {
                 console.error("Checkout Failure:", error);
@@ -439,3 +424,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
