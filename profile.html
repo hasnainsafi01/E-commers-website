@@ -74,7 +74,7 @@
             <div class="profile-stats">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-box"></i></div>
-                    <div class="stat-value">0</div>
+                    <div id="orderStatCount" class="stat-value">0</div>
                     <div class="stat-label">Orders</div>
                 </div>
                 <div class="stat-card">
@@ -92,10 +92,13 @@
             <!-- Order History -->
             <div class="orders-section">
                 <h3 class="serif">Recent Orders</h3>
-                <div class="empty-orders">
-                    <i class="fas fa-receipt"></i>
-                    <p>You haven't placed any orders yet. Start your luxury journey today.</p>
-                    <a href="products.html" class="btn-primary">Shop Now</a>
+                <div id="ordersHistoryList">
+                    <!-- Real orders injected by profile.js -->
+                    <div id="emptyOrdersUI" class="empty-orders">
+                        <i class="fas fa-receipt"></i>
+                        <p>You haven't placed any orders yet. Start your luxury journey today.</p>
+                        <a href="products.html" class="btn-primary">Shop Now</a>
+                    </div>
                 </div>
             </div>
         </section>

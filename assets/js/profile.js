@@ -78,17 +78,72 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('globalNavName')) document.getElementById('globalNavName').innerText = displayName;
         });
 
-        // 3. Fetch Real Stats
+        // 3. Fetch Real Stats & Render Order History
         try {
-            const cartSnap = await getDocs(collection(db, `users/${user.uid}/cart`));
-            document.getElementById('cartStatCount').innerText = cartSnap.size;
+            const cartSnap = await getDocs(collection(db, `cart/${user.uid}/items`));
+            if (document.getElementById('cartStatCount')) document.getElementById('cartStatCount').innerText = cartSnap.size;
 
-            const favSnap = await getDocs(collection(db, `users/${user.uid}/favorites`));
-            document.getElementById('favStatCount').innerText = favSnap.size;
+            const favSnap = await getDocs(collection(db, `favorites/${user.uid}/items`));
+            if (document.getElementById('favStatCount')) document.getElementById('favStatCount').innerText = favSnap.size;
 
             const ordersSnap = await getDocs(collection(db, 'orders'));
-            const userOrders = ordersSnap.docs.filter(doc => doc.data().customerUid === user.uid);
-            document.querySelector('.profile-stats .stat-value').innerText = userOrders.length;
+            const userOrders = ordersSnap.docs
+                .filter(d => d.data().customerUid === user.uid)
+                .map(d => ({ id: d.id, ...d.data() }))
+                .sort((a, b) => {
+                    const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+                    const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+                    return bDate - aDate;
+                });
+
+            if (document.getElementById('orderStatCount')) document.getElementById('orderStatCount').innerText = userOrders.length;
+
+            const historyList = document.getElementById('ordersHistoryList');
+            const emptyUI = document.getElementById('emptyOrdersUI');
+
+            if (historyList && userOrders.length > 0) {
+                if (emptyUI) emptyUI.style.display = 'none';
+
+                const statusColors = {
+                    'Pending':    { bg: '#fff3cd', color: '#856404' },
+                    'Processing': { bg: '#cce5ff', color: '#004085' },
+                    'Shipped':    { bg: '#d4edda', color: '#155724' },
+                    'Delivered':  { bg: '#d1ecf1', color: '#0c5460' },
+                    'Cancelled':  { bg: '#f8d7da', color: '#721c24' }
+                };
+
+                userOrders.forEach(order => {
+                    const date = order.date?.toDate ? order.date.toDate() : new Date(order.date);
+                    const sc = statusColors[order.status] || { bg: '#eee', color: '#333' };
+                    const itemsPreview = (order.items || []).slice(0, 3).map(item => `
+                        <img src="${item.image}" alt="${item.title}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid #eee;">
+                    `).join('');
+                    const moreCount = (order.items?.length || 0) > 3 ? `<span style="font-size:0.75rem;color:#888;margin-left:6px;">+${order.items.length - 3} more</span>` : '';
+
+                    const card = document.createElement('div');
+                    card.innerHTML = `
+                        <div style="border:1px solid #eee;border-radius:14px;padding:18px 20px;margin-bottom:14px;background:#fafafa;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='none'">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                                <div>
+                                    <strong style="font-size:0.95rem;">${order.orderId}</strong>
+                                    <p style="font-size:0.78rem;color:#888;margin:3px 0 0;">${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <span style="background:${sc.bg};color:${sc.color};padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">${order.status}</span>
+                                    <strong style="font-size:1rem;">$${(order.total || 0).toLocaleString()}</strong>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+                                ${itemsPreview}${moreCount}
+                            </div>
+                            <p style="font-size:0.78rem;color:#888;margin-top:10px;"><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>${order.client?.fullAddressString || order.client?.city || 'Address on file'}</p>
+                        </div>
+                    `;
+                    historyList.appendChild(card);
+                });
+            } else if (emptyUI) {
+                emptyUI.style.display = '';
+            }
         } catch(e) {
             console.log("Stats fetch issue:", e);
         }
