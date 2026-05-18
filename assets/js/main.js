@@ -133,6 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for Auth State
     onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // A user successfully authenticated! Clear the admin logout conflict flags
+            sessionStorage.removeItem('chenari_admin_just_logged_out');
+            sessionStorage.removeItem('chenari_logged_in_admin');
+        }
+
         currentUser = user;
         if (window.updateChenariLoaderText) {
             window.updateChenariLoaderText("Authenticating Account...");

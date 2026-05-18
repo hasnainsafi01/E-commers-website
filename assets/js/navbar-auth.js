@@ -98,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let unsubscribeFirestore = null;
 
     onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // A user successfully authenticated! Clear the admin logout conflict flags
+            sessionStorage.removeItem('chenari_admin_just_logged_out');
+            sessionStorage.removeItem('chenari_logged_in_admin');
+        }
+
         // If admin just logged out, force guest UI immediately
         if (sessionStorage.getItem('chenari_admin_just_logged_out') === 'true') {
             localStorage.removeItem('chenari_logged_in_user');

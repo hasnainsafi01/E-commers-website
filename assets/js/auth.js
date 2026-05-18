@@ -256,6 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Firebase Authentication ONLY verification
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
+                // Clear conflict flags
+                sessionStorage.removeItem('chenari_admin_just_logged_out');
+                sessionStorage.removeItem('chenari_logged_in_admin');
+
                 // 2. Failsafe Firestore Role Fetch (No Firestore issue will block successful auth login)
                 let role = 'user';
                 try {
@@ -388,6 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.disabled = true;
                 
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                
+                // Clear conflict flags
+                sessionStorage.removeItem('chenari_admin_just_logged_out');
+                sessionStorage.removeItem('chenari_logged_in_admin');
+
                 await updateProfile(userCredential.user, { displayName: name });
                 await syncUserToFirestore(userCredential.user);
                 
@@ -433,6 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 googleBtn.disabled = true;
                 
                 const result = await signInWithPopup(auth, googleProvider);
+                
+                // Clear conflict flags
+                sessionStorage.removeItem('chenari_admin_just_logged_out');
+                sessionStorage.removeItem('chenari_logged_in_admin');
                 
                 // Secure Firestore Role check: Google logins MUST be restricted to standard users ONLY
                 const userRef = doc(db, 'users', result.user.uid);
