@@ -801,6 +801,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const featuredContainer = document.getElementById('featuredProducts');
     if (featuredContainer) {
         const loadFeatured = async () => {
+            // Immediately show skeleton placeholders for featured products only
+            featuredContainer.innerHTML = Array(3).fill(0).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-text short"></div>
+                        <div class="skeleton-text medium"></div>
+                    </div>
+                </div>
+            `).join('');
+
             if (window.updateChenariLoaderText) {
                 window.updateChenariLoaderText("Curating Premium Collection...");
             }
@@ -828,6 +840,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (productsListContainer) {
         let allProducts = [];
         const loadAll = async () => {
+            // Immediately show skeleton placeholders for products only, keeping UI visible
+            productsListContainer.innerHTML = Array(6).fill(0).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-text short"></div>
+                        <div class="skeleton-text medium"></div>
+                    </div>
+                </div>
+            `).join('');
+
             if (window.updateChenariLoaderText) {
                 window.updateChenariLoaderText("Curating Premium Collection...");
             }
