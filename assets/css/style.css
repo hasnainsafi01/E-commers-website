@@ -50,7 +50,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: var(--transition);
-    min-height: 200vh; /* For scrolling test */
+    min-height: 100vh;
 }
 
 /* Glassmorphism Navbar */
@@ -301,6 +301,31 @@ body {
     font-size: 20px;
     cursor: pointer;
     margin-right: 15px;
+}
+
+/* ============================================================
+   GLOBAL OVERLAY SAFETY — always fixed/hidden outside media query
+   Prevents mobile-drawer and search overlay from appearing in
+   the document flow on desktop (e.g. below the cart page).
+   ============================================================ */
+.mobile-drawer-overlay,
+.mobile-search-overlay {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-drawer-overlay.active,
+.mobile-search-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 /* Responsive Design */

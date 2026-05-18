@@ -15,6 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
             navActions.prepend(authContainer);
         }
 
+        // If admin just logged out, force guest UI — do not show profile state
+        if (sessionStorage.getItem('chenari_admin_just_logged_out') === 'true') {
+            authContainer.innerHTML = `
+                <a href="login.html" class="nav-login-btn">Login</a>
+                <a href="signup.html" class="nav-signup-btn">Sign Up</a>
+            `;
+            return;
+        }
+
         if (user) {
             // Render initial standard layout immediately
             const initialPhotoURL = user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;

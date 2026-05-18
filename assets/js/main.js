@@ -138,6 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.updateChenariLoaderText("Authenticating Account...");
         }
 
+        // If admin just logged out, suppress all auth-side effects and hide loader only
+        if (sessionStorage.getItem('chenari_admin_just_logged_out') === 'true') {
+            if (window.hideChenariLoader) window.hideChenariLoader();
+            return;
+        }
+
         // Live sync mobile drawer auth interface
         if (window.updateDrawerAuthUI) {
             window.updateDrawerAuthUI(user);

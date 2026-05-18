@@ -71,6 +71,104 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (document.getElementById('editFlatNumber')) document.getElementById('editFlatNumber').value = currentUserDoc.flatNumber || '';
                 if (document.getElementById('editNotes')) document.getElementById('editNotes').value = currentUserDoc.notes || '';
                 document.getElementById('editModalImagePreview').src = photoURL;
+
+                // Auto-open modal & highlight missing fields when redirected from checkout guard
+                if (sessionStorage.getItem('chenari_return_to_cart') === 'true') {
+                    // Inject checkout-redirect banner inside modal if not already there
+                    const modalContent = editModal.querySelector('.auth-modal-content');
+                    if (modalContent && !modalContent.querySelector('#checkoutRedirectBanner')) {
+                        const banner = document.createElement('div');
+                        banner.id = 'checkoutRedirectBanner';
+                        banner.style.cssText = `
+                            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+                            border: 1px solid #f6c23e;
+                            border-radius: 10px;
+                            padding: 14px 18px;
+                            margin-bottom: 20px;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 12px;
+                            animation: bannerSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+                        `;
+                        banner.innerHTML = `
+                            <i class="fas fa-exclamation-triangle" style="color:#856404;font-size:1.2rem;margin-top:2px;flex-shrink:0;"></i>
+                            <div>
+                                <strong style="color:#856404;font-size:0.88rem;display:block;margin-bottom:3px;">Delivery Information Required</strong>
+                                <span style="color:#856404;font-size:0.82rem;line-height:1.5;">
+                                    Please complete all required fields marked with <span style="color:#c0392b;font-weight:700;">*</span> to proceed with checkout.
+                                </span>
+                            </div>
+                        `;
+                        const modalHeader = modalContent.querySelector('.auth-modal-header');
+                        if (modalHeader) {
+                            modalHeader.insertAdjacentElement('afterend', banner);
+                        } else {
+                            modalContent.prepend(banner);
+                        }
+
+                        // Inject animation keyframes once
+                        if (!document.getElementById('profileHighlightStyles')) {
+                            const style = document.createElement('style');
+                            style.id = 'profileHighlightStyles';
+                            style.textContent = `
+                                @keyframes bannerSlideIn {
+                                    from { opacity: 0; transform: translateY(-10px); }
+                                    to { opacity: 1; transform: translateY(0); }
+                                }
+                                @keyframes fieldShake {
+                                    0%, 100% { transform: translateX(0); }
+                                    20% { transform: translateX(-6px); }
+                                    40% { transform: translateX(6px); }
+                                    60% { transform: translateX(-4px); }
+                                    80% { transform: translateX(4px); }
+                                }
+                                .missing-field-highlight {
+                                    border-color: #e74c3c !important;
+                                    background: rgba(231, 76, 60, 0.04) !important;
+                                    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15) !important;
+                                    animation: fieldShake 0.5s ease 0.3s;
+                                }
+                            `;
+                            document.head.appendChild(style);
+                        }
+                    }
+
+                    // Open the modal with smooth animation
+                    editModal.classList.add('active');
+
+                    // Highlight all missing required fields and focus the first one
+                    const requiredFieldMap = [
+                        { id: 'editPhone', fieldKey: 'phone' },
+                        { id: 'editCountry', fieldKey: 'country' },
+                        { id: 'editCity', fieldKey: 'city' },
+                        { id: 'editStreetAddress', fieldKey: 'streetAddress' },
+                        { id: 'editHouseNumber', fieldKey: 'houseNumber' }
+                    ];
+                    let firstMissingEl = null;
+                    requiredFieldMap.forEach(({ id, fieldKey }) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            if (!currentUserDoc[fieldKey] || currentUserDoc[fieldKey].trim() === '') {
+                                el.classList.add('missing-field-highlight');
+                                if (!firstMissingEl) firstMissingEl = el;
+                                // Remove highlight on user input
+                                el.addEventListener('input', () => el.classList.remove('missing-field-highlight'), { once: true });
+                            } else {
+                                el.classList.remove('missing-field-highlight');
+                            }
+                        }
+                    });
+
+                    // Scroll modal to top, then focus first missing field
+                    setTimeout(() => {
+                        const modalContentEl = editModal.querySelector('.auth-modal-content');
+                        if (modalContentEl) modalContentEl.scrollTop = 0;
+                        if (firstMissingEl) {
+                            firstMissingEl.focus({ preventScroll: false });
+                            firstMissingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 350);
+                }
             }
 
             // Sync Navbar instantly if it exists

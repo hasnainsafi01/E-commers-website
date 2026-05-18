@@ -162,10 +162,15 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
             curtain.style.visibility = 'hidden';
             
             if (forceSignOut) {
-                await signOut(auth);
+                try {
+                    await signOut(auth);
+                } catch(e) { console.warn('Signout error:', e); }
+                localStorage.clear();
+                sessionStorage.clear();
+                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
             }
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }, 500);
         };
     }
@@ -592,11 +597,14 @@ const showAdminLogoutConfirmationModal = () => {
                 // 1. Fully sign out from Firebase Authentication
                 await signOut(auth);
 
-                // 2. Clear all browser storages
+                // 2. Clear ALL browser storages to prevent session leakage
                 localStorage.clear();
                 sessionStorage.clear();
 
-                // 3. Smooth card scale-down and opacity fade-out
+                // 3. Set flag AFTER clearing — tells main site to NOT re-authenticate
+                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
+
+                // 4. Smooth card scale-down and opacity fade-out
                 if (card) {
                     card.style.transform = 'scale(0.9)';
                     card.style.opacity = '0';
@@ -604,14 +612,15 @@ const showAdminLogoutConfirmationModal = () => {
                 curtain.style.opacity = '0';
                 curtain.style.visibility = 'hidden';
 
-                // 4. Redirect to homepage
+                // 5. Redirect ONLY to login — never back to homepage as authenticated user
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }, 500);
 
             } catch (err) {
                 console.error("Administrative logout failure:", err);
-                window.location.href = 'index.html';
+                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
+                window.location.href = 'login.html';
             }
         };
     }

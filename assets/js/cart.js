@@ -299,14 +299,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userSnap = await getDoc(userRef);
                 const userData = userSnap.exists() ? userSnap.data() : null;
 
-                if (!userData || !userData.profileCompleted) {
+                // Validate BOTH the flag AND every individual required field.
+                // This prevents stale flags from allowing checkout with incomplete data.
+                const requiredDeliveryFields = ['phone', 'country', 'city', 'streetAddress', 'houseNumber'];
+                const missingFields = requiredDeliveryFields.filter(f => !userData?.[f] || userData[f].trim() === '');
+                const isProfileIncomplete = !userData || !userData.profileCompleted || missingFields.length > 0;
+
+                if (isProfileIncomplete) {
                     checkoutBtn.disabled = false;
                     checkoutBtn.innerHTML = 'Proceed to Checkout';
+
                     if (window.showCheckoutGuardModal) {
+                        // Flag is set inside the modal's 'Complete Profile' button onclick
                         window.showCheckoutGuardModal();
                     } else {
-                        window.showToast('Please complete your delivery address first.', 'error');
+                        // Fallback: set flag and redirect directly
                         sessionStorage.setItem('chenari_return_to_cart', 'true');
+                        window.showToast('Please complete your delivery address first.', 'error');
                         setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
                     }
                     return;
