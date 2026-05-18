@@ -20,11 +20,11 @@
             
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="products.html" class="active">Collection</a></li>
-                <li><a href="cart.html">Bag</a></li>
+                <li><a href="products.html?category=watches">Watches</a></li>
+                <li><a href="products.html?category=bags">Bags</a></li>
+                <li><a href="products.html?category=shoes">Shoes</a></li>
             </ul>
             <div class="nav-actions">
-                <div class="mobile-search-btn" id="mobileSearchBtn"><i class="fas fa-search"></i></div>
                 <div class="theme-toggle"><i class="fas fa-moon"></i></div>
                 <a href="favorites.html" title="Favorites" class="auth-guarded" data-action="fav">
                     <i class="far fa-heart"></i>
@@ -40,17 +40,8 @@
     </header>
 
     <!-- Product Listing Controls -->
-    <section class="listing-controls">
-        <h1 class="serif" style="font-size: 3rem; margin-bottom: 30px;">Our Collection</h1>
-        
+    <section class="listing-controls" style="padding-top: 20px;">
         <div class="filters-wrapper">
-            <!-- Category Filters -->
-            <div class="category-chips">
-                <button class="chip active" data-category="all">All Items</button>
-                <button class="chip" data-category="watches">Watches</button>
-                <button class="chip" data-category="bags">Bags</button>
-                <button class="chip" data-category="shoes">Shoes</button>
-            </div>
 
             <!-- Search Box -->
             <div class="search-box">
@@ -151,15 +142,7 @@
     <script type="module" src="assets/js/favorites.js"></script>
     <script type="module" src="assets/js/navbar-auth.js"></script>
     <script>
-        // Handle URL parameters for initial category filter
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialCat = urlParams.get('category');
-        if (initialCat) {
-            document.addEventListener('DOMContentLoaded', () => {
-                const chip = document.querySelector(`.chip[data-category="${initialCat.toLowerCase()}"]`);
-                if (chip) chip.click();
-            });
-        }
+        // Category filtering is now handled natively in main.js via URL params
     </script>
 </body>
 </html>

@@ -294,6 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li><a href="products.html?category=watches"><i class="fas fa-clock"></i> Watches</a></li>
                                 <li><a href="products.html?category=bags"><i class="fas fa-shopping-bag"></i> Bags</a></li>
                                 <li><a href="products.html?category=shoes"><i class="fas fa-shoe-prints"></i> Shoes</a></li>
+                                <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-cart"></i> Bag</a></li>
+                                <li><a href="favorites.html" class="auth-guarded"><i class="fas fa-heart"></i> Favorites</a></li>
                             </ul>
                         </div>
                         
@@ -381,9 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ` : ''}
                 
                 <ul class="drawer-links" style="margin-bottom: 20px;">
-                    <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile Profile</a></li>
-                    <li><a href="cart.html"><i class="fas fa-shopping-basket"></i> View Bag</a></li>
-                    <li><a href="favorites.html"><i class="fas fa-heart-broken"></i> View Favorites</a></li>
+                    <li><a href="profile.html" class="auth-guarded"><i class="fas fa-user-circle"></i> Profile</a></li>
+                    <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-basket"></i> View Bag</a></li>
+                    <li><a href="favorites.html" class="auth-guarded"><i class="fas fa-heart-broken"></i> View Favorites</a></li>
                 </ul>
                 
                 <button class="drawer-auth-btn signup" id="drawerLogoutBtn" style="border-color: var(--primary-red); color: var(--primary-red);">
@@ -422,128 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.updateDrawerAuthUI(currentUser);
     }
 
-    // 2c. Premium Mobile Search Overlay Injection & Events
-    const injectMobileSearchOverlay = () => {
-        if (document.getElementById('mobileSearchOverlay')) return;
-        const searchHTML = `
-            <div id="mobileSearchOverlay" class="mobile-search-overlay">
-                <div class="search-overlay-content">
-                    <div class="search-overlay-header">
-                        <div class="search-input-wrapper">
-                            <i class="fas fa-search search-icon-active"></i>
-                            <input type="text" id="mobileSearchInput" placeholder="Search premium items..." autocomplete="off">
-                            <button id="mobileSearchClear" class="clear-btn hidden" style="background: none; border: none; color: #888; cursor: pointer; padding: 0 5px;"><i class="fas fa-times-circle"></i></button>
-                        </div>
-                        <button class="search-close-btn" id="mobileSearchClose">Cancel</button>
-                    </div>
-                    <div class="search-overlay-body">
-                        <div id="mobileSearchResults" class="search-results-list">
-                            <div class="search-empty-state">
-                                <i class="fas fa-search"></i>
-                                <p>Search for luxury watches, bags, and shoes...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', searchHTML);
-    };
-
-    injectMobileSearchOverlay();
-
-    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
-    const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
-    const mobileSearchClose = document.getElementById('mobileSearchClose');
-    const mobileSearchInput = document.getElementById('mobileSearchInput');
-    const mobileSearchResults = document.getElementById('mobileSearchResults');
-    const mobileSearchClear = document.getElementById('mobileSearchClear');
-
-    if (mobileSearchBtn && mobileSearchOverlay) {
-        mobileSearchBtn.addEventListener('click', () => {
-            mobileSearchOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => mobileSearchInput.focus(), 150);
-        });
-    }
-
-    if (mobileSearchClose && mobileSearchOverlay) {
-        mobileSearchClose.addEventListener('click', () => {
-            mobileSearchOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-    }
-
-    if (mobileSearchInput && mobileSearchResults) {
-        let allProductsCache = [];
-        let searchTimeout = null;
-
-        mobileSearchInput.addEventListener('input', () => {
-            const term = mobileSearchInput.value.trim().toLowerCase();
-            if (term.length > 0) mobileSearchClear.classList.remove('hidden');
-            else mobileSearchClear.classList.add('hidden');
-
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                if (term.length < 2) {
-                    mobileSearchResults.innerHTML = `
-                        <div class="search-empty-state">
-                            <i class="fas fa-search"></i>
-                            <p>Search for luxury watches, bags, and shoes...</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                if (allProductsCache.length === 0) {
-                    try {
-                        const q = query(collection(db, 'products'));
-                        const snapshot = await getDocs(q);
-                        allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                    } catch (e) {
-                        console.error("Search fetch failed:", e);
-                    }
-                }
-
-                const results = allProductsCache.filter(p => 
-                    p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
-                ).slice(0, 8);
-
-                if (results.length > 0) {
-                    mobileSearchResults.innerHTML = results.map(p => `
-                        <a href="product-details.html?id=${p.id}" class="search-result-row">
-                            <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-row-img">
-                            <div class="search-result-row-info">
-                                <span class="search-result-row-title">${p.title}</span>
-                                <span class="search-result-row-category">${p.category}</span>
-                            </div>
-                            <span class="search-result-row-price">$${p.price.toLocaleString()}</span>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    `).join('');
-                } else {
-                    mobileSearchResults.innerHTML = `
-                        <div class="search-empty-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>No results found for "${term}"</p>
-                        </div>
-                    `;
-                }
-            }, 300);
-        });
-
-        mobileSearchClear.onclick = () => {
-            mobileSearchInput.value = '';
-            mobileSearchClear.classList.add('hidden');
-            mobileSearchInput.focus();
-            mobileSearchResults.innerHTML = `
-                <div class="search-empty-state">
-                    <i class="fas fa-search"></i>
-                    <p>Search for luxury watches, bags, and shoes...</p>
-                </div>
-            `;
-        };
-    }
+    // Removed mobile search overlay logic as requested
 
     // 3. Theme Synchronization & Operation
     const currentTheme = localStorage.getItem('theme') || 'light';
@@ -823,14 +704,15 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.onclick = (e) => { if(e.target === modal) closeModal(); };
     };
 
-    // Auth-guard for Navbar Links
-    document.querySelectorAll('.auth-guarded').forEach(link => {
-        link.addEventListener('click', (e) => {
+    // Auth-guard for Navbar Links & Drawer Links using Event Delegation
+    document.body.addEventListener('click', (e) => {
+        const link = e.target.closest('a.auth-guarded');
+        if (link) {
             if (!currentUser) {
                 e.preventDefault();
                 window.showLoginRequiredModal({ type: 'nav', data: { url: link.href } });
             }
-        });
+        }
     });
 
     const executePendingAction = () => {
@@ -965,25 +847,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const renderAndFilter = () => {
-            const activeChip = document.querySelector('.chip.active');
-            const activeCat = activeChip ? activeChip.dataset.category : 'all';
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeCat = urlParams.get('category') || 'all';
             const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-            const filtered = allProducts.filter(p => {
+            const sortSelect = document.getElementById('sortSelect')?.value || 'default';
+
+            let filtered = allProducts.filter(p => {
                 const matchesCat = activeCat === 'all' || p.category.toLowerCase() === activeCat.toLowerCase();
                 return matchesCat && p.title.toLowerCase().includes(searchTerm);
             });
+
+            if (sortSelect === 'price-low') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (sortSelect === 'price-high') {
+                filtered.sort((a, b) => b.price - a.price);
+            }
+
             productsListContainer.innerHTML = filtered.map(p => renderProductCard(p)).join('');
             attachListeners(productsListContainer);
         };
 
-        document.querySelectorAll('.chip').forEach(chip => {
-            chip.onclick = () => {
-                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                renderAndFilter();
-            };
-        });
         document.getElementById('searchInput')?.addEventListener('input', renderAndFilter);
+        document.getElementById('sortSelect')?.addEventListener('change', renderAndFilter);
         loadAll();
     }
 
