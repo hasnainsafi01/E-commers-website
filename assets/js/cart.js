@@ -10,6 +10,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyCartUI = document.getElementById('emptyCartUI');
     const cartContent = document.getElementById('cartContent');
 
+    const injectCheckoutGuardModal = () => {
+        if (document.getElementById('checkoutGuardModal')) return;
+        const modalHTML = `
+            <div id="checkoutGuardModal" class="auth-modal-overlay">
+                <div class="auth-modal-content" style="text-align: center; max-width: 450px;">
+                    <div style="font-size: 3rem; color: var(--primary-red); margin-bottom: 15px;">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h2 class="serif" style="margin-bottom: 10px;">Complete Your Delivery Information</h2>
+                    <p style="color: #666; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5;">
+                        Please complete your delivery address and contact information securely before placing an order.
+                    </p>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn-secondary" id="checkoutGuardCancel" style="flex: 1; margin: 0;">Cancel</button>
+                        <button class="login-btn" id="checkoutGuardProceed" style="flex: 1; margin: 0;">Complete Profile</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        document.getElementById('checkoutGuardCancel').onclick = () => {
+            document.getElementById('checkoutGuardModal').classList.remove('active');
+        };
+        document.getElementById('checkoutGuardProceed').onclick = () => {
+            sessionStorage.setItem('chenari_return_to_cart', 'true');
+            window.location.href = 'profile.html';
+        };
+    };
+
+    window.showCheckoutGuardModal = () => {
+        injectCheckoutGuardModal();
+        setTimeout(() => {
+            document.getElementById('checkoutGuardModal').classList.add('active');
+        }, 50);
+    };
+
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user) {
@@ -253,8 +290,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Get items currently in the cart
-            const cartRef = collection(db, `cart/${currentUser.uid}/items`);
+            try {
+                // 1. Verify Profile Completion explicitly before continuing
+                const userRef = doc(db, 'users', currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                const userData = userSnap.exists() ? userSnap.data() : null;
+
+                if (!userData || !userData.profileCompleted) {
+                    if (window.showCheckoutGuardModal) {
+                        window.showCheckoutGuardModal();
+                    } else {
+                        window.showToast('Please complete your delivery address first.', 'error');
+                        sessionStorage.setItem('chenari_return_to_cart', 'true');
+                        setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
+                    }
+                    return; // Stop checkout process entirely
+                }
+
+                // Get items currently in the cart
+                const cartRef = collection(db, `cart/${currentUser.uid}/items`);
             const cartSnap = await getDocs(cartRef);
             const cartItems = [];
             cartSnap.forEach(docSnap => {
@@ -308,25 +362,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const shipping = subtotal > 0 ? 45 : 0;
                 const grandTotal = subtotal + tax + shipping;
 
-                // 3. Get user details for order documentation
-                const userRef = doc(db, 'users', currentUser.uid);
-                const userSnap = await getDoc(userRef);
-                const userData = userSnap.exists() ? userSnap.data() : {};
+                // 3. Get verified user details for order documentation
                 const customerName = userData.name || userData.displayName || currentUser.displayName || 'Luxury Client';
                 const customerEmail = userData.email || currentUser.email || 'guest@example.com';
-                const customerAddress = userData.address || 'Atelier Premium Delivery Address';
+                const customerAddressStr = `${userData.houseNumber} ${userData.streetAddress}, ${userData.city}, ${userData.country} ${userData.postalCode}`;
 
                 // 4. Create Order document in global orders collection
                 const newOrderRef = doc(collection(db, 'orders'));
                 const orderDocData = {
                     orderId: orderIdStr,
                     userId: currentUser.uid,
-                    customerUid: currentUser.uid, // Add this for profile.js compatibility
+                    customerUid: currentUser.uid,
                     customerName: customerName,
                     client: {
                         name: customerName,
                         email: customerEmail,
-                        address: customerAddress
+                        phone: userData.phone || '',
+                        country: userData.country || '',
+                        city: userData.city || '',
+                        province: userData.province || '',
+                        streetAddress: userData.streetAddress || '',
+                        houseNumber: userData.houseNumber || '',
+                        flatNumber: userData.flatNumber || '',
+                        postalCode: userData.postalCode || '',
+                        notes: userData.notes || '',
+                        fullAddressString: customerAddressStr
                     },
                     items: cartItems.map(item => ({
                         productId: item.id,

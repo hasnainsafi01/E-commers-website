@@ -134,7 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
         detailOrderId.innerText = `Order #${order.orderId}`;
         detailOrderDate.innerText = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         detailCustomerName.innerText = order.client.name;
-        detailCustomerAddress.innerText = order.client.address;
+        detailCustomerAddress.innerHTML = `
+            ${order.client.fullAddressString || order.client.address || 'Address not provided'}<br>
+            <strong>Phone:</strong> ${order.client.phone || 'N/A'}<br>
+            <strong>Notes:</strong> ${order.client.notes || 'None'}
+        `;
         detailCustomerEmail.innerText = order.client.email;
         detailSubtotal.innerText = `€${order.subtotal.toLocaleString()}`;
         detailShipping.innerText = `€${order.shipping.toLocaleString()}`;

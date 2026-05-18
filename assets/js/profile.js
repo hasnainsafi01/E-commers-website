@@ -32,11 +32,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('userProfileEmail')) document.getElementById('userProfileEmail').innerText = user.email;
             if (document.getElementById('userProfileImage')) document.getElementById('userProfileImage').src = photoURL;
             
+            // Check Profile Completion logic
+            const requiredFields = ['phone', 'country', 'city', 'streetAddress', 'houseNumber'];
+            let filledCount = 0;
+            requiredFields.forEach(field => {
+                if (currentUserDoc[field] && currentUserDoc[field].trim() !== '') filledCount++;
+            });
+            const completionPercentage = Math.round((filledCount / requiredFields.length) * 100);
+            
+            // Update UI Sidebar Progress
+            if (document.getElementById('profileProgressText')) {
+                document.getElementById('profileProgressText').innerText = `${completionPercentage}%`;
+                document.getElementById('profileProgressFill').style.width = `${completionPercentage}%`;
+                
+                if (completionPercentage === 100) {
+                    document.getElementById('profileProgressWarning').style.display = 'none';
+                    document.getElementById('profileProgressFill').style.background = '#28a745'; // Green when complete
+                    document.getElementById('profileProgressText').style.color = '#28a745';
+                } else {
+                    document.getElementById('profileProgressWarning').style.display = 'block';
+                    document.getElementById('profileProgressFill').style.background = 'var(--primary-blue)';
+                    document.getElementById('profileProgressText').style.color = 'var(--primary-blue)';
+                }
+            }
+
             // Populate edit modal (only if modal is not currently active to prevent typing interruptions)
             const editModal = document.getElementById('editProfileModal');
             if (editModal && !editModal.classList.contains('active')) {
                 document.getElementById('editFullName').value = displayName;
                 document.getElementById('editEmail').value = user.email;
+                if (document.getElementById('editPhone')) document.getElementById('editPhone').value = currentUserDoc.phone || '';
+                if (document.getElementById('editCountry')) document.getElementById('editCountry').value = currentUserDoc.country || '';
+                if (document.getElementById('editCity')) document.getElementById('editCity').value = currentUserDoc.city || '';
+                if (document.getElementById('editProvince')) document.getElementById('editProvince').value = currentUserDoc.province || '';
+                if (document.getElementById('editPostalCode')) document.getElementById('editPostalCode').value = currentUserDoc.postalCode || '';
+                if (document.getElementById('editStreetAddress')) document.getElementById('editStreetAddress').value = currentUserDoc.streetAddress || '';
+                if (document.getElementById('editHouseNumber')) document.getElementById('editHouseNumber').value = currentUserDoc.houseNumber || '';
+                if (document.getElementById('editFlatNumber')) document.getElementById('editFlatNumber').value = currentUserDoc.flatNumber || '';
+                if (document.getElementById('editNotes')) document.getElementById('editNotes').value = currentUserDoc.notes || '';
                 document.getElementById('editModalImagePreview').src = photoURL;
             }
 
@@ -76,6 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const displayName = currentUserDoc.name || currentUserDoc.displayName || currentAuthUser.displayName || '';
                 const photoURL = currentUserDoc.photoURL || currentAuthUser.photoURL || `https://ui-avatars.com/api/?name=${currentAuthUser.email}`;
                 document.getElementById('editFullName').value = displayName;
+                
+                if (document.getElementById('editPhone')) document.getElementById('editPhone').value = currentUserDoc.phone || '';
+                if (document.getElementById('editCountry')) document.getElementById('editCountry').value = currentUserDoc.country || '';
+                if (document.getElementById('editCity')) document.getElementById('editCity').value = currentUserDoc.city || '';
+                if (document.getElementById('editProvince')) document.getElementById('editProvince').value = currentUserDoc.province || '';
+                if (document.getElementById('editPostalCode')) document.getElementById('editPostalCode').value = currentUserDoc.postalCode || '';
+                if (document.getElementById('editStreetAddress')) document.getElementById('editStreetAddress').value = currentUserDoc.streetAddress || '';
+                if (document.getElementById('editHouseNumber')) document.getElementById('editHouseNumber').value = currentUserDoc.houseNumber || '';
+                if (document.getElementById('editFlatNumber')) document.getElementById('editFlatNumber').value = currentUserDoc.flatNumber || '';
+                if (document.getElementById('editNotes')) document.getElementById('editNotes').value = currentUserDoc.notes || '';
+                
                 document.getElementById('editModalImagePreview').src = photoURL;
                 
                 const fileInput = document.getElementById('profileImageInput');
@@ -183,17 +227,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // 3. Update Firestore Document (strict requested structure)
+            const phone = document.getElementById('editPhone').value.trim();
+            const country = document.getElementById('editCountry').value.trim();
+            const city = document.getElementById('editCity').value.trim();
+            const province = document.getElementById('editProvince').value.trim();
+            const streetAddress = document.getElementById('editStreetAddress').value.trim();
+            const houseNumber = document.getElementById('editHouseNumber').value.trim();
+            const flatNumber = document.getElementById('editFlatNumber').value.trim();
+            const postalCode = document.getElementById('editPostalCode').value.trim();
+            const notes = document.getElementById('editNotes').value.trim();
+
+            const profileCompleted = !!(phone && country && city && streetAddress && houseNumber);
+
             const userRef = doc(db, 'users', currentAuthUser.uid);
             await setDoc(userRef, {
                 name: newName,
                 displayName: newName, // Keeping displayName for backwards compatibility
                 email: currentAuthUser.email,
-                photoURL: updatedPhotoURL
+                photoURL: updatedPhotoURL,
+                phone,
+                country,
+                city,
+                province,
+                streetAddress,
+                houseNumber,
+                flatNumber,
+                postalCode,
+                notes,
+                profileCompleted
             }, { merge: true });
 
             // 4. Update UI instantly (onSnapshot handles this now, but we close modal and show toast)
             window.showToast('Profile updated successfully!');
-            closeEditProfileModal();
+            
+            // Auto-redirect back to cart if they were forced here by checkout guard
+            if (sessionStorage.getItem('chenari_return_to_cart') === 'true' && profileCompleted) {
+                sessionStorage.removeItem('chenari_return_to_cart');
+                setTimeout(() => {
+                    window.location.href = 'cart.html';
+                }, 800);
+            } else {
+                closeEditProfileModal();
+            }
 
         } catch (error) {
             console.error("Error updating profile:", error);
