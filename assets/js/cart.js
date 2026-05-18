@@ -191,9 +191,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemRef = doc(db, `cart/${currentUser.uid}/items`, product.id);
         
         try {
+            // Live stock check before adding
+            const productRef = doc(db, 'products', product.id);
+            const productSnap = await getDoc(productRef);
+            if (!productSnap.exists()) {
+                window.showToast("Product no longer exists in the collection.", "error");
+                return;
+            }
+            const productData = productSnap.data();
+            const availableStock = productData.stock !== undefined ? parseInt(productData.stock) : 0;
+            if (availableStock <= 0) {
+                window.showToast("This item is currently out of stock.", "error");
+                return;
+            }
+
             const itemSnap = await getDoc(itemRef);
+            const currentQtyInCart = itemSnap.exists() ? itemSnap.data().quantity : 0;
+            if (currentQtyInCart + 1 > availableStock) {
+                window.showToast(`Not enough stock available. Only ${availableStock} remaining.`, "error");
+                return;
+            }
+
             if (itemSnap.exists()) {
-                await setDoc(itemRef, { quantity: itemSnap.data().quantity + 1 }, { merge: true });
+                await setDoc(itemRef, { quantity: currentQtyInCart + 1 }, { merge: true });
             } else {
                 // Fetch full product details if only ID/Title provided
                 let fullProduct = product;
@@ -251,6 +271,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (itemSnap.exists()) {
                 let newQty = itemSnap.data().quantity + delta;
                 if (newQty < 1) newQty = 1;
+
+                if (delta > 0) {
+                    // Check live stock dynamically to prevent exceeding inventory limits
+                    const productRef = doc(db, 'products', id);
+                    const productSnap = await getDoc(productRef);
+                    if (productSnap.exists()) {
+                        const productData = productSnap.data();
+                        const availableStock = productData.stock !== undefined ? parseInt(productData.stock) : 0;
+                        if (newQty > availableStock) {
+                            window.showToast(`Not enough stock available. Only ${availableStock} remaining.`, "error");
+                            return;
+                        }
+                    }
+                }
                 await setDoc(itemRef, { quantity: newQty }, { merge: true });
             }
         } catch (e) {
@@ -355,7 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     batch.update(productRef, {
                         stock: currentStock - item.quantity,
-                        sold: (productData.sold || 0) + item.quantity
+                        sold: (productData.sold || 0) + item.quantity,
+                        soldCount: (productData.soldCount || productData.sold || 0) + item.quantity
                     });
                 }
 

@@ -109,6 +109,63 @@
         </section>
     </main>
 
+    <!-- Reviews Section -->
+    <section class="reviews-section" style="max-width: 1200px; margin: 60px auto; padding: 0 40px;">
+        <h2 class="serif" style="font-size: 2rem; border-bottom: 1px solid var(--nav-border); padding-bottom: 20px; margin-bottom: 40px; letter-spacing: 0.5px;">Customer Reflections</h2>
+        
+        <div class="reviews-layout" style="display: grid; grid-template-columns: 1fr 2fr; gap: 60px;">
+            <!-- Left Panel: Rating Summary & Submit Review -->
+            <div class="reviews-summary-panel">
+                <div style="background: rgba(26, 26, 26, 0.02); border: 1px solid var(--nav-border); padding: 30px; border-radius: 4px;">
+                    <h3 class="serif" style="font-size: 1.3rem; margin-bottom: 15px;">Product Rating</h3>
+                    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px;">
+                        <span id="averageRatingText" style="font-size: 3rem; font-family: 'Playfair Display', serif; font-weight: 700; color: #1a1a1a;">5.0</span>
+                        <span style="color: #666; font-size: 0.9rem;">/ 5.0</span>
+                    </div>
+                    <div id="averageRatingStars" style="font-size: 1.1rem; display: flex; gap: 4px; margin-bottom: 25px;">
+                        <!-- Injected Stars -->
+                    </div>
+
+                    <!-- Review Submission Form Guard -->
+                    <div id="reviewFormContainer">
+                        <div id="reviewLockMsg" style="border-top: 1px dashed var(--nav-border); padding-top: 25px; font-size: 0.82rem; color: #666; line-height: 1.5;">
+                            <i class="fas fa-lock" style="color: #a1a1a1; margin-right: 5px;"></i> Only verified owners of this exclusive piece from CHENARI can submit feedback.
+                        </div>
+                        <form id="submitReviewForm" style="display: none; border-top: 1px dashed var(--nav-border); padding-top: 25px;">
+                            <h4 class="serif" style="font-size: 1.05rem; margin-bottom: 15px;">Write your Reflection</h4>
+                            
+                            <!-- Star Selection Input -->
+                            <div class="star-rating-select" id="starRatingSelect" style="display: flex; gap: 8px; font-size: 1.3rem; margin-bottom: 20px; cursor: pointer;">
+                                <i class="fas fa-star rating-star" data-value="1" style="color: #ebac14;"></i>
+                                <i class="fas fa-star rating-star" data-value="2" style="color: #ebac14;"></i>
+                                <i class="fas fa-star rating-star" data-value="3" style="color: #ebac14;"></i>
+                                <i class="fas fa-star rating-star" data-value="4" style="color: #ebac14;"></i>
+                                <i class="fas fa-star rating-star" data-value="5" style="color: #ebac14;"></i>
+                                <input type="hidden" id="selectedRating" value="5">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <textarea id="reviewComment" placeholder="Share your experience regarding the quality, packaging, and design..." required style="width: 100%; height: 120px; border: 1px solid var(--nav-border); border-radius: 4px; padding: 12px; font-family: inherit; font-size: 0.85rem; line-height: 1.6; resize: none; background: transparent; outline: none; transition: border 0.3s;" onfocus="this.style.borderColor='#1a1a1a'" onblur="this.style.borderColor='var(--nav-border)'"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-publish" style="width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 4px; cursor: pointer; transition: opacity 0.3s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Review list -->
+            <div class="reviews-list-panel">
+                <div id="reviewsList" style="display: flex; flex-direction: column; gap: 30px;">
+                    <!-- Injected Reviews -->
+                    <div style="color: #888; font-size: 0.9rem; text-align: center; padding: 50px 0;">No reflections have been left for this masterpiece yet.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Related Items -->
     <section class="related-section">
         <h2 class="serif" style="font-size: 2.5rem; margin-bottom: 50px;">Related Items</h2>
@@ -144,46 +201,6 @@
     <script type="module" src="assets/js/cart.js"></script>
     <script type="module" src="assets/js/favorites.js"></script>
     <script type="module" src="assets/js/navbar-auth.js"></script>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const prodId = urlParams.get('id');
-        if (prodId === '4') {
-            document.getElementById('prodName').innerText = 'Midnight Classic';
-            document.getElementById('prodPrice').innerText = '$8,200.00';
-            document.getElementById('mainImg').src = 'assets/images/watch_2.png';
-            document.title = 'Midnight Classic | CHENARI';
-        }
-
-        // Add to Cart and Favorites triggers
-        const addBagBtn = document.querySelector('.add-bag-btn');
-        const saveWishlistBtn = document.querySelector('.save-wishlist-btn');
-
-        const getProductObj = () => {
-            const id = prodId || '1';
-            const name = document.getElementById('prodName').innerText;
-            const price = parseFloat(document.getElementById('prodPrice').innerText.replace(/[$,]/g, ''));
-            const image = document.getElementById('mainImg').getAttribute('src');
-            const category = 'Watches';
-            return { id, title: name, name, price, image, category };
-        };
-
-        if (addBagBtn) {
-            addBagBtn.onclick = () => {
-                const prod = getProductObj();
-                if (window.addToCart) {
-                    window.addToCart(prod);
-                }
-            };
-        }
-
-        if (saveWishlistBtn) {
-            saveWishlistBtn.onclick = () => {
-                const prod = getProductObj();
-                if (window.handleFavClick) {
-                    window.handleFavClick(saveWishlistBtn, prod);
-                }
-            };
-        }
-    </script>
+    <script type="module" src="assets/js/product-details.js"></script>
 </body>
 </html>

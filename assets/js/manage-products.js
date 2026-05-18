@@ -190,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('editProdCategory').value = product.category;
         document.getElementById('editProdPrice').value = product.price;
         document.getElementById('editProdStock').value = product.stock;
+        document.getElementById('editProdRating').value = product.rating !== undefined ? product.rating : 5.0;
         document.getElementById('editProdDiscount').value = product.discount || 0;
         document.getElementById('editProdDesc').value = product.description;
 
@@ -212,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category: document.getElementById('editProdCategory').value,
             price: parseFloat(document.getElementById('editProdPrice').value),
             stock: parseInt(document.getElementById('editProdStock').value),
+            rating: parseFloat(document.getElementById('editProdRating').value) || 5.0,
             discount: parseInt(document.getElementById('editProdDiscount').value) || 0,
             description: document.getElementById('editProdDesc').value,
             updatedAt: new Date()

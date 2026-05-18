@@ -735,24 +735,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = prod.images && prod.images.length > 0 ? prod.images[0] : 'assets/images/default.png';
         const discountTag = prod.discount > 0 ? `<span class="discount-badge">-${prod.discount}%</span>` : '';
         
+        // Stock Status Setup
+        const stock = prod.stock !== undefined ? parseInt(prod.stock) : 0;
+        const isOutOfStock = stock === 0;
+        let stockBadgeHTML = '';
+        let cardStyle = isOutOfStock ? 'filter: grayscale(1); opacity: 0.75;' : '';
+        let cartBtnHTML = isOutOfStock 
+            ? `<button class="add-cart-btn" disabled style="background: var(--nav-border); cursor: not-allowed; opacity: 0.5;" title="Out of Stock"><i class="fas fa-lock"></i></button>`
+            : `<button class="add-cart-btn" title="Add to Bag"><i class="fas fa-plus"></i></button>`;
+
+        if (isOutOfStock) {
+            stockBadgeHTML = `<span class="stock-display out-of-stock" style="color: var(--primary-red); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Out of Stock</span>`;
+        } else if (stock <= 3) {
+            stockBadgeHTML = `<span class="stock-display stock-low" style="color: #d97706; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 5px;"><i class="fas fa-hourglass-half"></i> Only ${stock} left</span>`;
+        } else {
+            stockBadgeHTML = `<span class="stock-display stock-ok" style="color: #666; font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 5px;">Stock: ${stock} available</span>`;
+        }
+
+        // Manual Star Rating Setup
+        const rating = prod.rating !== undefined ? parseFloat(prod.rating) : 5.0;
+        let starsHTML = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(rating)) {
+                starsHTML += `<i class="fas fa-star" style="color: #ebac14; margin-right: 2px;"></i>`;
+            } else if (i - 0.5 <= rating) {
+                starsHTML += `<i class="fas fa-star-half-alt" style="color: #ebac14; margin-right: 2px;"></i>`;
+            } else {
+                starsHTML += `<i class="far fa-star" style="color: var(--nav-border); margin-right: 2px;"></i>`;
+            }
+        }
+
         return `
-            <div class="product-card" data-id="${prod.id}" style="animation: fadeInUp 0.5s ease backwards">
+            <div class="product-card" data-id="${prod.id}" style="animation: fadeInUp 0.5s ease backwards; ${cardStyle}">
                 <div class="product-image">
                     ${discountTag}
                     <button class="fav-btn" title="Add to Wishlist"><i class="far fa-heart"></i></button>
                     <img src="${img}" alt="${prod.title}">
                 </div>
                 <div class="product-info">
+                    ${stockBadgeHTML}
                     <span class="product-category">${prod.category}</span>
                     <h3 class="product-name">${prod.title}</h3>
-                    <div class="product-rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    <div class="product-rating" style="display: flex; margin-bottom: 10px;">
+                        ${starsHTML}
                     </div>
                     <div class="product-footer">
                         <div class="product-price">
                             <span class="current-price">$${prod.price.toLocaleString()}</span>
                         </div>
-                        <button class="add-cart-btn"><i class="fas fa-plus"></i></button>
+                        ${cartBtnHTML}
                     </div>
                 </div>
             </div>

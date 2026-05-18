@@ -181,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update Products Card (Index 2)
             updateStatUI(2, productsSnap.size, 'Cataloged Pieces');
 
-            // Populate Trending Section with Real Top Pieces
-            populateTrendingProducts(products.slice(0, 3));
+            // Populate Trending Section with Real Top Pieces sorted by sales volume (sales impact)
+            const trending = [...products].sort((a, b) => (b.soldCount || b.sold || 0) - (a.soldCount || a.sold || 0));
+            populateTrendingProducts(trending.slice(0, 3));
 
             // Populate Low Stock Alerts dynamically
             populateLowStockAlerts(products);
@@ -260,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img src="${imageUrl}" alt="${prod.title || 'Product'}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(prod.title || 'Product')}&background=random'">
                     <div class="info">
                         <h3 style="font-weight: 600;">${prod.title || 'Piece'}</h3>
-                        <p>${price}</p>
+                        <p>${price} &bull; ${prod.soldCount || prod.sold || 0} sold</p>
                     </div>
                 </li>
             `;
