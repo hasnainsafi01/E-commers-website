@@ -19,11 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (favUnsubscribe) favUnsubscribe();
             userFavs.clear();
             updateUI([]);
+            
+            // Protect Favorites page access
+            if (window.location.pathname.includes('favorites.html')) {
+                window.showToast("Please login first", "error");
+                sessionStorage.setItem('chenari_trigger_login_modal', 'true');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            }
         }
     });
 
     const startFavListener = (uid) => {
-        const favRef = collection(db, `users/${uid}/favorites`);
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Recalling Saved Timepieces...");
+        }
+        const favRef = collection(db, `favorites/${uid}/items`);
         favUnsubscribe = onSnapshot(favRef, (snapshot) => {
             const items = [];
             userFavs.clear();
@@ -33,6 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             updateUI(items);
             syncHeartIcons();
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
+        }, (err) => {
+            console.error("Favorites fetch error:", err);
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         });
     };
 
@@ -58,10 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const icon = btn.querySelector('i');
                 if (userFavs.has(id)) {
                     btn.classList.add('active');
-                    icon.classList.replace('far', 'fas');
+                    if (icon) {
+                        icon.className = 'fas fa-heart';
+                    }
                 } else {
                     btn.classList.remove('active');
-                    icon.classList.replace('fas', 'far');
+                    if (icon) {
+                        icon.className = 'far fa-heart';
+                    }
                 }
             }
         });
@@ -85,11 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="fav-btn active" title="Remove from Wishlist">
                             <i class="fas fa-heart"></i>
                         </button>
-                        <img src="${item.image}" alt="${item.title}">
+                        <img src="${item.image}" alt="${item.title || item.name}">
                     </div>
                     <div class="product-info">
                         <span class="product-category">${item.category}</span>
-                        <h3 class="product-name">${item.title}</h3>
+                        <h3 class="product-name">${item.title || item.name}</h3>
                         <div class="product-footer" style="margin-top: 15px;">
                             <div class="product-price">
                                 <span class="current-price">$${item.price.toLocaleString()}</span>
@@ -120,24 +144,81 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleFavClick = async (btn, product) => {
-        if (!currentUser) return;
-        const favRef = doc(db, `users/${currentUser.uid}/favorites`, product.id);
-        
-        if (userFavs.has(product.id)) {
-            await deleteDoc(favRef);
-            window.showToast('Removed from wishlist.');
-        } else {
-            // Fetch full details if needed
-            let fullProduct = product;
-            if (!product.price) {
-                const pSnap = await getDoc(doc(db, 'products', product.id));
-                if (pSnap.exists()) {
-                    const d = pSnap.data();
-                    fullProduct = { id: product.id, title: d.title, price: d.price, category: d.category, image: d.images[0], addedAt: serverTimestamp() };
-                }
+        if (!currentUser) {
+            if (window.showLoginRequiredModal) {
+                window.showLoginRequiredModal({ type: 'fav', data: product });
+            } else {
+                window.showToast('Please login first', 'error');
             }
-            await setDoc(favRef, fullProduct);
-            window.showToast('Saved to your wishlist.');
+            return;
+        }
+
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Updating wishlist...");
+        }
+
+        const favRef = doc(db, `favorites/${currentUser.uid}/items`, product.id);
+        
+        try {
+            if (userFavs.has(product.id)) {
+                await deleteDoc(favRef);
+                if (btn) {
+                    btn.classList.remove('active');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'far fa-heart';
+                }
+                window.showToast('Removed from Favorites');
+            } else {
+                // Fetch full details if needed
+                let fullProduct = product;
+                if (!product.price || !product.image) {
+                    const pSnap = await getDoc(doc(db, 'products', product.id));
+                    if (pSnap.exists()) {
+                        const d = pSnap.data();
+                        fullProduct = {
+                            productId: product.id,
+                            id: product.id,
+                            title: d.title,
+                            name: d.title,
+                            price: d.price,
+                            category: d.category,
+                            image: d.images[0],
+                            quantity: 1,
+                            createdAt: serverTimestamp()
+                        };
+                    }
+                } else {
+                    fullProduct = {
+                        productId: product.id,
+                        id: product.id,
+                        title: product.title || product.name,
+                        name: product.title || product.name,
+                        price: product.price,
+                        category: product.category,
+                        image: product.image,
+                        quantity: 1,
+                        createdAt: serverTimestamp()
+                    };
+                }
+                await setDoc(favRef, fullProduct);
+                if (btn) {
+                    btn.classList.add('active');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-heart';
+                    
+                    // Luxury scale bounce animation on favorite click
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(() => btn.style.transform = 'scale(1)', 200);
+                }
+                window.showToast('Added to Favorites');
+            }
+        } catch (e) {
+            console.error("Wishlist operation failed:", e);
+            window.showToast("Failed to save Favorite", "error");
+        } finally {
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         }
     };
 });

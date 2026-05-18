@@ -17,15 +17,35 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (cartUnsubscribe) cartUnsubscribe();
             updateUI([]); // Reset UI
+            
+            // Protect Cart page access
+            if (window.location.pathname.includes('cart.html')) {
+                window.showToast("Please login first", "error");
+                sessionStorage.setItem('chenari_trigger_login_modal', 'true');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            }
         }
     });
 
     const startCartListener = (uid) => {
-        const cartRef = collection(db, `users/${uid}/cart`);
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Curating Shopping Collection...");
+        }
+        const cartRef = collection(db, `cart/${uid}/items`);
         cartUnsubscribe = onSnapshot(cartRef, (snapshot) => {
             const items = [];
             snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
             updateUI(items);
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
+        }, (err) => {
+            console.error("Cart fetch error:", err);
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         });
     };
 
@@ -38,8 +58,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const badges = document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge');
         const count = items.reduce((sum, item) => sum + item.quantity, 0);
         badges.forEach(badge => {
+            const oldCount = parseInt(badge.innerText) || 0;
             badge.innerText = count;
             badge.style.display = count > 0 ? 'block' : 'none';
+            
+            // Luxurious scale/bounce animation on badge update
+            if (oldCount !== count) {
+                const icon = badge.parentElement.querySelector('i');
+                if (icon) {
+                    icon.style.transform = 'scale(1.3)';
+                    icon.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1)';
+                    }, 250);
+                }
+            }
         });
     };
 
@@ -58,11 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemHTML = `
                 <div class="cart-item" data-id="${item.id}">
                     <div class="cart-item-image">
-                        <img src="${item.image}" alt="${item.title}">
+                        <img src="${item.image}" alt="${item.title || item.name}">
                     </div>
                     <div class="cart-item-info">
                         <div class="cart-item-header">
-                            <h3 class="serif">${item.title}</h3>
+                            <h3 class="serif">${item.title || item.name}</h3>
                             <span class="cart-item-price">$${item.price.toLocaleString()}</span>
                         </div>
                         <span class="cart-item-details">${item.category} / Authentic Piece</span>
@@ -105,49 +138,109 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Exported Global Actions
     window.addToCart = async (product) => {
-        if (!currentUser) return;
-        const itemRef = doc(db, `users/${currentUser.uid}/cart`, product.id);
-        const itemSnap = await getDoc(itemRef);
+        if (!currentUser) {
+            if (window.showLoginRequiredModal) {
+                window.showLoginRequiredModal({ type: 'cart', data: product });
+            } else {
+                window.showToast('Please login first', 'error');
+            }
+            return;
+        }
 
-        if (itemSnap.exists()) {
-            await setDoc(itemRef, { quantity: itemSnap.data().quantity + 1 }, { merge: true });
-        } else {
-            // Fetch full product details if only ID/Title provided
-            let fullProduct = product;
-            if (!product.price || !product.image) {
-                const pSnap = await getDoc(doc(db, 'products', product.id));
-                if (pSnap.exists()) {
-                    const pData = pSnap.data();
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Adding to Collection...");
+        }
+
+        const itemRef = doc(db, `cart/${currentUser.uid}/items`, product.id);
+        
+        try {
+            const itemSnap = await getDoc(itemRef);
+            if (itemSnap.exists()) {
+                await setDoc(itemRef, { quantity: itemSnap.data().quantity + 1 }, { merge: true });
+            } else {
+                // Fetch full product details if only ID/Title provided
+                let fullProduct = product;
+                if (!product.price || !product.image) {
+                    const pSnap = await getDoc(doc(db, 'products', product.id));
+                    if (pSnap.exists()) {
+                        const pData = pSnap.data();
+                        fullProduct = {
+                            productId: product.id,
+                            id: product.id,
+                            title: pData.title,
+                            name: pData.title,
+                            price: pData.price,
+                            category: pData.category,
+                            image: pData.images[0],
+                            quantity: 1,
+                            createdAt: serverTimestamp(),
+                            addedAt: serverTimestamp()
+                        };
+                    }
+                } else {
                     fullProduct = {
-                        id: product.id,
-                        title: pData.title,
-                        price: pData.price,
-                        category: pData.category,
-                        image: pData.images[0],
-                        quantity: 1,
+                        productId: product.id || product.productId,
+                        id: product.id || product.productId,
+                        title: product.title || product.name,
+                        name: product.title || product.name,
+                        price: product.price,
+                        category: product.category,
+                        image: product.image,
+                        quantity: product.quantity || 1,
+                        createdAt: serverTimestamp(),
                         addedAt: serverTimestamp()
                     };
                 }
+                await setDoc(itemRef, fullProduct);
             }
-            await setDoc(itemRef, fullProduct);
+            window.showToast('Added to Cart');
+        } catch (e) {
+            console.error("Cart save error:", e);
+            window.showToast("Failed to save to Cart", "error");
+        } finally {
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         }
-        window.showToast('Added to your collection.');
     };
 
     const changeQty = async (id, delta) => {
-        const itemRef = doc(db, `users/${currentUser.uid}/cart`, id);
-        const itemSnap = await getDoc(itemRef);
-        if (itemSnap.exists()) {
-            let newQty = itemSnap.data().quantity + delta;
-            if (newQty < 1) newQty = 1;
-            await setDoc(itemRef, { quantity: newQty }, { merge: true });
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Updating Quantity...");
+        }
+        try {
+            const itemRef = doc(db, `cart/${currentUser.uid}/items`, id);
+            const itemSnap = await getDoc(itemRef);
+            if (itemSnap.exists()) {
+                let newQty = itemSnap.data().quantity + delta;
+                if (newQty < 1) newQty = 1;
+                await setDoc(itemRef, { quantity: newQty }, { merge: true });
+            }
+        } catch (e) {
+            console.error("Qty update error:", e);
+        } finally {
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
         }
     };
 
     const removeFromCart = async (id) => {
-        const itemRef = doc(db, `users/${currentUser.uid}/cart`, id);
-        await deleteDoc(itemRef);
-        window.showToast('Removed from collection.');
+        if (window.updateChenariLoaderText) {
+            window.updateChenariLoaderText("Removing Item...");
+        }
+        try {
+            const itemRef = doc(db, `cart/${currentUser.uid}/items`, id);
+            await deleteDoc(itemRef);
+            window.showToast('Removed from Cart');
+        } catch (e) {
+            console.error("Remove error:", e);
+            window.showToast("Failed to remove item", "error");
+        } finally {
+            if (window.hideChenariLoader) {
+                window.hideChenariLoader();
+            }
+        }
     };
 
     // Atomic Checkout and Stock Deduction Listener
@@ -161,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Get items currently in the cart
-            const cartRef = collection(db, `users/${currentUser.uid}/cart`);
+            const cartRef = collection(db, `cart/${currentUser.uid}/items`);
             const cartSnap = await getDocs(cartRef);
             const cartItems = [];
             cartSnap.forEach(docSnap => {
@@ -185,13 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const productRef = doc(db, 'products', item.id);
                     const productSnap = await getDoc(productRef);
                     if (!productSnap.exists()) {
-                        throw new Error(`Product ${item.title} no longer exists in the collection.`);
+                        throw new Error(`Product ${item.title || item.name} no longer exists in the collection.`);
                     }
 
                     const productData = productSnap.data();
                     const currentStock = productData.stock || 0;
                     if (currentStock < item.quantity) {
-                        throw new Error(`Insufficient stock for "${item.title}". Only ${currentStock} remaining.`);
+                        throw new Error(`Insufficient stock for "${item.title || item.name}". Only ${currentStock} remaining.`);
                     }
 
                     // Calculate updated stocks and sales
@@ -237,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     items: cartItems.map(item => ({
                         productId: item.id,
-                        title: item.title,
+                        title: item.title || item.name,
                         price: item.price,
                         qty: item.quantity,
                         image: item.image
@@ -255,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 5. Queue clearing the cart items
                 for (const item of cartItems) {
-                    const cartItemRef = doc(db, `users/${currentUser.uid}/cart`, item.id);
+                    const cartItemRef = doc(db, `cart/${currentUser.uid}/items`, item.id);
                     batch.delete(cartItemRef);
                 }
 

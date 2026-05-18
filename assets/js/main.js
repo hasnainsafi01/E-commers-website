@@ -137,11 +137,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.updateChenariLoaderText) {
             window.updateChenariLoaderText("Authenticating Account...");
         }
-        if (user && pendingAction) {
-            executePendingAction();
-        }
 
         if (user) {
+            // Check for pending action in localStorage
+            const pending = localStorage.getItem('chenari_pending_action');
+            if (pending) {
+                localStorage.removeItem('chenari_pending_action');
+                try {
+                    const action = JSON.parse(pending);
+                    console.log("Found pending action to execute post-login:", action);
+                    
+                    // Show Login Successful Toast
+                    window.showToast("Login successful");
+                    
+                    // Execute action with slight delay to ensure other modules are loaded
+                    setTimeout(async () => {
+                        if (action.type === 'cart') {
+                            if (window.addToCart) {
+                                await window.addToCart(action.data);
+                            }
+                        } else if (action.type === 'fav') {
+                            if (window.handleFavClick) {
+                                const btn = document.querySelector(`.product-card[data-id="${action.data.id}"] .fav-btn`) || document.createElement('button');
+                                await window.handleFavClick(btn, action.data);
+                            }
+                        } else if (action.type === 'nav') {
+                            window.location.href = action.data.url;
+                        }
+                    }, 800);
+                } catch (pe) {
+                    console.error("Failed to parse pending action:", pe);
+                }
+            }
+
             // Prevent repeated popups during the same active browser session
             const sessionKey = `chenari_greeted_${user.uid}`;
             if (sessionStorage.getItem(sessionKey)) {
@@ -208,6 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Auth State Changed: Guest user (No authenticated session).");
             if (window.hideChenariLoader) {
                 window.hideChenariLoader();
+            }
+            
+            // Trigger login modal if requested by a redirect
+            if (sessionStorage.getItem('chenari_trigger_login_modal') === 'true') {
+                sessionStorage.removeItem('chenari_trigger_login_modal');
+                setTimeout(() => {
+                    if (window.showLoginRequiredModal) {
+                        window.showLoginRequiredModal({ type: 'nav', data: { url: 'cart.html' } });
+                    }
+                }, 500);
             }
         }
     });
@@ -304,10 +342,185 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    const showAuthModal = (action) => {
-        pendingAction = action;
-        injectAuthModal();
-        setTimeout(() => document.getElementById('authModal').classList.add('active'), 10);
+    // Custom Premium Login Required Modal
+    window.showLoginRequiredModal = (action) => {
+        // Remove existing modal if any
+        const existing = document.getElementById('loginRequiredModal');
+        if (existing) existing.remove();
+
+        const modalHTML = `
+            <div id="loginRequiredModal" class="auth-modal-overlay" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(10, 10, 10, 0.4);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                z-index: 1000000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            ">
+                <div class="auth-modal-content" style="
+                    background: rgba(255, 255, 255, 0.88);
+                    border: 1px solid rgba(255, 255, 255, 0.4);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    border-radius: 20px;
+                    padding: 45px 50px;
+                    width: 90%;
+                    max-width: 440px;
+                    text-align: center;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+                    transform: scale(0.95) translateY(15px);
+                    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    opacity: 0;
+                    box-sizing: border-box;
+                    font-family: 'Inter', sans-serif;
+                ">
+                    <div style="
+                        width: 64px;
+                        height: 64px;
+                        background: rgba(10, 10, 10, 0.03);
+                        border: 1px solid rgba(10, 10, 10, 0.08);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 25px auto;
+                        color: #111;
+                        font-size: 1.6rem;
+                    ">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    
+                    <h2 class="serif" style="
+                        color: #111;
+                        font-size: 1.8rem;
+                        margin: 0 0 12px 0;
+                        font-weight: 400;
+                        letter-spacing: 0.5px;
+                    ">Login Required</h2>
+                    
+                    <p style="
+                        color: #555;
+                        font-size: 0.9rem;
+                        line-height: 1.6;
+                        margin: 0 0 35px 0;
+                    ">Please login to continue using Cart and Favorites.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button id="modalLoginBtn" style="
+                            width: 100%;
+                            padding: 14px;
+                            background: #111;
+                            color: #fff;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            letter-spacing: 1.5px;
+                            text-transform: uppercase;
+                            cursor: pointer;
+                            transition: background 0.2s, transform 0.2s;
+                        ">Login</button>
+                        
+                        <button id="modalSignupBtn" style="
+                            width: 100%;
+                            padding: 14px;
+                            background: transparent;
+                            color: #111;
+                            border: 1px solid #111;
+                            border-radius: 8px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            letter-spacing: 1.5px;
+                            text-transform: uppercase;
+                            cursor: pointer;
+                            transition: background 0.2s;
+                        ">Signup</button>
+                        
+                        <button id="modalCancelBtn" style="
+                            width: 100%;
+                            padding: 14px;
+                            background: transparent;
+                            color: #666;
+                            border: none;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            letter-spacing: 1px;
+                            text-transform: uppercase;
+                            cursor: pointer;
+                        ">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <style>
+                [data-theme="dark"] #loginRequiredModal .auth-modal-content {
+                    background: rgba(18, 18, 18, 0.88) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
+                }
+                [data-theme="dark"] #loginRequiredModal h2 {
+                    color: #fff !important;
+                }
+                [data-theme="dark"] #loginRequiredModal p {
+                    color: #aaa !important;
+                }
+                [data-theme="dark"] #loginRequiredModal .auth-modal-content div:first-child {
+                    background: rgba(255, 255, 255, 0.03) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    color: #fff !important;
+                }
+                [data-theme="dark"] #loginRequiredModal #modalLoginBtn {
+                    background: #fff !important;
+                    color: #000 !important;
+                }
+                [data-theme="dark"] #loginRequiredModal #modalSignupBtn {
+                    border-color: #fff !important;
+                    color: #fff !important;
+                }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = document.getElementById('loginRequiredModal');
+        const card = modal.querySelector('.auth-modal-content');
+
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            card.style.transform = 'scale(1) translateY(0)';
+            card.style.opacity = '1';
+        }, 50);
+
+        const closeModal = () => {
+            card.style.transform = 'scale(0.95) translateY(15px)';
+            card.style.opacity = '0';
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            setTimeout(() => modal.remove(), 500);
+        };
+
+        modal.querySelector('#modalLoginBtn').onclick = () => {
+            localStorage.setItem('chenari_pending_action', JSON.stringify(action));
+            closeModal();
+            setTimeout(() => window.location.href = 'login.html', 300);
+        };
+
+        modal.querySelector('#modalSignupBtn').onclick = () => {
+            localStorage.setItem('chenari_pending_action', JSON.stringify(action));
+            closeModal();
+            setTimeout(() => window.location.href = 'signup.html', 300);
+        };
+
+        modal.querySelector('#modalCancelBtn').onclick = closeModal;
+        modal.onclick = (e) => { if(e.target === modal) closeModal(); };
     };
 
     // Auth-guard for Navbar Links
@@ -315,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', (e) => {
             if (!currentUser) {
                 e.preventDefault();
-                showAuthModal({ type: 'nav', data: { url: link.href } });
+                window.showLoginRequiredModal({ type: 'nav', data: { url: link.href } });
             }
         });
     });
@@ -379,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prodId = card.dataset.id;
                 const prodTitle = card.querySelector('.product-name').innerText;
                 if (!currentUser) {
-                    showAuthModal({ type: 'fav', data: { btn: favBtn, prod: { id: prodId, title: prodTitle } } });
+                    window.showLoginRequiredModal({ type: 'fav', data: { id: prodId, title: prodTitle } });
                 } else {
                     if (window.handleFavClick) window.handleFavClick(favBtn, { id: prodId, title: prodTitle });
                     else window.showToast(`Saved to wishlist!`);
@@ -393,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prodId = card.dataset.id;
                 const prodTitle = card.querySelector('.product-name').innerText;
                 if (!currentUser) {
-                    showAuthModal({ type: 'cart', data: { id: prodId, title: prodTitle } });
+                    window.showLoginRequiredModal({ type: 'cart', data: { id: prodId, title: prodTitle } });
                 } else {
                     if (window.addToCart) window.addToCart({ id: prodId, title: prodTitle });
                     else window.showToast(`Added to your bag!`);

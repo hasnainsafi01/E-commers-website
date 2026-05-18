@@ -138,12 +138,11 @@
         </div>
     </section>
 
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/cart.js"></script>
-    <script src="assets/js/favorites.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/cart.js"></script>
+    <script type="module" src="assets/js/favorites.js"></script>
     <script type="module" src="assets/js/navbar-auth.js"></script>
     <script>
-        // Override dynamic price/name if ID is found, or use defaults
         const urlParams = new URLSearchParams(window.location.search);
         const prodId = urlParams.get('id');
         if (prodId === '4') {
@@ -151,6 +150,37 @@
             document.getElementById('prodPrice').innerText = '$8,200.00';
             document.getElementById('mainImg').src = 'assets/images/watch_2.png';
             document.title = 'Midnight Classic | CHENARI';
+        }
+
+        // Add to Cart and Favorites triggers
+        const addBagBtn = document.querySelector('.add-bag-btn');
+        const saveWishlistBtn = document.querySelector('.save-wishlist-btn');
+
+        const getProductObj = () => {
+            const id = prodId || '1';
+            const name = document.getElementById('prodName').innerText;
+            const price = parseFloat(document.getElementById('prodPrice').innerText.replace(/[$,]/g, ''));
+            const image = document.getElementById('mainImg').getAttribute('src');
+            const category = 'Watches';
+            return { id, title: name, name, price, image, category };
+        };
+
+        if (addBagBtn) {
+            addBagBtn.onclick = () => {
+                const prod = getProductObj();
+                if (window.addToCart) {
+                    window.addToCart(prod);
+                }
+            };
+        }
+
+        if (saveWishlistBtn) {
+            saveWishlistBtn.onclick = () => {
+                const prod = getProductObj();
+                if (window.handleFavClick) {
+                    window.handleFavClick(saveWishlistBtn, prod);
+                }
+            };
         }
     </script>
 </body>
