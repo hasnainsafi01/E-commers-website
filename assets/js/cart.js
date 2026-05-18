@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="cart-item-info">
                         <div class="cart-item-header">
                             <h3 class="serif">${item.title || item.name}</h3>
-                            <span class="cart-item-price">$${item.price.toLocaleString()}</span>
+                            <span class="cart-item-price">PKR ${item.price.toLocaleString()}</span>
                         </div>
                         <span class="cart-item-details">${item.category} / Authentic Piece</span>
                         <div class="cart-item-actions">
@@ -168,9 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = subtotal + tax + shipping;
 
         const subtotalEl = document.getElementById('subtotal');
+        const taxEl = document.getElementById('tax');
         const grandTotalEl = document.getElementById('grandTotal');
-        if (subtotalEl) subtotalEl.innerText = `$${subtotal.toLocaleString()}.00`;
-        if (grandTotalEl) grandTotalEl.innerText = `$${total.toLocaleString()}.00`;
+        if (subtotalEl) subtotalEl.innerText = `PKR ${subtotal.toLocaleString()}`;
+        if (taxEl) taxEl.innerText = `PKR ${tax.toLocaleString()}`;
+        if (grandTotalEl) grandTotalEl.innerText = `PKR ${total.toLocaleString()}`;
     };
 
     // Exported Global Actions
@@ -364,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (cartItems.length === 0) {
-                    window.showToast('Your shopping bag is empty.', 'error');
+                    window.showToast('Your shopping cart is empty.', 'error');
                     checkoutBtn.disabled = false;
                     checkoutBtn.innerHTML = 'Proceed to Checkout';
                     return;

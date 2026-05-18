@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td>${date.toLocaleDateString()}</td>
-                    <td>€${order.total.toLocaleString()}</td>
+                    <td>PKR ${order.total.toLocaleString()}</td>
                     <td><span class="status-badge ${statusClass}">${order.status}</span></td>
                     <td>
                         <button class="btn-icon" onclick="viewOrderDetails('${order.id}')" title="View Details">
@@ -140,9 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <strong>Notes:</strong> ${order.client.notes || 'None'}
         `;
         detailCustomerEmail.innerText = order.client.email;
-        detailSubtotal.innerText = `€${order.subtotal.toLocaleString()}`;
-        detailShipping.innerText = `€${order.shipping.toLocaleString()}`;
-        detailTotal.innerText = `€${order.total.toLocaleString()}`;
+        detailSubtotal.innerText = `PKR ${order.subtotal.toLocaleString()}`;
+        detailShipping.innerText = `PKR ${order.shipping.toLocaleString()}`;
+        detailTotal.innerText = `PKR ${order.total.toLocaleString()}`;
         updateStatusSelect.value = order.status;
 
         detailItemsList.innerHTML = '';
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4 style="margin: 0; font-size: 1rem;">${item.title}</h4>
                         <span style="font-size: 0.8rem; color: var(--admin-text-secondary);">Qty: ${item.qty}</span>
                     </div>
-                    <div style="font-weight: 600;">€${(item.price * item.qty).toLocaleString()}</div>
+                    <div style="font-weight: 600;">PKR ${(item.price * item.qty).toLocaleString()}</div>
                 </div>
             `;
             detailItemsList.insertAdjacentHTML('beforeend', itemHTML);
@@ -207,5 +207,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Execution
-    initMockOrders().then(() => fetchOrders());
+    fetchOrders();
 });

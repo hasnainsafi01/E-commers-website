@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Bind data
         prodNameEl.innerText = prod.title;
-        prodPriceEl.innerText = `$${prod.price.toLocaleString()}.00`;
+        prodPriceEl.innerText = `PKR ${prod.price.toLocaleString()}`;
         descEl.innerText = prod.description;
         breadcrumbsEl.innerText = `${prod.category} / Premium Collection / ${prod.title}`;
         document.title = `${prod.title} | CHENARI`;
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stockBadgeContainer.innerHTML = `<span style="color: #d97706; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;"><i class="fas fa-hourglass-half"></i> Only ${stock} pieces left</span>`;
             if (addBagBtn) {
                 addBagBtn.disabled = false;
-                addBagBtn.innerHTML = 'Add to Shopping Bag';
+                addBagBtn.innerHTML = 'Add to Shopping Cart';
                 addBagBtn.style.background = '';
                 addBagBtn.style.cursor = 'pointer';
                 addBagBtn.style.opacity = '1';
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stockBadgeContainer.innerHTML = `<span style="color: #666; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 5px;"></i> In Stock (${stock} available)</span>`;
             if (addBagBtn) {
                 addBagBtn.disabled = false;
-                addBagBtn.innerHTML = 'Add to Shopping Bag';
+                addBagBtn.innerHTML = 'Add to Shopping Cart';
                 addBagBtn.style.background = '';
                 addBagBtn.style.cursor = 'pointer';
                 addBagBtn.style.opacity = '1';

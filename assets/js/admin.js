@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Update Revenue Card (Index 0)
-            updateStatUI(0, `€${totalRevenue.toLocaleString()}`, 'Total Revenue');
+            updateStatUI(0, `PKR ${totalRevenue.toLocaleString()}`, 'Total Revenue');
             // Update Active Orders Card (Index 1)
             updateStatUI(1, ordersSnap.size, 'Active Orders');
 
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td>${order.items ? order.items.length : 0} Items</td>
                     <td>${date}</td>
-                    <td style="font-weight: 600; color: var(--admin-text-primary);">€${order.total?.toLocaleString()}</td>
+                    <td style="font-weight: 600; color: var(--admin-text-primary);">PKR ${order.total?.toLocaleString()}</td>
                     <td>
                         <span class="status-badge status-${order.status?.toLowerCase() || 'pending'}">
                             ${order.status || 'Pending'}
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         trendingList.innerHTML = '';
         trendingProducts.forEach(prod => {
             const imageUrl = (prod.images && prod.images.length > 0) ? prod.images[0] : 'https://ui-avatars.com/api/?name=Piece';
-            const price = prod.price ? `€${prod.price.toLocaleString()}` : '€0';
+            const price = prod.price ? `PKR ${prod.price.toLocaleString()}` : 'PKR 0';
             trendingList.innerHTML += `
                 <li class="trending-item">
                     <img src="${imageUrl}" alt="${prod.title || 'Product'}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(prod.title || 'Product')}&background=random'">
@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ticks: { 
                             color: isDark ? '#888' : '#666',
                             font: { family: 'Inter', size: 10 },
-                            callback: value => '€' + value.toLocaleString()
+                            callback: value => 'PKR ' + value.toLocaleString()
                         }
                     }
                 }

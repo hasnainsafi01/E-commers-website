@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </td>
                     <td data-label="Category">${product.category}</td>
-                    <td data-label="Price">€${parseFloat(product.price).toLocaleString()}</td>
+                    <td data-label="Price">PKR ${parseFloat(product.price).toLocaleString()}</td>
                     <td data-label="Stock Status">
                         <span class="stock-badge ${product.stock < 10 ? 'stock-low' : 'stock-ok'}">
                             ${product.stock} in stock

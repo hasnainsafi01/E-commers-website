@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <div style="display:flex;align-items:center;gap:12px;">
                                     <span style="background:${sc.bg};color:${sc.color};padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">${order.status}</span>
-                                    <strong style="font-size:1rem;">$${(order.total || 0).toLocaleString()}</strong>
+                                    <strong style="font-size:1rem;">PKR ${(order.total || 0).toLocaleString()}</strong>
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">

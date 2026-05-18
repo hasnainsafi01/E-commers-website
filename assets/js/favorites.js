@@ -116,9 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3 class="product-name">${item.title || item.name}</h3>
                         <div class="product-footer" style="margin-top: 15px;">
                             <div class="product-price">
-                                <span class="current-price">$${item.price.toLocaleString()}</span>
+                                <span class="current-price">PKR ${item.price.toLocaleString()}</span>
                             </div>
-                            <button class="add-cart-btn" title="Move to Bag"><i class="fas fa-shopping-bag"></i></button>
+                            <button class="add-cart-btn" title="Move to Cart"><i class="fas fa-shopping-bag"></i></button>
                         </div>
                     </div>
                 </div>

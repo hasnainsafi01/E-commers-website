@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li><a href="products.html?category=watches"><i class="fas fa-clock"></i> Watches</a></li>
                                 <li><a href="products.html?category=bags"><i class="fas fa-shopping-bag"></i> Bags</a></li>
                                 <li><a href="products.html?category=shoes"><i class="fas fa-shoe-prints"></i> Shoes</a></li>
-                                <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-cart"></i> Bag</a></li>
+                                <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-cart"></i> Cart</a></li>
                                 <li><a href="favorites.html" class="auth-guarded"><i class="fas fa-heart"></i> Favorites</a></li>
                             </ul>
                         </div>
@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <ul class="drawer-links" style="margin-bottom: 20px;">
                     <li><a href="profile.html" class="auth-guarded"><i class="fas fa-user-circle"></i> Profile</a></li>
-                    <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-basket"></i> View Bag</a></li>
+                    <li><a href="cart.html" class="auth-guarded"><i class="fas fa-shopping-basket"></i> View Cart</a></li>
                     <li><a href="favorites.html" class="auth-guarded"><i class="fas fa-heart-broken"></i> View Favorites</a></li>
                 </ul>
                 
@@ -726,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { type, data } = pendingAction;
         if (type === 'cart') {
             if (window.addToCart) window.addToCart(data);
-            else window.showToast(`Added ${data.title} to your bag!`);
+            else window.showToast(`Added ${data.title} to your cart!`);
         } else if (type === 'fav') {
             if (window.handleFavClick) window.handleFavClick(data.btn, data.prod);
             else window.showToast(`Saved ${data.prod.title} to your wishlist!`);
@@ -748,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let cardStyle = isOutOfStock ? 'filter: grayscale(1); opacity: 0.75;' : '';
         let cartBtnHTML = isOutOfStock 
             ? `<button class="add-cart-btn" disabled style="background: var(--nav-border); cursor: not-allowed; opacity: 0.5;" title="Out of Stock"><i class="fas fa-lock"></i></button>`
-            : `<button class="add-cart-btn" title="Add to Bag"><i class="fas fa-plus"></i></button>`;
+            : `<button class="add-cart-btn" title="Add to Cart"><i class="fas fa-plus"></i></button>`;
 
         if (isOutOfStock) {
             stockBadgeHTML = `<span class="stock-display out-of-stock" style="color: var(--primary-red); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Out of Stock</span>`;
@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="product-footer">
                         <div class="product-price">
-                            <span class="current-price">$${prod.price.toLocaleString()}</span>
+                            <span class="current-price">PKR ${prod.price.toLocaleString()}</span>
                         </div>
                         ${cartBtnHTML}
                     </div>
@@ -828,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.showLoginRequiredModal({ type: 'cart', data: { id: prodId, title: prodTitle } });
                 } else {
                     if (window.addToCart) window.addToCart({ id: prodId, title: prodTitle });
-                    else window.showToast(`Added to your bag!`);
+                    else window.showToast(`Added to your cart!`);
                 }
             };
         });
@@ -963,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-img">
                         <div class="search-result-info">
                             <span class="search-result-title">${p.title}</span>
-                            <span class="search-result-price">$${p.price.toLocaleString()}</span>
+                            <span class="search-result-price">PKR ${p.price.toLocaleString()}</span>
                         </div>
                     </a>
                 `).join('');
