@@ -1537,9 +1537,8 @@ body {
 
 .filters-wrapper {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 30px;
+    gap: 20px;
     flex-wrap: wrap;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--nav-border);
@@ -1575,18 +1574,23 @@ body {
 .search-box {
     position: relative;
     flex: 1;
+    min-width: 220px;
     max-width: 400px;
+    display: flex;
+    align-items: center;
 }
 
 .search-box input {
     width: 100%;
-    padding: 12px 20px 12px 45px;
+    height: 44px;
+    padding: 0 20px 0 45px;
     border-radius: 30px;
     border: 1px solid var(--nav-border);
     background: var(--search-bg);
     color: var(--text-color);
     outline: none;
     transition: var(--transition);
+    display: block;
 }
 
 .search-box i {
@@ -1595,16 +1599,23 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: #888;
+    pointer-events: none;
+    line-height: 1;
 }
 
 .sort-select {
     padding: 10px 20px;
+    height: 44px;
     border-radius: 10px;
     border: 1px solid var(--nav-border);
     background: var(--bg-color);
     color: var(--text-color);
     outline: none;
     cursor: pointer;
+    flex-shrink: 0;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Skeleton Loading Animation */
@@ -3122,7 +3133,7 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-right: 20px;
+    flex-shrink: 0;
 }
 
 .nav-avatar {

@@ -3,6 +3,17 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inject a hidden placeholder immediately to prevent layout shift
+    const navActions = document.querySelector('.nav-actions');
+    if (navActions && !document.getElementById('navbarAuth')) {
+        const placeholder = document.createElement('div');
+        placeholder.id = 'navbarAuth';
+        placeholder.className = 'nav-auth-group';
+        placeholder.style.opacity = '0';
+        placeholder.style.transition = 'opacity 0.25s ease';
+        navActions.prepend(placeholder);
+    }
+
     onAuthStateChanged(auth, async (user) => {
         const navActions = document.querySelector('.nav-actions');
         if (!navActions) return;
@@ -12,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
             authContainer = document.createElement('div');
             authContainer.id = 'navbarAuth';
             authContainer.className = 'nav-auth-group';
+            authContainer.style.opacity = '0';
+            authContainer.style.transition = 'opacity 0.25s ease';
             navActions.prepend(authContainer);
         }
 
@@ -21,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="login.html" class="nav-login-btn">Login</a>
                 <a href="signup.html" class="nav-signup-btn">Sign Up</a>
             `;
+            requestAnimationFrame(() => { authContainer.style.opacity = '1'; });
             return;
         }
 
@@ -91,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="signup.html" class="nav-signup-btn">Sign Up</a>
             `;
         }
+
+        // Fade in auth container after content is ready
+        requestAnimationFrame(() => { authContainer.style.opacity = '1'; });
     });
 
     // Global Logout Modal Implementation
