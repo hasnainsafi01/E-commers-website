@@ -339,8 +339,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Update order status
-            batch.update(orderRef, { status: 'Cancelled' });
+            // Update order status and tracking fields
+            const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+            batch.update(orderRef, { 
+                status: 'Cancelled',
+                cancelledAt: serverTimestamp(),
+                cancelledBy: currentAuthUser ? currentAuthUser.uid : 'user',
+                cancellationAllowed: false
+            });
             
             await batch.commit();
             window.showToast("Order cancelled successfully.");

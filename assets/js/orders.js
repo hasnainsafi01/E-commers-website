@@ -145,6 +145,17 @@ document.addEventListener('DOMContentLoaded', () => {
         detailTotal.innerText = `PKR ${order.total.toLocaleString()}`;
         updateStatusSelect.value = order.status;
 
+        const cancelInfoDiv = document.getElementById('cancelInfoDiv');
+        if (cancelInfoDiv) {
+            if (order.status === 'Cancelled' && order.cancelledAt) {
+                const cancelDate = order.cancelledAt.toDate ? order.cancelledAt.toDate() : new Date(order.cancelledAt);
+                cancelInfoDiv.innerHTML = `<strong>Cancelled:</strong> ${cancelDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}<br><strong>By User:</strong> ${order.cancelledBy || 'Unknown'}`;
+                cancelInfoDiv.style.display = 'block';
+            } else {
+                cancelInfoDiv.style.display = 'none';
+            }
+        }
+
         detailItemsList.innerHTML = '';
         order.items.forEach(item => {
             const itemHTML = `
