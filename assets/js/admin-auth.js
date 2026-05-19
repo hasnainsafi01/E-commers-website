@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 2. Perform Firebase Authentication login
                 const credential = await signInWithEmailAndPassword(auth, email, password);
                 user = credential.user;
+                console.log("Firebase login success");
+                console.log("UID:", user.uid);
             } catch (authErr) {
                 console.error("Admin Auth Credentials Failure:", authErr);
                 let msg = "Invalid email or password";
@@ -72,7 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            console.log("Firestore doc found");
             const userData = userSnap.data();
+            console.log("Role:", userData.role);
 
             // 4. Role validation
             if (userData.role === 'admin') {
@@ -84,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.showToast("Portal unlocked. Welcome, Admin.");
                 }
 
+                console.log("Redirecting to dashboard");
                 submitBtn.innerHTML = '<i class="fas fa-check"></i> Redirecting...';
                 setTimeout(() => {
                     window.location.href = 'admin.html';

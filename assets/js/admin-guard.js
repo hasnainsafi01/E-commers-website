@@ -293,6 +293,16 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
+    // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
+    const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
+    if (isGoogleUser) {
+        showAccessDeniedModal(
+            "Access denied. Admin privileges required.",
+            true
+        );
+        return;
+    }
+
     // Authenticated: transition login modal back to active loading curator verification curtain
     if (curtain) {
         curtain.style.opacity = '1';
@@ -340,26 +350,34 @@ onAuthStateChanged(auth, async (user) => {
             </style>
         `;
     }
-
-    // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
-    const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
-    if (isGoogleUser) {
+    
+    // Set a 5-second failsafe timeout to prevent permanent loading screens
+    const fetchTimeout = setTimeout(() => {
+        console.error("Firestore role fetch took too long (5s timeout triggered).");
         showAccessDeniedModal(
-            "Access denied. Admin privileges required.",
+            "Unable to load admin dashboard.",
             true
         );
-        return;
-    }
+    }, 5000);
     
     try {
-        // Fetch real role from Firestore (Bulletproof check)
+        console.log("Firebase login success");
+        console.log("UID:", user.uid);
+
+        // Fetch real role from Firestore (Bulletproof check using exact document ID = auth.currentUser.uid)
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         
+        // Clear failsafe timeout immediately since getDoc resolved
+        clearTimeout(fetchTimeout);
+        
         if (userSnap.exists()) {
+            console.log("Firestore doc found");
             const userData = userSnap.data();
+            console.log("Role:", userData.role);
             
             if (userData.role === 'admin') {
+                console.log("Redirecting to dashboard");
                 // Admin authorized -> Add authenticated reveal class to body
                 document.body.classList.add('authenticated-admin');
                 
@@ -377,6 +395,8 @@ onAuthStateChanged(auth, async (user) => {
                 }
                 return;
             }
+        } else {
+            console.warn("Firestore user document not found for UID:", user.uid);
         }
         
         // Non-admin or doc not found -> Show modern Access Denied modal
@@ -386,9 +406,10 @@ onAuthStateChanged(auth, async (user) => {
         );
         
     } catch (error) {
+        clearTimeout(fetchTimeout);
         console.error("Route Guard Security Error:", error);
         showAccessDeniedModal(
-            "Unable to verify admin account.",
+            "Unable to load admin dashboard.",
             true
         );
     }

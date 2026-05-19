@@ -65,49 +65,40 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAdminAuth = null;
     let chartInstance = null;
 
-    // 1. Auth & Admin Profile Sync
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            // Let admin-guard.js handle redirection to admin-login.html; do not conflict here!
-            return;
-        }
+    // 1. Auth & Admin Profile Sync - Rely on unified listener in admin-guard.js to avoid duplicate listeners & fetches
+    const handleAdminInit = (user) => {
+        currentAdminAuth = user;
 
-        // Failsafe role validation check before initializing listeners to prevent customer leaks
-        try {
-            const adminRef = doc(db, 'users', user.uid);
-            const adminSnap = await getDoc(adminRef);
-            if (!adminSnap.exists() || adminSnap.data().role !== 'admin') {
-                return;
+        // Setup real-time listener for the Admin User's details in Firestore
+        const adminRef = doc(db, 'users', user.uid);
+        onSnapshot(adminRef, (snap) => {
+            if (snap.exists()) {
+                currentAdminDoc = snap.data();
+                const name = currentAdminDoc.name || currentAdminDoc.displayName || user.displayName || 'Admin User';
+                const role = currentAdminDoc.role || 'Chief Curator';
+                const photoURL = currentAdminDoc.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
+
+                const nameElem = document.getElementById('adminName');
+                const roleElem = document.getElementById('adminRole');
+                const avatarImg = document.getElementById('adminAvatarImg');
+
+                if (nameElem) nameElem.innerText = name;
+                if (roleElem) roleElem.innerText = role;
+                if (avatarImg) avatarImg.src = photoURL;
             }
+        });
 
-            currentAdminAuth = user;
-            currentAdminDoc = adminSnap.data();
+        // Initialize Real-Time Dashboard Queries
+        initRealtimeDashboard();
+    };
 
-            // Setup real-time listener for the Admin User's details in Firestore
-            onSnapshot(adminRef, (snap) => {
-                if (snap.exists()) {
-                    currentAdminDoc = snap.data();
-                    const name = currentAdminDoc.name || currentAdminDoc.displayName || user.displayName || 'Admin User';
-                    const role = currentAdminDoc.role || 'Chief Curator';
-                    const photoURL = currentAdminDoc.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
-
-                    const nameElem = document.getElementById('adminName');
-                    const roleElem = document.getElementById('adminRole');
-                    const avatarImg = document.getElementById('adminAvatarImg');
-
-                    if (nameElem) nameElem.innerText = name;
-                    if (roleElem) roleElem.innerText = role;
-                    if (avatarImg) avatarImg.src = photoURL;
-                }
-            });
-
-            // Initialize Real-Time Dashboard Queries
-            initRealtimeDashboard();
-
-        } catch (err) {
-            console.error("Dashboard auth snapshot setup failed:", err);
-        }
-    });
+    if (window.authenticatedAdminUser) {
+        handleAdminInit(window.authenticatedAdminUser);
+    } else {
+        window.addEventListener('admin-auth-success', (e) => {
+            handleAdminInit(e.detail);
+        });
+    }
 
     // 2. Avatar Selection and Cloudinary Upload
     const avatarInput = document.getElementById('adminAvatarInput');
