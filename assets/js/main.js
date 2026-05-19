@@ -1,6 +1,7 @@
 import { db, auth, googleProvider } from './firebase-config.js';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { fetchPersonalizedRecommendations, renderRecommendationsToContainer } from './recommendations.js';
 
 // Clean URL routing redirect for admin routes
 const pathname = window.location.pathname.toLowerCase();
@@ -17,6 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUser = null;
     let pendingAction = null;
+
+    // Shared Product Search Cache & Helpers
+    let allProductsCache = [];
+    const ensureCache = async () => {
+        if (allProductsCache.length === 0) {
+            const snapshot = await getDocs(collection(db, 'products'));
+            allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+    };
+    const getCategoryIcon = (cat) => {
+        const icons = { watches: 'fa-clock', bags: 'fa-shopping-bag', shoes: 'fa-shoe-prints', jewelry: 'fa-gem', accessories: 'fa-glasses', electronics: 'fa-mobile-alt', clothing: 'fa-tshirt' };
+        return icons[cat?.toLowerCase()] || 'fa-tag';
+    };
+    const highlightMatch = (text, term) => {
+        if (!term || !text) return text;
+        const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark style="background: rgba(66,133,244,0.15); color: var(--primary-blue); border-radius: 2px; padding: 0 2px; font-weight: 700;">$1</mark>');
+    };
 
     // Welcome Popup Implementation (Declared at the top to prevent temporal dead zone ReferenceErrors)
     const showWelcomePopup = (userName, isFirstVisit) => {
@@ -424,7 +443,156 @@ document.addEventListener('DOMContentLoaded', () => {
         window.updateDrawerAuthUI(currentUser);
     }
 
-    // Removed mobile search overlay logic as requested
+    // Ensure mobile search button is dynamically injected into navbar actions on mobile
+    const navActionsContainer = document.querySelector('.nav-actions');
+    if (navActionsContainer && !document.querySelector('.mobile-search-btn')) {
+        const searchBtn = document.createElement('div');
+        searchBtn.className = 'mobile-search-btn';
+        searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+        navActionsContainer.prepend(searchBtn);
+    }
+
+    // 2c. Mobile Search Overlay Injection & Events
+    const injectMobileSearchOverlay = () => {
+        if (document.getElementById('mobileSearchOverlay')) return;
+        const overlayHTML = `
+            <div id="mobileSearchOverlay" class="mobile-search-overlay">
+                <div class="search-overlay-content">
+                    <div class="search-overlay-header">
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon-active"></i>
+                            <input type="text" id="mobileSearchInput" placeholder="Search MyMart...">
+                        </div>
+                        <button class="search-close-btn" id="mobileSearchCloseBtn">Cancel</button>
+                    </div>
+                    <div class="search-overlay-body">
+                        <div id="mobileSearchResults" class="search-results-list">
+                            <div class="search-empty-state">
+                                <i class="fas fa-search"></i>
+                                <p>Type to search MyMart products</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', overlayHTML);
+    };
+
+    injectMobileSearchOverlay();
+
+    const mobileSearchBtn = document.querySelector('.mobile-search-btn');
+    const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+    const mobileSearchCloseBtn = document.getElementById('mobileSearchCloseBtn');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSearchResults = document.getElementById('mobileSearchResults');
+
+    if (mobileSearchBtn && mobileSearchOverlay) {
+        mobileSearchBtn.addEventListener('click', () => {
+            mobileSearchOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => { if (mobileSearchInput) mobileSearchInput.focus(); }, 150);
+        });
+    }
+
+    if (mobileSearchCloseBtn && mobileSearchOverlay) {
+        mobileSearchCloseBtn.addEventListener('click', () => {
+            mobileSearchOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            if (mobileSearchInput) mobileSearchInput.value = '';
+            if (mobileSearchResults) {
+                mobileSearchResults.innerHTML = `
+                    <div class="search-empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Type to search MyMart products</p>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    if (mobileSearchInput && mobileSearchResults) {
+        let mobileSearchTimeout = null;
+
+        const performMobileSearch = async () => {
+            const term = mobileSearchInput.value.trim().toLowerCase();
+            if (term.length < 2) {
+                mobileSearchResults.innerHTML = `
+                    <div class="search-empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Type to search MyMart products</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                await ensureCache();
+
+                const scored = allProductsCache.map(p => {
+                    let score = 0;
+                    const title = (p.title || '').toLowerCase();
+                    const cat = (p.category || '').toLowerCase();
+                    const desc = (p.description || '').toLowerCase();
+                    const keywords = (Array.isArray(p.keywords) ? p.keywords.join(' ') : (p.keywords || '')).toLowerCase();
+
+                    if (title === term) score += 10;
+                    else if (title.startsWith(term)) score += 7;
+                    else if (title.includes(term)) score += 5;
+
+                    if (cat.includes(term)) score += 4;
+                    if (keywords.includes(term)) score += 3;
+                    if (desc.includes(term)) score += 1;
+
+                    return { ...p, score };
+                }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 10);
+
+                if (scored.length > 0) {
+                    const stockBadge = (p) => {
+                        const s = parseInt(p.stock || 0);
+                        if (s === 0) return `<span style="font-size:0.65rem;color:#e74c3c;font-weight:700;margin-left:6px;">Out of Stock</span>`;
+                        if (s <= 3) return `<span style="font-size:0.65rem;color:#d97706;font-weight:700;margin-left:6px;">Only ${s} left</span>`;
+                        return '';
+                    };
+
+                    mobileSearchResults.innerHTML = scored.map(p => `
+                        <a href="product-details.html?id=${p.id}" class="search-result-row">
+                            <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-row-img">
+                            <div class="search-result-row-info">
+                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                    <span class="search-result-row-title">${highlightMatch(p.title, term)}</span>
+                                    ${stockBadge(p)}
+                                </div>
+                                <span class="search-result-row-category">${highlightMatch(p.category, term)}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="search-result-row-price">PKR ${parseFloat(p.price).toLocaleString()}</span>
+                                <i class="fas fa-chevron-right" style="color:#888;font-size:0.75rem;"></i>
+                            </div>
+                        </a>
+                    `).join('') + `
+                        <a href="products.html?search=${encodeURIComponent(term)}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;font-size:0.85rem;font-weight:700;color:var(--primary-blue);text-decoration:none;border-top:1px solid rgba(0,0,0,0.06);margin-top:10px;" onclick="document.getElementById('mobileSearchOverlay').classList.remove('active');document.body.style.overflow=''">
+                            <i class="fas fa-search" style="font-size:0.75rem;"></i> View all results for "${term}"
+                        </a>
+                    `;
+                } else {
+                    mobileSearchResults.innerHTML = `
+                        <div class="search-empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>No results for <strong>"${term}"</strong></p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Mobile search error:", err);
+            }
+        };
+
+        mobileSearchInput.addEventListener('input', () => {
+            clearTimeout(mobileSearchTimeout);
+            mobileSearchTimeout = setTimeout(performMobileSearch, 280);
+        });
+    }
 
     // 3. Theme Synchronization & Operation
     const currentTheme = localStorage.getItem('theme') || 'light';
@@ -828,6 +996,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    window.renderMyMartProductCard = renderProductCard;
+    window.attachMyMartProductListeners = attachListeners;
+
     // 6. Load Homepage Featured Products
     const featuredContainer = document.getElementById('featuredProducts');
     if (featuredContainer) {
@@ -863,7 +1034,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         };
+        const loadPersonalized = async () => {
+            const container = document.getElementById('personalizedRecommendations');
+            const section = document.getElementById('personalizedRecommendationsSection');
+            if (!container || !section) return;
+
+            try {
+                const products = await fetchPersonalizedRecommendations(4);
+                if (products && products.length > 0) {
+                    section.style.display = 'block';
+                    renderRecommendationsToContainer(products, container);
+                }
+            } catch (error) {
+                console.error("Error loading personalized recommendations:", error);
+            }
+        };
+
         loadFeatured();
+        loadPersonalized();
     }
 
     // 7. Load Product Listing Page — Full Filter & Sort Engine
@@ -1081,27 +1269,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalSearchInput = document.getElementById('globalSearchInput');
     const searchResults = document.getElementById('searchResults');
     if (globalSearchInput && searchResults) {
-        let allProductsCache = [];
         let searchTimeout = null;
         let selectedIndex = -1;
-
-        const highlightMatch = (text, term) => {
-            if (!term || !text) return text;
-            const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return text.replace(regex, '<mark style="background: rgba(66,133,244,0.15); color: var(--primary-blue); border-radius: 2px; padding: 0 2px; font-weight: 700;">$1</mark>');
-        };
-
-        const getCategoryIcon = (cat) => {
-            const icons = { watches: 'fa-clock', bags: 'fa-shopping-bag', shoes: 'fa-shoe-prints', electronics: 'fa-mobile-alt', clothing: 'fa-tshirt' };
-            return icons[cat?.toLowerCase()] || 'fa-tag';
-        };
-
-        const ensureCache = async () => {
-            if (allProductsCache.length === 0) {
-                const snapshot = await getDocs(collection(db, 'products'));
-                allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            }
-        };
 
         const performSearch = async () => {
             const term = globalSearchInput.value.trim().toLowerCase();

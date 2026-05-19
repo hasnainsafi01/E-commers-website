@@ -197,33 +197,18 @@
     </section>
 
     <!-- Related Items -->
-    <section class="related-section">
-        <h2 class="serif" style="font-size: 2.5rem; margin-bottom: 50px;">Related Items</h2>
-        <div class="product-grid">
-            <div class="product-card" data-id="4">
-                <div class="product-image">
-                    <img src="assets/images/watch_2.png" alt="Watch 2">
-                </div>
-                <div class="product-info">
-                    <span class="product-category">Watches</span>
-                    <h3 class="product-name">Midnight Classic</h3>
-                    <div class="product-footer">
-                        <span class="current-price">PKR 8,200</span>
-                    </div>
-                </div>
-            </div>
-            <div class="product-card" data-id="2">
-                <div class="product-image">
-                    <img src="assets/images/bag.png" alt="Bag">
-                </div>
-                <div class="product-info">
-                    <span class="product-category">Bags</span>
-                    <h3 class="product-name">Atelier Suede Tote</h3>
-                    <div class="product-footer">
-                        <span class="current-price">PKR 1,850</span>
-                    </div>
-                </div>
-            </div>
+    <section class="related-section" style="max-width: 1200px; margin: 60px auto; padding: 0 40px;">
+        <h2 class="serif" style="font-size: 2.2rem; margin-bottom: 30px; letter-spacing: 0.5px; border-bottom: 1px solid var(--nav-border); padding-bottom: 15px;">Related Masterpieces</h2>
+        <div class="product-grid" id="relatedProductsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px;">
+            <!-- Dynamic Related Products Injected Here -->
+        </div>
+    </section>
+
+    <!-- Recently Viewed Items -->
+    <section class="recently-viewed-section" id="recentlyViewedSection" style="max-width: 1200px; margin: 60px auto 100px; padding: 0 40px; display: none;">
+        <h2 class="serif" style="font-size: 2.2rem; margin-bottom: 30px; letter-spacing: 0.5px; border-bottom: 1px solid var(--nav-border); padding-bottom: 15px;">Recently Viewed</h2>
+        <div class="product-grid" id="recentlyViewedGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px;">
+            <!-- Dynamic Recently Viewed Items Injected Here -->
         </div>
     </section>
 

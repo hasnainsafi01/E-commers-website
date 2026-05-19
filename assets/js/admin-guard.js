@@ -2,74 +2,60 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Immediately inject a luxurious loading overlay to prevent flash of restricted content
+// Immediately show the shared MyMart auth-grade loader to prevent flash of restricted content
 const injectSecurityCurtain = () => {
-    const curtain = document.createElement('div');
-    curtain.id = 'adminSecurityCurtain';
-    curtain.style.position = 'fixed';
-    curtain.style.top = '0';
-    curtain.style.left = '0';
-    curtain.style.width = '100vw';
-    curtain.style.height = '100vh';
-    curtain.style.background = '#080808';
-    curtain.style.zIndex = '99999';
-    curtain.style.display = 'flex';
-    curtain.style.flexDirection = 'column';
-    curtain.style.alignItems = 'center';
-    curtain.style.justifyContent = 'center';
-    curtain.style.transition = 'opacity 0.5s ease, visibility 0.5s ease';
-    
-    curtain.innerHTML = `
-        <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <!-- MyMart Premium Logo with Custom Letter Coloring -->
-            <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
-                <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
-                <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
-                <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
-                <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
-                <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
-                <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
-                <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
+    let curtain = document.getElementById('adminSecurityCurtain');
+    if (!curtain) {
+        curtain = document.createElement('div');
+        curtain.id = 'adminSecurityCurtain';
+        Object.assign(curtain.style, {
+            position: 'fixed', inset: '0', background: '#090909',
+            zIndex: '99999', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexDirection: 'column',
+            transition: 'opacity 0.35s ease, visibility 0.35s ease'
+        });
+        curtain.innerHTML = `
+            <div style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:800;display:flex;gap:2px;margin-bottom:24px;">
+                <span style="color:#4285F4;">M</span><span style="color:#ea4335;">y</span><span style="color:#34a853;">M</span><span style="color:#fbbc05;">a</span><span style="color:#ff5a5f;">r</span><span style="color:#2e7d32;">t</span>
             </div>
-            
-            <!-- Thin Golden Progress Line -->
-            <div class="loader-progress-bar" style="width: 150px; height: 2px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; margin: 10px auto 0 auto;">
-                <div class="loader-progress-fill" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #d4af37, transparent); animation: progressWave 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);"></div>
+            <div style="width:140px;height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;position:relative;">
+                <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,#d4af37,transparent);animation:mmFallbackBar 1.4s ease-in-out infinite;"></div>
             </div>
-
-            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; margin-top: 25px; font-weight: 500;">Securing Curator Portal...</p>
-        </div>
-        <style>
-            @keyframes securityLetterGlow {
-                0%, 100% {
-                    opacity: 0.25;
-                    transform: translateY(0) scale(1);
-                    filter: drop-shadow(0 0 2px rgba(255,255,255,0.05));
-                }
-                50% {
-                    opacity: 1;
-                    transform: translateY(-8px) scale(1.08);
-                    filter: drop-shadow(0 0 12px currentColor);
-                }
-            }
-            @keyframes progressWave {
-                0% { left: -100%; }
-                100% { left: 100%; }
-            }
-        </style>
-    `;
-    
-    document.documentElement.appendChild(curtain);
+            <p style="font-family:'Inter',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:3px;text-transform:uppercase;margin-top:22px;">Securing Curator Portal...</p>
+            <style>@keyframes mmFallbackBar{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}</style>
+        `;
+        if (document.body) document.body.prepend(curtain);
+        else document.addEventListener('DOMContentLoaded', () => document.body.prepend(curtain));
+    }
+    if (window.showMyMartLoader) {
+        window.showMyMartLoader('Securing Curator Portal...');
+    }
 };
+    
 
 injectSecurityCurtain();
 
+
 // Render centered modern security access denied modal
 const showAccessDeniedModal = (message, forceSignOut = false) => {
-    const curtain = document.getElementById('adminSecurityCurtain');
-    if (!curtain) return;
+    // Hide the shared loader if it was shown
+    if (window.hideMyMartLoader) window.hideMyMartLoader();
 
-    curtain.innerHTML = `
+    // Remove fallback curtain if it exists
+    const legacyCurtain = document.getElementById('adminSecurityCurtain');
+    if (legacyCurtain) legacyCurtain.remove();
+
+    // Create a fresh full-screen overlay for the denial message
+    const overlay = document.createElement('div');
+    overlay.id = 'adminDenialOverlay';
+    Object.assign(overlay.style, {
+        position: 'fixed', inset: '0', background: 'rgba(8,8,8,0.95)',
+        backdropFilter: 'blur(15px)', zIndex: '9999999',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Inter', sans-serif"
+    });
+
+    overlay.innerHTML = `
         <div class="security-card-modal" style="
             max-width: 450px;
             width: 90%;
@@ -85,103 +71,57 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
             font-family: 'Inter', sans-serif;
         ">
-            <div style="
-                width: 70px;
-                height: 70px;
-                background: rgba(255, 59, 48, 0.08);
-                border: 1px solid rgba(255, 59, 48, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 25px auto;
-                color: #ff3b30;
-                font-size: 2rem;
-                box-shadow: 0 0 20px rgba(255, 59, 48, 0.1);
-            ">
+            <div style="width:70px;height:70px;background:rgba(255,59,48,0.08);border:1px solid rgba(255,59,48,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 25px;color:#ff3b30;font-size:2rem;">
                 <i class="fas fa-lock"></i>
             </div>
-            <h2 style="
-                font-family: 'Playfair Display', serif;
-                color: #fff;
-                font-size: 1.8rem;
-                letter-spacing: 0.5px;
-                margin-bottom: 12px;
-                font-weight: 400;
-            ">Access Denied</h2>
-            <p style="
-                color: #a0a0a0;
-                font-size: 0.9rem;
-                line-height: 1.6;
-                margin-bottom: 30px;
-            ">${message}</p>
-            <button id="securityHomeBtn" style="
-                width: 100%;
-                padding: 14px 28px;
-                background: #fff;
-                color: #000;
-                border: none;
-                border-radius: 6px;
-                font-family: 'Inter', sans-serif;
-                font-size: 0.75rem;
-                font-weight: 700;
-                letter-spacing: 1.5px;
-                text-transform: uppercase;
-                cursor: pointer;
-                transition: background 0.2s, transform 0.2s;
-            ">Go Back Home</button>
+            <h2 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;letter-spacing:0.5px;margin-bottom:12px;font-weight:400;">Access Denied</h2>
+            <p style="color:#a0a0a0;font-size:0.9rem;line-height:1.6;margin-bottom:30px;">${message}</p>
+            <button id="securityHomeBtn" style="width:100%;padding:14px 28px;background:#fff;color:#000;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s;">Go Back Home</button>
         </div>
-        <style>
-            #adminSecurityCurtain {
-                background: rgba(10, 10, 10, 0.8) !important;
-                backdrop-filter: blur(15px) !important;
-            }
-        </style>
     `;
 
-    // Smooth card scale-up and opacity fade-in
-    const card = curtain.querySelector('.security-card-modal');
-    setTimeout(() => {
-        if (card) {
-            card.style.transform = 'scale(1)';
-            card.style.opacity = '1';
-        }
-    }, 50);
+    document.body.appendChild(overlay);
 
-    const homeBtn = curtain.querySelector('#securityHomeBtn');
+    // Smooth card scale-up
+    const card = overlay.querySelector('.security-card-modal');
+    setTimeout(() => { if (card) { card.style.transform = 'scale(1)'; card.style.opacity = '1'; } }, 50);
+
+    const homeBtn = overlay.querySelector('#securityHomeBtn');
     if (homeBtn) {
         homeBtn.onmouseover = () => { homeBtn.style.background = '#e5e5e5'; };
         homeBtn.onmouseout = () => { homeBtn.style.background = '#fff'; };
         homeBtn.onclick = async () => {
-            // Animate card scale-down and opacity fade-out
-            if (card) {
-                card.style.transform = 'scale(0.9)';
-                card.style.opacity = '0';
-            }
-            curtain.style.opacity = '0';
-            curtain.style.visibility = 'hidden';
-            
+            if (card) { card.style.transform = 'scale(0.9)'; card.style.opacity = '0'; }
+            overlay.style.opacity = '0';
             if (forceSignOut) {
-                try {
-                    await signOut(auth);
-                } catch(e) { console.warn('Signout error:', e); }
+                try { await signOut(auth); } catch(e) { console.warn('Signout error:', e); }
                 localStorage.clear();
                 sessionStorage.clear();
                 sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
             }
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 500);
+            setTimeout(() => { window.location.href = 'login.html'; }, 500);
         };
     }
 };
 
 // Render centered modern curator login popup modal
 const showSecurityCuratorLoginModal = () => {
-    const curtain = document.getElementById('adminSecurityCurtain');
-    if (!curtain) return;
+    // Hide the shared loader
+    if (window.hideMyMartLoader) window.hideMyMartLoader();
 
-    curtain.innerHTML = `
+    // Remove any existing modal
+    const existing = document.getElementById('adminLoginOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'adminLoginOverlay';
+    Object.assign(overlay.style, {
+        position: 'fixed', inset: '0', background: 'rgba(8,8,8,0.95)',
+        backdropFilter: 'blur(15px)', zIndex: '9999999',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+    });
+
+    overlay.innerHTML = `
         <div class="security-card-modal login-modal" style="
             max-width: 420px;
             width: 90%;
@@ -291,10 +231,6 @@ const showSecurityCuratorLoginModal = () => {
             </form>
         </div>
         <style>
-            #adminSecurityCurtain {
-                background: rgba(10, 10, 10, 0.8) !important;
-                backdrop-filter: blur(15px) !important;
-            }
             .security-card-modal input:focus {
                 outline: none;
                 border-color: rgba(255,255,255,0.3) !important;
@@ -302,8 +238,10 @@ const showSecurityCuratorLoginModal = () => {
         </style>
     `;
 
+    document.body.appendChild(overlay);
+
     // Smooth card scale-up and opacity fade-in
-    const card = curtain.querySelector('.security-card-modal');
+    const card = overlay.querySelector('.security-card-modal');
     setTimeout(() => {
         if (card) {
             card.style.transform = 'scale(1)';
@@ -311,14 +249,14 @@ const showSecurityCuratorLoginModal = () => {
         }
     }, 50);
 
-    const loginForm = curtain.querySelector('#securityLoginForm');
+    const loginForm = overlay.querySelector('#securityLoginForm');
     if (loginForm) {
         loginForm.onsubmit = async (e) => {
             e.preventDefault();
-            const email = curtain.querySelector('#securityEmail').value.trim();
-            const password = curtain.querySelector('#securityPassword').value;
-            const errorDiv = curtain.querySelector('#securityLoginError');
-            const submitBtn = curtain.querySelector('#securityLoginBtn');
+            const email = overlay.querySelector('#securityEmail').value.trim();
+            const password = overlay.querySelector('#securityPassword').value;
+            const errorDiv = overlay.querySelector('#securityLoginError');
+            const submitBtn = overlay.querySelector('#securityLoginBtn');
 
             try {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
@@ -343,25 +281,12 @@ const showSecurityCuratorLoginModal = () => {
 
 // Route Protection Logic
 onAuthStateChanged(auth, async (user) => {
-    let curtain = document.getElementById('adminSecurityCurtain');
-    if (!curtain) {
-        curtain = document.createElement('div');
-        curtain.id = 'adminSecurityCurtain';
-        curtain.style.position = 'fixed';
-        curtain.style.top = '0';
-        curtain.style.left = '0';
-        curtain.style.width = '100vw';
-        curtain.style.height = '100vh';
-        curtain.style.background = '#0b0b0b';
-        curtain.style.zIndex = '99999';
-        curtain.style.display = 'flex';
-        curtain.style.flexDirection = 'column';
-        curtain.style.alignItems = 'center';
-        curtain.style.justifyContent = 'center';
-        curtain.style.transition = 'opacity 0.5s ease, visibility 0.5s ease';
-        document.documentElement.appendChild(curtain);
-    }
-    
+    // The loader/curtain was already shown by injectSecurityCurtain() above.
+    // Here we either clear it (if verified) or show access denied.
+    const curtain = document.getElementById('adminSecurityCurtain');
+    const loginOverlay = document.getElementById('adminLoginOverlay');
+    if (loginOverlay) loginOverlay.remove();
+
     if (!user) {
         // Unauthenticated -> Show login popup modal instead of page redirect
         showSecurityCuratorLoginModal();
@@ -369,51 +294,53 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     // Authenticated: transition login modal back to active loading curator verification curtain
-    curtain.style.opacity = '1';
-    curtain.style.visibility = 'visible';
-    curtain.innerHTML = `
-        <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <!-- MyMart Premium Logo with Custom Letter Coloring -->
-            <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
-                <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
-                <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
-                <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
-                <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
-                <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
-                <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
-                <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
-            </div>
-            
-            <!-- Thin Golden Progress Line -->
-            <div class="loader-progress-bar" style="width: 150px; height: 2px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; margin: 10px auto 0 auto;">
-                <div class="loader-progress-fill" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #d4af37, transparent); animation: progressWave 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);"></div>
-            </div>
+    if (curtain) {
+        curtain.style.opacity = '1';
+        curtain.style.visibility = 'visible';
+        curtain.innerHTML = `
+            <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
+                <!-- MyMart Premium Logo with Custom Letter Coloring -->
+                <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
+                    <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
+                    <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
+                    <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
+                    <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
+                    <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
+                    <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
+                    <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
+                </div>
+                
+                <!-- Thin Golden Progress Line -->
+                <div class="loader-progress-bar" style="width: 150px; height: 2px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; position: relative; overflow: hidden; margin: 10px auto 0 auto;">
+                    <div class="loader-progress-fill" style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #d4af37, transparent); animation: progressWave 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                </div>
 
-            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; margin-top: 25px; font-weight: 500;">Verifying Curator Status...</p>
-        </div>
-        <style>
-            @keyframes securityLetterGlow {
-                0%, 100% {
-                    opacity: 0.25;
-                    transform: translateY(0) scale(1);
-                    filter: drop-shadow(0 0 2px rgba(255,255,255,0.05));
+                <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; margin-top: 25px; font-weight: 500;">Verifying Curator Status...</p>
+            </div>
+            <style>
+                @keyframes securityLetterGlow {
+                    0%, 100% {
+                        opacity: 0.25;
+                        transform: translateY(0) scale(1);
+                        filter: drop-shadow(0 0 2px rgba(255,255,255,0.05));
+                    }
+                    50% {
+                        opacity: 1;
+                        transform: translateY(-8px) scale(1.08);
+                        filter: drop-shadow(0 0 12px currentColor);
+                    }
                 }
-                50% {
-                    opacity: 1;
-                    transform: translateY(-8px) scale(1.08);
-                    filter: drop-shadow(0 0 12px currentColor);
+                @keyframes progressWave {
+                    0% { left: -100%; }
+                    100% { left: 100%; }
                 }
-            }
-            @keyframes progressWave {
-                0% { left: -100%; }
-                100% { left: 100%; }
-            }
-            #adminSecurityCurtain {
-                background: #080808 !important;
-                backdrop-filter: none !important;
-            }
-        </style>
-    `;
+                #adminSecurityCurtain {
+                    background: #080808 !important;
+                    backdrop-filter: none !important;
+                }
+            </style>
+        `;
+    }
 
     // Google Sign-In check: Google users must NEVER access the admin panel under any circumstances
     const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');

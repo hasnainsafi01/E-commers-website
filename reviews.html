@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="assets/js/loader.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews Moderation | MyMart Admin</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <!-- Admin Security Route Guard -->
+    <script type="module" src="assets/js/admin-guard.js"></script>
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                MyMart Admin
+                <span>Inventory Control</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="manage-products.html" class="nav-item">
+                    <i class="fas fa-box"></i> Inventory
+                </a>
+                <a href="stock.html" class="nav-item">
+                    <i class="fas fa-cubes"></i> Stock Control
+                </a>
+                <a href="categories.html" class="nav-item">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="reviews.html" class="nav-item active">
+                    <i class="fas fa-star"></i> Reviews
+                </a>
+
+                <a href="add-product.html" class="add-product-btn" style="display: block; text-align: center; text-decoration: none;">Add Product</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item">
+                    <i class="far fa-question-circle"></i> Support
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-title">
+                    <h1 class="serif">Reviews Moderation</h1>
+                    <p id="reviewsCount">Checking review logs...</p>
+                </div>
+            </header>
+
+            <!-- Table Controls -->
+            <div class="manage-header">
+                <div class="search-filter-group">
+                    <div class="admin-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="reviewsSearch" placeholder="Search by reviewer, product, or comment...">
+                    </div>
+                    <select id="ratingFilter" class="admin-filter">
+                        <option value="all">All Ratings</option>
+                        <option value="5">5 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reviews Table -->
+            <div class="manage-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Product Info</th>
+                            <th>Reviewer Details</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Submission Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewsTableBody">
+                        <!-- Dynamic reviews injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal-overlay" style="z-index: 4000;">
+        <div class="modal-content" style="max-width: 450px; padding: 40px; text-align: center; border: 1px solid var(--admin-border);">
+            <div style="width: 60px; height: 60px; background-color: rgba(255, 59, 48, 0.1); display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 25px auto;">
+                <i class="fas fa-trash-alt" style="color: #ff3b38; font-size: 1.8rem;"></i>
+            </div>
+            <h2 class="serif" style="margin-bottom: 12px; font-size: 1.6rem; letter-spacing: 0.5px;">Delete Review</h2>
+            <p style="color: var(--admin-text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 30px;">Are you sure you want to permanently remove this review? This action cannot be undone.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button type="button" class="btn-ghost" id="cancelDeleteBtn" style="flex: 1; padding: 12px 20px; font-size: 0.75rem; letter-spacing: 1px;">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" style="flex: 1; padding: 12px 20px; background-color: #ff3b38; color: white; border: none; border-radius: 4px; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="statusToast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span>Action Successful!</span>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script type="module" src="assets/js/reviews.js"></script>
+</body>
+</html>

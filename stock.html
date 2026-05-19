@@ -4,7 +4,7 @@
     <script src="assets/js/loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Categories | MyMart Admin</title>
+    <title>Stock Control | MyMart Admin</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
@@ -31,10 +31,10 @@
                 <a href="manage-products.html" class="nav-item">
                     <i class="fas fa-box"></i> Inventory
                 </a>
-                <a href="stock.html" class="nav-item">
+                <a href="stock.html" class="nav-item active">
                     <i class="fas fa-cubes"></i> Stock Control
                 </a>
-                <a href="categories.html" class="nav-item active">
+                <a href="categories.html" class="nav-item">
                     <i class="fas fa-tags"></i> Categories
                 </a>
                 <a href="orders.html" class="nav-item">
@@ -64,58 +64,46 @@
         <main class="admin-main">
             <header class="admin-header">
                 <div class="header-title">
-                    <h1 class="serif">Manage Categories</h1>
-                    <p id="categoryCount">Loading categories...</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn-publish" id="addCategoryBtn">
-                        <i class="fas fa-plus"></i> Add Category
-                    </button>
+                    <h1 class="serif">Stock Control Center</h1>
+                    <p id="stockCount">Checking stock status...</p>
                 </div>
             </header>
 
-            <!-- Categories Grid -->
-            <div class="categories-grid" id="categoriesGrid">
-                <!-- Categories injected here -->
+            <!-- Table Controls -->
+            <div class="manage-header">
+                <div class="search-filter-group">
+                    <div class="admin-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="stockSearch" placeholder="Search by product name...">
+                    </div>
+                    <select id="stockStatusFilter" class="admin-filter">
+                        <option value="all">All Statuses</option>
+                        <option value="healthy">Healthy (10+)</option>
+                        <option value="low">Low Stock (<10)</option>
+                        <option value="out">Out of Stock (0)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stock Table -->
+            <div class="manage-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Product Details</th>
+                            <th>Category</th>
+                            <th>Current Stock</th>
+                            <th>Alert Threshold</th>
+                            <th>Quick Restock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                        <!-- Dynamic stock details loaded here -->
+                    </tbody>
+                </table>
             </div>
         </main>
-    </div>
-
-    <!-- Add/Edit Category Modal -->
-    <div id="categoryModal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close" id="closeCategoryModal">&times;</button>
-            <div class="modal-header">
-                <h2 class="serif" id="modalTitle">Add Category</h2>
-                <p>Define a new segment for your luxury collection.</p>
-            </div>
-            <form id="categoryForm">
-                <input type="hidden" id="categoryId">
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="catName">Category Name</label>
-                        <input type="text" id="catName" placeholder="e.g. Fine Jewelry" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>Category Image</label>
-                        <div id="catImageDropzone" class="dropzone" style="height: 150px;">
-                            <i class="far fa-image"></i>
-                            <p>Upload Category Image</p>
-                            <input type="file" id="catImage" accept="image/*" style="display: none;">
-                        </div>
-                        <div id="catImagePreview" style="margin-top: 10px; display: none;">
-                            <img src="" alt="Preview" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px;">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-actions" style="margin-top: 30px;">
-                    <button type="button" class="btn-ghost" id="cancelCategory">Cancel</button>
-                    <button type="submit" class="btn-publish">
-                        <i class="fas fa-save"></i> Save Category
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- Toast -->
@@ -126,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script type="module" src="assets/js/categories.js"></script>
+    <!-- Script -->
+    <script type="module" src="assets/js/stock.js"></script>
 </body>
 </html>

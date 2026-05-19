@@ -382,19 +382,23 @@ body {
     .nav-actions {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         z-index: 11;
         margin-left: auto;
+    }
+
+    .nav-login-btn, .nav-signup-btn {
+        display: none !important; /* Hide guest buttons from header on mobile; accessible via drawer */
     }
 
     .mobile-search-btn {
         display: flex !important;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
         cursor: pointer;
-        font-size: 18px;
+        font-size: 20px;
         color: var(--text-color);
         transition: var(--transition);
     }
@@ -402,33 +406,30 @@ body {
         color: var(--icon-hover);
     }
 
-    /* Prevent theme icon from breaking line spacing on mobile */
+    /* Hide theme toggle on mobile navbar header; accessible inside hamburger drawer */
     .theme-toggle {
-        margin-right: 0 !important;
-        font-size: 18px !important;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: none !important;
     }
 
-    /* Make badges robust on smaller layouts */
-    .nav-actions a {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Make action links and user profile icon touch-friendly (44x44px target) on smaller layouts */
+    .nav-actions a:not(.nav-login-btn):not(.nav-signup-btn), .nav-avatar {
+        width: 44px !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         position: relative;
     }
 
     .nav-actions .badge {
-        top: -4px !important;
-        right: -4px !important;
+        top: 2px !important;
+        right: 2px !important;
         font-size: 0.65rem !important;
-        width: 16px !important;
-        height: 16px !important;
+        width: 18px !important;
+        height: 18px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* Glassmorphic Mobile Drawer Overlay */
@@ -842,31 +843,31 @@ body {
 
 @media (max-width: 480px) {
     .navbar {
-        padding: 0 10px;
+        padding: 0 12px;
     }
     .navbar .logo {
-        font-size: 18px; /* Safe fit on very narrow devices */
+        font-size: 19px; /* Safe fit on very narrow devices */
         letter-spacing: -0.5px;
     }
     .mobile-toggle {
-        width: 36px;
-        height: 36px;
-        font-size: 18px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
     }
     .nav-actions {
         gap: 6px; /* Tight, beautiful gaps to ensure zero wrapping */
     }
-    .mobile-search-btn, .theme-toggle, .nav-actions a {
-        width: 32px;
-        height: 32px;
-        font-size: 15px !important;
+    .mobile-search-btn, .nav-actions a:not(.nav-login-btn):not(.nav-signup-btn) {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 18px !important;
     }
     .nav-actions .badge {
-        top: -3px !important;
-        right: -3px !important;
-        width: 14px !important;
-        height: 14px !important;
-        font-size: 0.6rem !important;
+        top: 1px !important;
+        right: 1px !important;
+        width: 16px !important;
+        height: 16px !important;
+        font-size: 0.65rem !important;
     }
     .mobile-drawer-content {
         width: 280px;
@@ -895,11 +896,14 @@ body {
         font-size: 0.95rem;
     }
     .fav-btn {
-        width: 28px;
-        height: 28px;
-        top: 8px;
-        right: 8px;
-        font-size: 12px;
+        width: 38px !important;
+        height: 38px !important;
+        top: 10px !important;
+        right: 10px !important;
+        font-size: 15px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 }
 
@@ -3611,4 +3615,92 @@ body {
 [data-theme="dark"] .auth-opt-btn.email {
     background: white;
     color: #1a1a1a;
+}
+
+/* Responsive mobile layouts & product filters */
+@media (max-width: 768px) {
+    .listing-controls {
+        padding: 20px 16px 0 !important;
+    }
+    
+    .listing-controls-top {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .listing-controls-top > div:last-child {
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    .listing-filter-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 16px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Search takes full width */
+    .listing-filter-row > div:nth-child(1) {
+        grid-column: span 2 !important;
+    }
+    
+    /* Category Filter takes left column */
+    #categoryFilter {
+        grid-column: span 1 !important;
+        width: 100% !important;
+    }
+    
+    /* Rating Filter takes right column */
+    #ratingFilter {
+        grid-column: span 1 !important;
+        width: 100% !important;
+    }
+    
+    /* Price Range takes full width, input boxes stretch equally */
+    .listing-filter-row > div:nth-child(3) {
+        grid-column: span 2 !important;
+        display: flex !important;
+        width: 100% !important;
+    }
+    .listing-filter-row > div:nth-child(3) input {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    
+    /* In stock toggle takes left column */
+    .listing-filter-row > label {
+        grid-column: span 1 !important;
+        margin: 0 !important;
+        justify-content: flex-start !important;
+        height: 38px !important;
+    }
+    
+    /* Clear filters button takes right column */
+    #clearFiltersBtn {
+        grid-column: span 1 !important;
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+        height: 38px !important;
+    }
+
+    .products {
+        padding: 0 16px 40px !important;
+    }
+
+    .profile-container {
+        margin-top: 90px !important;
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+        padding: 0 16px !important;
+    }
+
+    .profile-sidebar {
+        position: relative !important;
+        top: 0 !important;
+        padding: 24px 16px !important;
+    }
 }

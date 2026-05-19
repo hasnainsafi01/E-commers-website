@@ -1,6 +1,13 @@
 import { db, auth } from './firebase-config.js';
 import { doc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, serverTimestamp, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+    trackUserBehavior, 
+    addToRecentlyViewed, 
+    fetchRelatedProducts, 
+    fetchRecentlyViewedProducts, 
+    renderRecommendationsToContainer 
+} from './recommendations.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,6 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const prod = docSnap.data();
         activeProduct = { id: docSnap.id, ...prod };
+
+        // AI Recommendations & Telemetry Tracking
+        trackUserBehavior(prodId, prod.category, 'view');
+        addToRecentlyViewed(prodId);
+
+        // Load related items dynamically
+        loadRelatedProducts(prodId, prod.category);
+
+        // Load recently viewed items
+        loadRecentlyViewedList(prodId);
 
         // Bind data
         prodNameEl.innerText = prod.title;
@@ -154,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.addToCart) {
                 window.addToCart(cartProduct);
             }
+            trackUserBehavior(activeProduct.id, activeProduct.category, 'add_to_cart');
         };
     }
 
@@ -172,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.handleFavClick) {
                 window.handleFavClick(saveWishlistBtn, favProduct);
             }
+            trackUserBehavior(activeProduct.id, activeProduct.category, 'add_to_wishlist');
         };
     }
 
@@ -392,4 +411,28 @@ document.addEventListener('DOMContentLoaded', () => {
             window.showToast("Failed to delete reflection.", "error");
         }
     };
+
+    // AI Recommendation Helpers
+    async function loadRelatedProducts(currentId, category) {
+        const relatedGrid = document.getElementById('relatedProductsGrid');
+        if (!relatedGrid) return;
+        const products = await fetchRelatedProducts(currentId, category, 4);
+        renderRecommendationsToContainer(products, relatedGrid);
+    }
+
+    async function loadRecentlyViewedList(currentId) {
+        const recentSection = document.getElementById('recentlyViewedSection');
+        const recentGrid = document.getElementById('recentlyViewedGrid');
+        if (!recentGrid || !recentSection) return;
+
+        const products = await fetchRecentlyViewedProducts();
+        // Filter out current product
+        const filtered = products.filter(p => p.id !== currentId);
+        if (filtered.length > 0) {
+            recentSection.style.display = 'block';
+            renderRecommendationsToContainer(filtered, recentGrid);
+        } else {
+            recentSection.style.display = 'none';
+        }
+    }
 });

@@ -228,6 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 confirmBtn.disabled = true;
                 
+                // Show auth-grade loader during logout
+                if (window.showMyMartLoader) window.showMyMartLoader('Signing out...');
+
                 // Clear active user session
                 localStorage.removeItem('mymart_logged_in_user');
                 
@@ -235,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     await signOut(auth);
                 } catch (e) {
                     console.error("Sign out error:", e);
+                    if (window.hideMyMartLoader) window.hideMyMartLoader();
                 }
                 
                 closeModal();
