@@ -6,7 +6,7 @@
 </head>
 <body>
     <h1>Make Admin/Curator Helper</h1>
-    <button id="btn">Set curator@mymart.com as Curator</button>
+    <button id="btn">Set admin@mymart.com as Admin</button>
     <div id="output"></div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -28,7 +28,7 @@
 
         document.getElementById('btn').onclick = async () => {
             try {
-                const email = "curator@mymart.com";
+                const email = "admin@mymart.com";
                 const password = "password123";
                 
                 document.getElementById('output').innerText = "Logging in / Registering...";
@@ -45,14 +45,14 @@
                 const userRef = doc(db, 'users', user.uid);
                 await setDoc(userRef, {
                     uid: user.uid,
-                    name: 'Chief Curator',
-                    displayName: 'Chief Curator',
+                    name: 'Main Administrator',
+                    displayName: 'Main Administrator',
                     email: user.email,
-                    role: 'curator',
+                    role: 'admin',
                     profileCompleted: true
                 }, { merge: true });
                 
-                document.getElementById('output').innerText = "SUCCESS! User curator@mymart.com is now curator role in Firestore. UID: " + user.uid;
+                document.getElementById('output').innerText = "SUCCESS! User admin@mymart.com is now admin role in Firestore. UID: " + user.uid;
             } catch (err) {
                 document.getElementById('output').innerText = "ERROR: " + err.message;
             }

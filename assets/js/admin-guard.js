@@ -99,7 +99,7 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
                 sessionStorage.clear();
                 sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
             }
-            setTimeout(() => { window.location.href = 'login.html'; }, 500);
+            setTimeout(() => { window.location.href = 'index.html'; }, 500);
         };
     }
 };
@@ -288,8 +288,8 @@ onAuthStateChanged(auth, async (user) => {
     if (loginOverlay) loginOverlay.remove();
 
     if (!user) {
-        // Unauthenticated -> Show login popup modal instead of page redirect
-        showSecurityCuratorLoginModal();
+        // Redirect directly to separate admin login page
+        window.location.href = 'admin-login.html';
         return;
     }
 
@@ -376,7 +376,7 @@ onAuthStateChanged(auth, async (user) => {
         
         // Non-admin or doc not found -> Show modern Access Denied modal
         showAccessDeniedModal(
-            "Exclusive Atelier Curators Only. You are not authorized to access this page.",
+            "Access Denied: You do not have the required administrative permissions to enter this dashboard.",
             true // Force sign out standard users from active Firebase session
         );
         
@@ -539,15 +539,15 @@ const showAdminLogoutConfirmationModal = () => {
                 curtain.style.opacity = '0';
                 curtain.style.visibility = 'hidden';
 
-                // 5. Redirect ONLY to login — never back to homepage as authenticated user
+                // 5. Redirect ONLY to admin login
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.location.href = 'admin-login.html';
                 }, 500);
 
             } catch (err) {
                 console.error("Administrative logout failure:", err);
                 sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
-                window.location.href = 'login.html';
+                window.location.href = 'admin-login.html';
             }
         };
     }
