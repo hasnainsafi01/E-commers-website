@@ -76,7 +76,7 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
             </div>
             <h2 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;letter-spacing:0.5px;margin-bottom:12px;font-weight:400;">Access Denied</h2>
             <p style="color:#a0a0a0;font-size:0.9rem;line-height:1.6;margin-bottom:30px;">${message}</p>
-            <button id="securityHomeBtn" style="width:100%;padding:14px 28px;background:#fff;color:#000;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s;">Go Back Home</button>
+            <button id="securityHomeBtn" style="width:100%;padding:14px 28px;background:#fff;color:#000;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s;">Return to Portal Login</button>
         </div>
     `;
 
@@ -99,7 +99,7 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
                 sessionStorage.clear();
                 sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
             }
-            setTimeout(() => { window.location.href = 'index.html'; }, 500);
+            setTimeout(() => { window.location.href = 'admin-login.html'; }, 500);
         };
     }
 };

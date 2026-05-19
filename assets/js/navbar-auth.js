@@ -108,16 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists() && userSnap.data().role === 'admin') {
-                    // Admin must never have a customer session or UI
+                    // Admin must never have a customer session or UI on the client storefront
                     localStorage.removeItem('mymart_logged_in_user');
                     if (unsubscribeFirestore) {
                         unsubscribeFirestore();
                         unsubscribeFirestore = null;
                     }
                     renderGuestUI();
-                    
-                    // Redirect directly to admin dashboard
-                    window.location.href = 'admin.html';
                     return;
                 }
             } catch (err) {

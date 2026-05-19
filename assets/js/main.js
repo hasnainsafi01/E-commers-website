@@ -5,7 +5,9 @@ import { fetchPersonalizedRecommendations, renderRecommendationsToContainer } fr
 
 // Clean URL routing redirect for admin routes
 const pathname = window.location.pathname.toLowerCase();
-if (pathname.endsWith('/admin') || pathname.endsWith('/admin/') || pathname.includes('/admin-dashboard') || pathname.includes('/admin/dashboard')) {
+if (pathname.endsWith('/admin') || pathname.endsWith('/admin/')) {
+    window.location.href = 'admin-login.html';
+} else if (pathname.includes('/admin-dashboard') || pathname.includes('/admin/dashboard')) {
     window.location.href = 'admin.html';
 }
 
