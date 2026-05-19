@@ -5,7 +5,8 @@ import {
     updateProfile,
     signInWithPopup, 
     sendPasswordResetEmail,
-    onAuthStateChanged 
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -273,9 +274,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn("Failsafe Firestore role resolve failed, defaulting to 'user':", firestoreErr);
                 }
 
-                // 3. Dynamic redirection
+                // 3. Dynamic redirection & admin block
                 if (role === 'admin') {
-                    window.location.href = 'admin.html';
+                    // Prevent admin role session leakage in storefront
+                    await signOut(auth);
+                    if (window.hideMyMartLoader) {
+                        window.hideMyMartLoader();
+                    }
+                    localStorage.removeItem('mymart_logged_in_user');
+                    showFieldError(emailInput, "Please use Admin Panel Login");
+                    triggerCardShake(loginForm);
+                    submitBtn.innerHTML = 'Login';
+                    submitBtn.disabled = false;
                 } else {
                     window.location.href = 'index.html';
                 }

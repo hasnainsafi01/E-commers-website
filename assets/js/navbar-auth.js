@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const navActions = document.querySelector('.nav-actions');
@@ -102,6 +102,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // A user successfully authenticated! Clear the admin logout conflict flags
             sessionStorage.removeItem('mymart_admin_just_logged_out');
             sessionStorage.removeItem('mymart_logged_in_admin');
+
+            // Failsafe role check to ensure admin doesn't get treated as customer
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().role === 'admin') {
+                    // Admin must never have a customer session or UI
+                    localStorage.removeItem('mymart_logged_in_user');
+                    if (unsubscribeFirestore) {
+                        unsubscribeFirestore();
+                        unsubscribeFirestore = null;
+                    }
+                    renderGuestUI();
+                    
+                    // Redirect directly to admin dashboard
+                    window.location.href = 'admin.html';
+                    return;
+                }
+            } catch (err) {
+                console.error("Firestore role lookup failure in navbar:", err);
+            }
         }
 
         // If admin just logged out, force guest UI immediately

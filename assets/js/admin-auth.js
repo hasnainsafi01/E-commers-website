@@ -38,18 +38,37 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear any old session storage before attempting login
             sessionStorage.removeItem('mymart_admin_session');
 
-            // 2. Perform Firebase Authentication login
-            const credential = await signInWithEmailAndPassword(auth, email, password);
-            const user = credential.user;
+            let user;
+            try {
+                // 2. Perform Firebase Authentication login
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                user = credential.user;
+            } catch (authErr) {
+                console.error("Admin Auth Credentials Failure:", authErr);
+                let msg = "Invalid email or password";
+                if (authErr.code === 'auth/too-many-requests') {
+                    msg = "Security hold: Too many attempts. Please try again later.";
+                }
+                showError(msg);
+                return;
+            }
 
-            // 3. Fetch User Document from Firestore to verify role-based permissions
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
+            let userSnap;
+            try {
+                // 3. Fetch User Document from Firestore to verify role-based permissions
+                const userRef = doc(db, 'users', user.uid);
+                userSnap = await getDoc(userRef);
+            } catch (firestoreErr) {
+                console.error("Admin Auth Firestore Failure:", firestoreErr);
+                await signOut(auth);
+                showError("Unable to verify admin account.");
+                return;
+            }
 
             if (!userSnap.exists()) {
                 // User document doesn't exist in Firestore, sign out and error
                 await signOut(auth);
-                showError("Verification failed: User record not found.");
+                showError("Unable to verify admin account.");
                 return;
             }
 
@@ -72,20 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Not an admin! Log out immediately and display error
                 await signOut(auth);
-                showError("Access Denied: This account is not authorized to access the admin portal. You must be an administrator.");
+                showError("Access denied. Admin privileges required.");
             }
 
         } catch (err) {
-            console.error("Admin Authentication Failure:", err);
-            let msg = "Invalid administrative email or password.";
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                msg = "Invalid administrative email or password.";
-            } else if (err.code === 'auth/too-many-requests') {
-                msg = "Security hold: Too many attempts. Please try again later.";
-            } else if (err.message) {
-                msg = err.message;
-            }
-            showError(msg);
+            console.error("Unexpected Admin Authentication Failure:", err);
+            showError("Unable to verify admin account.");
         }
     };
 

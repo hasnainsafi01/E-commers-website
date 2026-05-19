@@ -301,13 +301,12 @@ onAuthStateChanged(auth, async (user) => {
             <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
                 <!-- MyMart Premium Logo with Custom Letter Coloring -->
                 <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
-                    <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
-                    <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
-                    <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">E</span>
-                    <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">N</span>
-                    <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">A</span>
-                    <span style="color: #1b5e20; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">R</span>
-                    <span style="color: #1565c0; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.90s; display: inline-block;">I</span>
+                    <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">M</span>
+                    <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">y</span>
+                    <span style="color: #34a853; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.30s; display: inline-block;">M</span>
+                    <span style="color: #fbbc05; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.45s; display: inline-block;">a</span>
+                    <span style="color: #ff5a5f; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.60s; display: inline-block;">r</span>
+                    <span style="color: #2e7d32; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.75s; display: inline-block;">t</span>
                 </div>
                 
                 <!-- Thin Golden Progress Line -->
@@ -346,7 +345,7 @@ onAuthStateChanged(auth, async (user) => {
     const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
     if (isGoogleUser) {
         showAccessDeniedModal(
-            "Google authenticated accounts are strictly prohibited from accessing the curator dashboard. Please sign in using your designated email and password credentials.",
+            "Access denied. Admin privileges required.",
             true
         );
         return;
@@ -364,6 +363,12 @@ onAuthStateChanged(auth, async (user) => {
                 // Admin authorized -> Add authenticated reveal class to body
                 document.body.classList.add('authenticated-admin');
                 
+                // Expose globally
+                window.authenticatedAdminUser = user;
+                
+                // Trigger success event
+                window.dispatchEvent(new CustomEvent('admin-auth-success', { detail: user }));
+                
                 // Fade out security curtain
                 if (curtain) {
                     curtain.style.opacity = '0';
@@ -376,13 +381,16 @@ onAuthStateChanged(auth, async (user) => {
         
         // Non-admin or doc not found -> Show modern Access Denied modal
         showAccessDeniedModal(
-            "Access Denied: You do not have the required administrative permissions to enter this dashboard.",
+            "Access denied. Admin privileges required.",
             true // Force sign out standard users from active Firebase session
         );
         
     } catch (error) {
         console.error("Route Guard Security Error:", error);
-        window.location.href = 'index.html';
+        showAccessDeniedModal(
+            "Unable to verify admin account.",
+            true
+        );
     }
 });
 

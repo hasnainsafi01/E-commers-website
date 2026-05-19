@@ -150,6 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // A user successfully authenticated! Clear the admin logout conflict flags
             sessionStorage.removeItem('mymart_admin_just_logged_out');
             sessionStorage.removeItem('mymart_logged_in_admin');
+
+            // Failsafe check: if user is admin, hide loader and let navbar-auth handle redirect
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().role === 'admin') {
+                    if (window.hideMyMartLoader) {
+                        window.hideMyMartLoader();
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.warn("Main auth state check failed to fetch role:", err);
+            }
         }
 
         currentUser = user;
