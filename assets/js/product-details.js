@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, onSnapshot, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, serverTimestamp, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -117,10 +117,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 1.5 Quantity Selector Logic
+    const qtyMinus = document.getElementById('qtyMinus');
+    const qtyPlus = document.getElementById('qtyPlus');
+    const prodQuantity = document.getElementById('prodQuantity');
+    
+    if (qtyMinus && qtyPlus && prodQuantity) {
+        qtyMinus.onclick = () => {
+            let val = parseInt(prodQuantity.value);
+            if (val > 1) prodQuantity.value = val - 1;
+        };
+        qtyPlus.onclick = () => {
+            let val = parseInt(prodQuantity.value);
+            const stock = activeProduct && activeProduct.stock !== undefined ? parseInt(activeProduct.stock) : 10;
+            if (val < stock) prodQuantity.value = val + 1;
+            else if (val >= stock) window.showToast(`Only ${stock} items available in stock.`, "error");
+        };
+    }
+
     // 2. Add to Shopping Bag Action
     if (addBagBtn) {
         addBagBtn.onclick = () => {
             if (!activeProduct) return;
+            const qtyInput = document.getElementById('prodQuantity');
+            const selectedQty = qtyInput ? parseInt(qtyInput.value) : 1;
+
             const cartProduct = {
                 id: activeProduct.id,
                 title: activeProduct.title,
@@ -128,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 price: activeProduct.price,
                 image: activeProduct.images && activeProduct.images.length > 0 ? activeProduct.images[0] : 'assets/images/default.png',
                 category: activeProduct.category,
-                quantity: 1
+                quantity: selectedQty
             };
             if (window.addToCart) {
                 window.addToCart(cartProduct);
@@ -282,13 +303,21 @@ document.addEventListener('DOMContentLoaded', () => {
         onSnapshot(reviewsQuery, (snapshot) => {
             if (snapshot.empty) {
                 reviewsList.innerHTML = `<div style="color: #888; font-size: 0.9rem; text-align: center; padding: 50px 0; font-style: italic;">No reflections have been left for this masterpiece yet.</div>`;
+                document.getElementById('averageRatingText').innerText = "0.0";
+                const avgStars = document.getElementById('averageRatingStars');
+                if (avgStars) avgStars.innerHTML = `<i class="far fa-star" style="color: var(--nav-border);"></i>`.repeat(5);
                 return;
             }
 
             reviewsList.innerHTML = '';
+            let totalScore = 0;
+            
             snapshot.forEach(docSnap => {
                 const review = docSnap.data();
+                const reviewId = docSnap.id;
                 const reviewDate = review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString() : 'Recent';
+                
+                totalScore += review.rating;
 
                 // Render Stars
                 let starsHTML = '';
@@ -299,6 +328,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         starsHTML += `<i class="far fa-star" style="color: var(--nav-border); font-size: 0.75rem; margin-right: 2px;"></i>`;
                     }
                 }
+
+                // Check if this review belongs to the current user
+                const isOwner = currentUser && review.userId === currentUser.uid;
+                const actionsHTML = isOwner ? `
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button onclick="window.deleteReview('${reviewId}')" style="background: transparent; border: none; color: #e74c3c; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </div>
+                ` : '';
 
                 const reviewItem = `
                     <div style="border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 25px; margin-bottom: 5px;">
@@ -317,10 +354,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p style="font-size: 0.88rem; color: #555; line-height: 1.6; font-style: italic;">
                             "${review.comment}"
                         </p>
+                        ${actionsHTML}
                     </div>
                 `;
                 reviewsList.insertAdjacentHTML('beforeend', reviewItem);
             });
+
+            // Update Dynamic Average
+            const avgRating = (totalScore / snapshot.size).toFixed(1);
+            document.getElementById('averageRatingText').innerText = avgRating;
+            
+            const averageRatingStars = document.getElementById('averageRatingStars');
+            if (averageRatingStars) {
+                averageRatingStars.innerHTML = '';
+                const numAvg = parseFloat(avgRating);
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.floor(numAvg)) {
+                        averageRatingStars.innerHTML += `<i class="fas fa-star" style="color: #ebac14;"></i>`;
+                    } else if (i - 0.5 <= numAvg) {
+                        averageRatingStars.innerHTML += `<i class="fas fa-star-half-alt" style="color: #ebac14;"></i>`;
+                    } else {
+                        averageRatingStars.innerHTML += `<i class="far fa-star" style="color: var(--nav-border);"></i>`;
+                    }
+                }
+            }
         });
     }
+
+    // Delete Review Logic
+    window.deleteReview = async (reviewId) => {
+        if (!confirm("Are you sure you want to delete your reflection?")) return;
+        try {
+            await deleteDoc(doc(db, 'products', prodId, 'reviews', reviewId));
+            window.showToast("Reflection deleted successfully.");
+        } catch (error) {
+            console.error("Error deleting review:", error);
+            window.showToast("Failed to delete reflection.", "error");
+        }
+    };
 });

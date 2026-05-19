@@ -102,6 +102,15 @@
                 </div>
             </div>
 
+            <div class="quantity-selector" style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                <label style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 1px;">Quantity</label>
+                <div style="display: flex; align-items: center; border: 1px solid var(--nav-border); border-radius: 6px; overflow: hidden;">
+                    <button type="button" id="qtyMinus" style="background: transparent; border: none; padding: 10px 15px; cursor: pointer; color: var(--text-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-minus"></i></button>
+                    <input type="number" id="prodQuantity" value="1" min="1" max="10" style="width: 50px; text-align: center; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 1rem; color: var(--text-color); background: transparent; -moz-appearance: textfield;" readonly>
+                    <button type="button" id="qtyPlus" style="background: transparent; border: none; padding: 10px 15px; cursor: pointer; color: var(--text-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
             <div class="details-actions">
                 <button class="add-bag-btn">Add to Shopping Cart</button>
                 <button class="save-wishlist-btn"><i class="far fa-heart"></i> Save to Wishlist</button>

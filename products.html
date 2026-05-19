@@ -56,24 +56,90 @@
     </header>
 
     <!-- Product Listing Controls -->
-    <section class="listing-controls" style="padding-top: 20px;">
-        <div class="filters-wrapper">
-
-            <!-- Sorting -->
-            <div class="sorting">
-                <select id="sortSelect" class="sort-select">
-                    <option value="default">Sort by: Default</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
+    <section class="listing-controls" style="padding: 28px 40px 0; max-width: 1400px; margin: 0 auto;">
+        <!-- Top Bar: Result count + Sort -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <p id="resultsCount" style="font-size:0.85rem; color:#888; margin:0;">Loading products...</p>
+                <!-- Active Filter Chips -->
+                <div id="activeFilterChips" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <!-- View toggle -->
+                <div style="display:flex; gap:4px; border:1px solid var(--nav-border); border-radius:8px; overflow:hidden;">
+                    <button id="viewGrid" title="Grid view" style="padding:8px 12px; background:var(--primary-blue); color:white; border:none; cursor:pointer; transition:background 0.2s;"><i class="fas fa-th"></i></button>
+                    <button id="viewList" title="List view" style="padding:8px 12px; background:transparent; color:var(--text-color); border:none; cursor:pointer; transition:background 0.2s;"><i class="fas fa-list"></i></button>
+                </div>
+                <select id="sortSelect" style="padding:9px 14px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.85rem; background:var(--nav-bg); color:var(--text-color); cursor:pointer; outline:none; font-family:inherit;">
+                    <option value="default">Sort: Default</option>
+                    <option value="newest">Newest First</option>
+                    <option value="price-low">Price: Low → High</option>
+                    <option value="price-high">Price: High → Low</option>
+                    <option value="rating">Top Rated</option>
+                    <option value="name-az">Name: A → Z</option>
                 </select>
             </div>
+        </div>
+
+        <!-- Filter Row -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:14px 16px; background:var(--nav-bg); border:1px solid var(--nav-border); border-radius:12px; margin-bottom:24px; backdrop-filter:blur(10px);">
+            <!-- Search -->
+            <div style="position:relative; flex:1; min-width:180px;">
+                <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#aaa; font-size:0.8rem; pointer-events:none;"></i>
+                <input id="searchInput" type="text" placeholder="Search products..." style="width:100%; padding:9px 12px 9px 34px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.85rem; background:var(--bg-color); color:var(--text-color); outline:none; font-family:inherit; box-sizing:border-box; transition:border 0.2s;" onfocus="this.style.borderColor='var(--primary-blue)'" onblur="this.style.borderColor='var(--nav-border)'">
+            </div>
+
+            <!-- Category Filter -->
+            <select id="categoryFilter" style="padding:9px 14px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.85rem; background:var(--bg-color); color:var(--text-color); cursor:pointer; outline:none; font-family:inherit;">
+                <option value="all">All Categories</option>
+                <option value="watches">Watches</option>
+                <option value="bags">Bags</option>
+                <option value="shoes">Shoes</option>
+                <option value="jewelry">Jewelry</option>
+                <option value="accessories">Accessories</option>
+                <option value="electronics">Electronics</option>
+                <option value="clothing">Clothing</option>
+            </select>
+
+            <!-- Price Range -->
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input id="priceMin" type="number" placeholder="Min PKR" min="0" style="width:100px; padding:9px 10px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.82rem; background:var(--bg-color); color:var(--text-color); outline:none; font-family:inherit;" onfocus="this.style.borderColor='var(--primary-blue)'" onblur="this.style.borderColor='var(--nav-border)'">
+                <span style="color:#aaa; font-size:0.8rem;">—</span>
+                <input id="priceMax" type="number" placeholder="Max PKR" min="0" style="width:100px; padding:9px 10px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.82rem; background:var(--bg-color); color:var(--text-color); outline:none; font-family:inherit;" onfocus="this.style.borderColor='var(--primary-blue)'" onblur="this.style.borderColor='var(--nav-border)'">
+            </div>
+
+            <!-- Min Rating -->
+            <select id="ratingFilter" style="padding:9px 12px; border:1px solid var(--nav-border); border-radius:8px; font-size:0.85rem; background:var(--bg-color); color:var(--text-color); cursor:pointer; outline:none; font-family:inherit;">
+                <option value="0">Any Rating</option>
+                <option value="4">4★ & above</option>
+                <option value="3">3★ & above</option>
+                <option value="2">2★ & above</option>
+            </select>
+
+            <!-- In-stock Only Toggle -->
+            <label style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.83rem; color:var(--text-color); white-space:nowrap; user-select:none;">
+                <input type="checkbox" id="inStockOnly" style="width:16px; height:16px; accent-color:var(--primary-blue); cursor:pointer;">
+                In Stock Only
+            </label>
+
+            <!-- Clear Filters -->
+            <button id="clearFiltersBtn" style="padding:9px 14px; background:transparent; border:1px solid var(--primary-red); color:var(--primary-red); border-radius:8px; font-size:0.8rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.2s; display:none;" onmouseover="this.style.background='var(--primary-red)'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='var(--primary-red)'">
+                <i class="fas fa-times" style="margin-right:4px;"></i>Clear
+            </button>
         </div>
     </section>
 
     <!-- Products Grid -->
-    <section class="products" style="padding-top: 30px;">
+    <section class="products" style="padding: 0 40px 60px; max-width:1400px; margin:0 auto;">
         <div id="productsList" class="product-grid">
             <!-- Skeletons injected here by JS -->
+        </div>
+        <!-- Empty State -->
+        <div id="noProductsFound" style="display:none; text-align:center; padding:80px 20px;">
+            <i class="fas fa-search" style="font-size:3rem; color:#ccc; display:block; margin-bottom:16px;"></i>
+            <h3 style="font-size:1.2rem; color:var(--text-color); margin-bottom:8px;">No products found</h3>
+            <p style="color:#888; font-size:0.9rem;">Try adjusting your filters or search terms</p>
+            <button onclick="document.getElementById('clearFiltersBtn').click()" style="margin-top:20px; padding:10px 24px; background:var(--primary-blue); color:white; border:none; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">Clear All Filters</button>
         </div>
     </section>
 

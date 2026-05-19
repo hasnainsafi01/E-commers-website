@@ -246,6 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     `).join('');
                     const moreCount = (order.items?.length || 0) > 3 ? `<span style="font-size:0.75rem;color:#888;margin-left:6px;">+${order.items.length - 3} more</span>` : '';
 
+                    const hoursSinceOrder = (Date.now() - date.getTime()) / (1000 * 60 * 60);
+                    const canCancel = hoursSinceOrder <= 24 && (order.status === 'Pending' || order.status === 'Processing');
+                    const cancelBtnHTML = canCancel ? `
+                        <button onclick="window.cancelUserOrder('${order.id}')" style="margin-top: 12px; background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c'">
+                            <i class="fas fa-times-circle" style="margin-right: 4px;"></i> Cancel Order
+                        </button>
+                    ` : '';
+
                     const card = document.createElement('div');
                     card.innerHTML = `
                         <div style="border:1px solid #eee;border-radius:14px;padding:18px 20px;margin-bottom:14px;background:#fafafa;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='none'">
@@ -262,7 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">
                                 ${itemsPreview}${moreCount}
                             </div>
-                            <p style="font-size:0.78rem;color:#888;margin-top:10px;"><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>${order.client?.fullAddressString || order.client?.city || 'Address on file'}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                <p style="font-size:0.78rem;color:#888;margin-top:10px;"><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>${order.client?.fullAddressString || order.client?.city || 'Address on file'}</p>
+                                ${cancelBtnHTML}
+                            </div>
                         </div>
                     `;
                     historyList.appendChild(card);
@@ -274,6 +285,76 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Stats fetch issue:", e);
         }
     });
+
+    // Cancel Order Atomic Transaction
+    window.cancelUserOrder = async (orderId) => {
+        if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) return;
+        
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Cancelling Order...");
+        }
+
+        try {
+            const { writeBatch, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+            const batch = writeBatch(db);
+            const orderRef = doc(db, 'orders', orderId);
+            const orderSnap = await getDoc(orderRef);
+            
+            if (!orderSnap.exists()) {
+                window.showToast("Order not found.", "error");
+                return;
+            }
+            
+            const orderData = orderSnap.data();
+            
+            // Re-verify eligibility server-side
+            const date = orderData.date?.toDate ? orderData.date.toDate() : new Date(orderData.date);
+            const hoursSinceOrder = (Date.now() - date.getTime()) / (1000 * 60 * 60);
+            if (hoursSinceOrder > 24) {
+                window.showToast("Cancellation period (24 hours) has expired.", "error");
+                return;
+            }
+            if (orderData.status !== 'Pending' && orderData.status !== 'Processing') {
+                window.showToast("This order can no longer be cancelled.", "error");
+                return;
+            }
+
+            // Restore Stock
+            if (orderData.items && Array.isArray(orderData.items)) {
+                for (const item of orderData.items) {
+                    const productRef = doc(db, 'products', item.productId);
+                    const productSnap = await getDoc(productRef);
+                    if (productSnap.exists()) {
+                        const productData = productSnap.data();
+                        const currentStock = productData.stock || 0;
+                        const currentSold = productData.sold || 0;
+                        const currentSoldCount = productData.soldCount || currentSold || 0;
+                        
+                        batch.update(productRef, {
+                            stock: currentStock + item.qty,
+                            sold: Math.max(0, currentSold - item.qty),
+                            soldCount: Math.max(0, currentSoldCount - item.qty)
+                        });
+                    }
+                }
+            }
+
+            // Update order status
+            batch.update(orderRef, { status: 'Cancelled' });
+            
+            await batch.commit();
+            window.showToast("Order cancelled successfully.");
+            
+            // Reload page to reflect changes
+            setTimeout(() => window.location.reload(), 1500);
+            
+        } catch (error) {
+            console.error("Cancellation error:", error);
+            window.showToast("Failed to cancel order.", "error");
+        } finally {
+            if (window.hideMyMartLoader) window.hideMyMartLoader();
+        }
+    };
 
     // Edit Profile Modal Logic
     const editModal = document.getElementById('editProfileModal');

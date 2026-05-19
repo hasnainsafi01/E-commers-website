@@ -866,12 +866,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loadFeatured();
     }
 
-    // 7. Load Product Listing Page
+    // 7. Load Product Listing Page — Full Filter & Sort Engine
     const productsListContainer = document.getElementById('productsList');
     if (productsListContainer) {
         let allProducts = [];
+        let isListView = false;
+
         const loadAll = async () => {
-            // Immediately show skeleton placeholders for products only, keeping UI visible
             productsListContainer.innerHTML = Array(6).fill(0).map(() => `
                 <div class="skeleton-card">
                     <div class="skeleton-img"></div>
@@ -883,102 +884,348 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `).join('');
 
-            if (window.updateMyMartLoaderText) {
-                window.updateMyMartLoaderText("Curating Premium Collection...");
-            }
+            if (window.updateMyMartLoaderText) window.updateMyMartLoaderText("Curating Collection...");
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(q);
                 allProducts = [];
                 snapshot.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+                
+                // Restore state from URL
+                syncFiltersFromURL();
                 renderAndFilter();
             } catch (error) {
-                console.error("Error loading all:", error);
+                console.error("Error loading products:", error);
             } finally {
-                if (window.hideMyMartLoader) {
-                    window.hideMyMartLoader();
-                }
+                if (window.hideMyMartLoader) window.hideMyMartLoader();
             }
+        };
+
+        const syncFiltersFromURL = () => {
+            const p = new URLSearchParams(window.location.search);
+            
+            const catFilter = document.getElementById('categoryFilter');
+            const catFromURL = p.get('category');
+            if (catFilter && catFromURL) catFilter.value = catFromURL.toLowerCase();
+            
+            const searchInput = document.getElementById('searchInput');
+            const searchFromURL = p.get('search');
+            if (searchInput && searchFromURL) searchInput.value = searchFromURL;
+            
+            const sortSel = document.getElementById('sortSelect');
+            const sortFromURL = p.get('sort');
+            if (sortSel && sortFromURL) sortSel.value = sortFromURL;
+
+            const priceMin = document.getElementById('priceMin');
+            const priceMax = document.getElementById('priceMax');
+            if (priceMin && p.get('minPrice')) priceMin.value = p.get('minPrice');
+            if (priceMax && p.get('maxPrice')) priceMax.value = p.get('maxPrice');
+
+            const ratingFilter = document.getElementById('ratingFilter');
+            if (ratingFilter && p.get('rating')) ratingFilter.value = p.get('rating');
+
+            const inStockOnly = document.getElementById('inStockOnly');
+            if (inStockOnly && p.get('inStock') === 'true') inStockOnly.checked = true;
+        };
+
+        const saveFiltersToURL = () => {
+            const catFilter = document.getElementById('categoryFilter')?.value || 'all';
+            const searchTerm = document.getElementById('searchInput')?.value || '';
+            const sortVal = document.getElementById('sortSelect')?.value || 'default';
+            const minPrice = document.getElementById('priceMin')?.value || '';
+            const maxPrice = document.getElementById('priceMax')?.value || '';
+            const rating = document.getElementById('ratingFilter')?.value || '0';
+            const inStock = document.getElementById('inStockOnly')?.checked || false;
+
+            const params = new URLSearchParams();
+            if (catFilter !== 'all') params.set('category', catFilter);
+            if (searchTerm) params.set('search', searchTerm);
+            if (sortVal !== 'default') params.set('sort', sortVal);
+            if (minPrice) params.set('minPrice', minPrice);
+            if (maxPrice) params.set('maxPrice', maxPrice);
+            if (rating !== '0') params.set('rating', rating);
+            if (inStock) params.set('inStock', 'true');
+
+            const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            history.replaceState(null, '', newURL);
+        };
+
+        const renderActiveChips = (filters) => {
+            const chips = document.getElementById('activeFilterChips');
+            const clearBtn = document.getElementById('clearFiltersBtn');
+            if (!chips) return;
+
+            chips.innerHTML = '';
+            let hasActive = false;
+
+            const addChip = (label, clearFn) => {
+                hasActive = true;
+                const chip = document.createElement('span');
+                chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(66,133,244,0.1);color:var(--primary-blue);border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid rgba(66,133,244,0.25);';
+                chip.innerHTML = `${label} <i class="fas fa-times" style="font-size:0.6rem;"></i>`;
+                chip.onclick = () => { clearFn(); renderAndFilter(); };
+                chips.appendChild(chip);
+            };
+
+            if (filters.cat && filters.cat !== 'all') addChip(`📂 ${filters.cat}`, () => { document.getElementById('categoryFilter').value = 'all'; });
+            if (filters.search) addChip(`🔍 "${filters.search}"`, () => { document.getElementById('searchInput').value = ''; });
+            if (filters.minPrice) addChip(`Min PKR ${parseInt(filters.minPrice).toLocaleString()}`, () => { document.getElementById('priceMin').value = ''; });
+            if (filters.maxPrice) addChip(`Max PKR ${parseInt(filters.maxPrice).toLocaleString()}`, () => { document.getElementById('priceMax').value = ''; });
+            if (filters.rating && filters.rating !== '0') addChip(`${filters.rating}★ & above`, () => { document.getElementById('ratingFilter').value = '0'; });
+            if (filters.inStock) addChip('In Stock Only', () => { document.getElementById('inStockOnly').checked = false; });
+
+            if (clearBtn) clearBtn.style.display = hasActive ? 'inline-flex' : 'none';
         };
 
         const renderAndFilter = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const activeCat = urlParams.get('category') || 'all';
-            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-            const sortSelect = document.getElementById('sortSelect')?.value || 'default';
+            const catFilter = document.getElementById('categoryFilter')?.value || 'all';
+            const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const sortVal = document.getElementById('sortSelect')?.value || 'default';
+            const minPrice = parseFloat(document.getElementById('priceMin')?.value) || 0;
+            const maxPrice = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+            const minRating = parseFloat(document.getElementById('ratingFilter')?.value) || 0;
+            const inStockOnly = document.getElementById('inStockOnly')?.checked || false;
+
+            const filters = { cat: catFilter, search: searchTerm, minPrice: minPrice || '', maxPrice: maxPrice === Infinity ? '' : maxPrice, rating: document.getElementById('ratingFilter')?.value || '0', inStock: inStockOnly };
+            renderActiveChips(filters);
+            saveFiltersToURL();
 
             let filtered = allProducts.filter(p => {
-                const matchesCat = activeCat === 'all' || p.category.toLowerCase() === activeCat.toLowerCase();
-                return matchesCat && p.title.toLowerCase().includes(searchTerm);
+                const matchesCat = catFilter === 'all' || p.category?.toLowerCase() === catFilter.toLowerCase();
+                const matchesSearch = !searchTerm || p.title?.toLowerCase().includes(searchTerm) || p.category?.toLowerCase().includes(searchTerm) || (p.description || '').toLowerCase().includes(searchTerm);
+                const matchesMin = !minPrice || p.price >= minPrice;
+                const matchesMax = maxPrice === Infinity || p.price <= maxPrice;
+                const matchesRating = !minRating || (parseFloat(p.rating) || 0) >= minRating;
+                const matchesStock = !inStockOnly || parseInt(p.stock || 0) > 0;
+                return matchesCat && matchesSearch && matchesMin && matchesMax && matchesRating && matchesStock;
             });
 
-            if (sortSelect === 'price-low') {
-                filtered.sort((a, b) => a.price - b.price);
-            } else if (sortSelect === 'price-high') {
-                filtered.sort((a, b) => b.price - a.price);
+            // Sorting
+            switch (sortVal) {
+                case 'price-low':   filtered.sort((a, b) => a.price - b.price); break;
+                case 'price-high':  filtered.sort((a, b) => b.price - a.price); break;
+                case 'rating':      filtered.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)); break;
+                case 'name-az':     filtered.sort((a, b) => a.title.localeCompare(b.title)); break;
+                case 'newest':      filtered.sort((a, b) => { const aD = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0); const bD = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0); return bD - aD; }); break;
             }
 
-            productsListContainer.innerHTML = filtered.map(p => renderProductCard(p)).join('');
+            // Results count
+            const resultsCount = document.getElementById('resultsCount');
+            if (resultsCount) resultsCount.innerText = `${filtered.length} product${filtered.length !== 1 ? 's' : ''} found`;
+
+            // Empty state
+            const noFound = document.getElementById('noProductsFound');
+            if (filtered.length === 0) {
+                productsListContainer.innerHTML = '';
+                if (noFound) noFound.style.display = 'block';
+                return;
+            }
+            if (noFound) noFound.style.display = 'none';
+
+            // List vs Grid view
+            if (isListView) {
+                productsListContainer.style.gridTemplateColumns = '1fr';
+            } else {
+                productsListContainer.style.gridTemplateColumns = '';
+            }
+
+            productsListContainer.innerHTML = filtered.map((p, i) => renderProductCard(p, i * 50)).join('');
             attachListeners(productsListContainer);
         };
 
-        document.getElementById('searchInput')?.addEventListener('input', renderAndFilter);
+        // View toggle
+        document.getElementById('viewGrid')?.addEventListener('click', () => {
+            isListView = false;
+            document.getElementById('viewGrid').style.background = 'var(--primary-blue)';
+            document.getElementById('viewGrid').style.color = 'white';
+            document.getElementById('viewList').style.background = 'transparent';
+            document.getElementById('viewList').style.color = 'var(--text-color)';
+            renderAndFilter();
+        });
+        document.getElementById('viewList')?.addEventListener('click', () => {
+            isListView = true;
+            document.getElementById('viewList').style.background = 'var(--primary-blue)';
+            document.getElementById('viewList').style.color = 'white';
+            document.getElementById('viewGrid').style.background = 'transparent';
+            document.getElementById('viewGrid').style.color = 'var(--text-color)';
+            renderAndFilter();
+        });
+
+        // Clear all filters
+        document.getElementById('clearFiltersBtn')?.addEventListener('click', () => {
+            const els = ['searchInput', 'priceMin', 'priceMax'];
+            els.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            const cat = document.getElementById('categoryFilter'); if (cat) cat.value = 'all';
+            const sort = document.getElementById('sortSelect'); if (sort) sort.value = 'default';
+            const rating = document.getElementById('ratingFilter'); if (rating) rating.value = '0';
+            const inStock = document.getElementById('inStockOnly'); if (inStock) inStock.checked = false;
+            renderAndFilter();
+        });
+
+        // Debounced listeners
+        let filterTimeout = null;
+        const debouncedFilter = () => { clearTimeout(filterTimeout); filterTimeout = setTimeout(renderAndFilter, 250); };
+
+        document.getElementById('searchInput')?.addEventListener('input', debouncedFilter);
+        document.getElementById('categoryFilter')?.addEventListener('change', renderAndFilter);
         document.getElementById('sortSelect')?.addEventListener('change', renderAndFilter);
+        document.getElementById('priceMin')?.addEventListener('input', debouncedFilter);
+        document.getElementById('priceMax')?.addEventListener('input', debouncedFilter);
+        document.getElementById('ratingFilter')?.addEventListener('change', renderAndFilter);
+        document.getElementById('inStockOnly')?.addEventListener('change', renderAndFilter);
+
         loadAll();
     }
 
-    // 8. Global Search
+    // 8. Global Search — Premium Real-Time Search Engine
     const globalSearchInput = document.getElementById('globalSearchInput');
     const searchResults = document.getElementById('searchResults');
     if (globalSearchInput && searchResults) {
         let allProductsCache = [];
         let searchTimeout = null;
+        let selectedIndex = -1;
+
+        const highlightMatch = (text, term) => {
+            if (!term || !text) return text;
+            const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark style="background: rgba(66,133,244,0.15); color: var(--primary-blue); border-radius: 2px; padding: 0 2px; font-weight: 700;">$1</mark>');
+        };
+
+        const getCategoryIcon = (cat) => {
+            const icons = { watches: 'fa-clock', bags: 'fa-shopping-bag', shoes: 'fa-shoe-prints', electronics: 'fa-mobile-alt', clothing: 'fa-tshirt' };
+            return icons[cat?.toLowerCase()] || 'fa-tag';
+        };
+
+        const ensureCache = async () => {
+            if (allProductsCache.length === 0) {
+                const snapshot = await getDocs(collection(db, 'products'));
+                allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
+        };
 
         const performSearch = async () => {
             const term = globalSearchInput.value.trim().toLowerCase();
             if (term.length < 2) {
                 searchResults.classList.add('hidden');
+                selectedIndex = -1;
                 return;
             }
 
-            if (allProductsCache.length === 0) {
-                const q = query(collection(db, 'products'));
-                const snapshot = await getDocs(q);
-                allProductsCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            }
+            try {
+                await ensureCache();
 
-            const results = allProductsCache.filter(p => 
-                p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
-            ).slice(0, 5);
+                // Score-based multi-field search
+                const scored = allProductsCache.map(p => {
+                    let score = 0;
+                    const title = (p.title || '').toLowerCase();
+                    const cat = (p.category || '').toLowerCase();
+                    const desc = (p.description || '').toLowerCase();
+                    const keywords = (Array.isArray(p.keywords) ? p.keywords.join(' ') : (p.keywords || '')).toLowerCase();
 
-            if (results.length > 0) {
-                searchResults.innerHTML = results.map(p => `
-                    <a href="product-details.html?id=${p.id}" class="search-result-item">
-                        <img src="${p.images?.[0] || 'assets/images/default.png'}" class="search-result-img">
-                        <div class="search-result-info">
-                            <span class="search-result-title">${p.title}</span>
-                            <span class="search-result-price">PKR ${p.price.toLocaleString()}</span>
+                    if (title === term) score += 10;
+                    else if (title.startsWith(term)) score += 7;
+                    else if (title.includes(term)) score += 5;
+
+                    if (cat.includes(term)) score += 4;
+                    if (keywords.includes(term)) score += 3;
+                    if (desc.includes(term)) score += 1;
+
+                    return { ...p, score };
+                }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
+
+                if (scored.length > 0) {
+                    const stockBadge = (p) => {
+                        const s = parseInt(p.stock || 0);
+                        if (s === 0) return `<span style="font-size:0.65rem;color:#e74c3c;font-weight:700;margin-left:6px;">Out of Stock</span>`;
+                        if (s <= 3) return `<span style="font-size:0.65rem;color:#d97706;font-weight:700;margin-left:6px;">Only ${s} left</span>`;
+                        return '';
+                    };
+
+                    searchResults.innerHTML = scored.map((p, i) => `
+                        <a href="product-details.html?id=${p.id}" class="search-result-item" data-index="${i}" style="display:flex;align-items:center;gap:12px;padding:10px 16px;text-decoration:none;color:inherit;transition:background 0.15s;border-bottom:1px solid rgba(0,0,0,0.04);" onmouseover="this.style.background='rgba(66,133,244,0.06)'" onmouseout="this.style.background='transparent'">
+                            <img src="${p.images?.[0] || 'assets/images/default.png'}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.06);">
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                    <span style="font-size:0.88rem;font-weight:600;color:var(--text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${highlightMatch(p.title, term)}</span>
+                                    ${stockBadge(p)}
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
+                                    <span style="font-size:0.7rem;background:rgba(66,133,244,0.1);color:var(--primary-blue);padding:2px 7px;border-radius:10px;font-weight:600;"><i class="fas ${getCategoryIcon(p.category)}" style="margin-right:3px;font-size:0.6rem;"></i>${highlightMatch(p.category, term)}</span>
+                                    <span style="font-size:0.82rem;font-weight:700;color:var(--text-color);">PKR ${parseFloat(p.price).toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color:#ccc;font-size:0.7rem;flex-shrink:0;"></i>
+                        </a>
+                    `).join('') + `
+                        <a href="products.html?search=${encodeURIComponent(term)}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;font-size:0.78rem;font-weight:700;color:var(--primary-blue);text-decoration:none;border-top:1px solid rgba(0,0,0,0.06);letter-spacing:0.5px;transition:background 0.15s;" onmouseover="this.style.background='rgba(66,133,244,0.04)'" onmouseout="this.style.background='transparent'">
+                            <i class="fas fa-search" style="font-size:0.7rem;"></i> View all results for "${term}"
+                        </a>
+                    `;
+                } else {
+                    searchResults.innerHTML = `
+                        <div style="padding:24px 16px;text-align:center;">
+                            <i class="fas fa-search" style="font-size:1.5rem;color:#ccc;display:block;margin-bottom:8px;"></i>
+                            <span style="font-size:0.85rem;color:#888;">No results for <strong>"${term}"</strong></span>
                         </div>
-                    </a>
-                `).join('');
+                    `;
+                }
                 searchResults.classList.remove('hidden');
-            } else {
-                searchResults.innerHTML = `<div class="search-result-item">No items found for "${term}"</div>`;
-                searchResults.classList.remove('hidden');
+                selectedIndex = -1;
+
+            } catch (err) {
+                console.error("Search error:", err);
             }
         };
 
         globalSearchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 300);
+            searchTimeout = setTimeout(performSearch, 280);
         });
+
+        // Keyboard navigation
+        globalSearchInput.addEventListener('keydown', (e) => {
+            const items = searchResults.querySelectorAll('a.search-result-item');
+            if (!items.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                items.forEach((item, i) => item.style.background = i === selectedIndex ? 'rgba(66,133,244,0.08)' : 'transparent');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                items.forEach((item, i) => item.style.background = i === selectedIndex ? 'rgba(66,133,244,0.08)' : 'transparent');
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                items[selectedIndex]?.click();
+            } else if (e.key === 'Escape') {
+                searchResults.classList.add('hidden');
+                globalSearchInput.blur();
+            }
+        });
+
+        // Handle search redirect from products page URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        const preloadSearch = urlParams.get('search');
+        if (preloadSearch) {
+            globalSearchInput.value = preloadSearch;
+            // Trigger filter on products page if applicable
+            const productSearchInput = document.getElementById('searchInput');
+            if (productSearchInput) {
+                productSearchInput.value = preloadSearch;
+                productSearchInput.dispatchEvent(new Event('input'));
+            }
+        }
 
         // Close on outside click
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
                 searchResults.classList.add('hidden');
+                selectedIndex = -1;
             }
         });
+
+        // Clear cache periodically so new products appear in search
+        setInterval(() => { allProductsCache = []; }, 5 * 60 * 1000);
     }
 
     // 9. Global Utility
