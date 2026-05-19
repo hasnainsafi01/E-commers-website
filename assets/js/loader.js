@@ -1,7 +1,7 @@
 (function() {
-    // Inject Premium GPU-optimized CSS Styles for Branded CHENARI Loading Screens
+    // Inject Premium GPU-optimized CSS Styles for Branded MyMart Loading Screens
     const loaderStyles = `
-        #chenariLoaderOverlay {
+        #mymartLoaderOverlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -19,7 +19,7 @@
             pointer-events: none;
             box-sizing: border-box;
         }
-        #chenariLoaderOverlay.active {
+        #mymartLoaderOverlay.active {
             display: flex !important;
             opacity: 1 !important;
             visibility: visible !important;
@@ -107,7 +107,7 @@
 
     // Pre-create Branded Loader Overlay
     const loaderHTML = `
-        <div id="chenariLoaderOverlay">
+        <div id="mymartLoaderOverlay">
             <div class="loader-logo">
                 <span class="loader-letter">C</span>
                 <span class="loader-letter">H</span>
@@ -120,13 +120,13 @@
             <div class="loader-progress-bar">
                 <div class="loader-progress-fill"></div>
             </div>
-            <div id="chenariLoaderStateText" class="loader-state-text">Loading CHENARI Boutique</div>
+            <div id="mymartLoaderStateText" class="loader-state-text">Loading MyMart Boutique</div>
         </div>
     `;
 
     // Append loader directly to the DOM as early as possible
     const appendLoader = () => {
-        if (document.getElementById('chenariLoaderOverlay')) return;
+        if (document.getElementById('mymartLoaderOverlay')) return;
         document.body.insertAdjacentHTML('afterbegin', loaderHTML);
     };
 
@@ -137,17 +137,17 @@
     }
 
     // Global APIs for handling loading screens programmatically
-    window.showChenariLoader = (stateText = 'Loading CHENARI Boutique') => {
-        const overlay = document.getElementById('chenariLoaderOverlay');
-        const txt = document.getElementById('chenariLoaderStateText');
+    window.showMyMartLoader = (stateText = 'Loading MyMart Boutique') => {
+        const overlay = document.getElementById('mymartLoaderOverlay');
+        const txt = document.getElementById('mymartLoaderStateText');
         if (txt) txt.innerText = stateText;
         if (overlay) {
             overlay.classList.add('active');
         }
     };
 
-    window.updateChenariLoaderText = (stateText) => {
-        const txt = document.getElementById('chenariLoaderStateText');
+    window.updateMyMartLoaderText = (stateText) => {
+        const txt = document.getElementById('mymartLoaderStateText');
         if (txt) {
             txt.style.opacity = '0';
             setTimeout(() => {
@@ -157,8 +157,8 @@
         }
     };
 
-    window.hideChenariLoader = () => {
-        const overlay = document.getElementById('chenariLoaderOverlay');
+    window.hideMyMartLoader = () => {
+        const overlay = document.getElementById('mymartLoaderOverlay');
         if (overlay) {
             overlay.classList.remove('active');
         }

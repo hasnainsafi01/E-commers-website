@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('checkoutGuardModal').classList.remove('active');
         };
         document.getElementById('checkoutGuardProceed').onclick = () => {
-            sessionStorage.setItem('chenari_return_to_cart', 'true');
+            sessionStorage.setItem('mymart_return_to_cart', 'true');
             window.location.href = 'profile.html';
         };
     };
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Protect Cart page access
             if (window.location.pathname.includes('cart.html')) {
                 window.showToast("Please login first", "error");
-                sessionStorage.setItem('chenari_trigger_login_modal', 'true');
+                sessionStorage.setItem('mymart_trigger_login_modal', 'true');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
@@ -67,21 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const startCartListener = (uid) => {
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Curating Shopping Collection...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Curating Shopping Collection...");
         }
         const cartRef = collection(db, `cart/${uid}/items`);
         cartUnsubscribe = onSnapshot(cartRef, (snapshot) => {
             const items = [];
             snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
             updateUI(items);
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }, (err) => {
             console.error("Cart fetch error:", err);
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         });
     };
@@ -186,8 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Adding to Collection...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Adding to Collection...");
         }
 
         const itemRef = doc(db, `cart/${currentUser.uid}/items`, product.id);
@@ -257,15 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Cart save error:", e);
             window.showToast("Failed to save to Cart", "error");
         } finally {
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }
     };
 
     const changeQty = async (id, delta) => {
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Updating Quantity...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Updating Quantity...");
         }
         try {
             const itemRef = doc(db, `cart/${currentUser.uid}/items`, id);
@@ -292,15 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("Qty update error:", e);
         } finally {
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }
     };
 
     const removeFromCart = async (id) => {
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Removing Item...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Removing Item...");
         }
         try {
             const itemRef = doc(db, `cart/${currentUser.uid}/items`, id);
@@ -310,8 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Remove error:", e);
             window.showToast("Failed to remove item", "error");
         } finally {
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }
     };
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.showCheckoutGuardModal();
                     } else {
                         // Fallback: set flag and redirect directly
-                        sessionStorage.setItem('chenari_return_to_cart', 'true');
+                        sessionStorage.setItem('mymart_return_to_cart', 'true');
                         window.showToast('Please complete your delivery address first.', 'error');
                         setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
                     }

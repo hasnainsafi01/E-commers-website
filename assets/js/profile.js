@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentAuthUser = user;
 
         // Synchronously load cached user data to prevent profile layout reset/flicker
-        const cachedUserString = localStorage.getItem('chenari_logged_in_user');
+        const cachedUserString = localStorage.getItem('mymart_logged_in_user');
         if (cachedUserString) {
             try {
                 const cachedUser = JSON.parse(cachedUserString);
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editModalImagePreview').src = photoURL;
 
                 // Auto-open modal & highlight missing fields when redirected from checkout guard
-                if (sessionStorage.getItem('chenari_return_to_cart') === 'true') {
+                if (sessionStorage.getItem('mymart_return_to_cart') === 'true') {
                     // Inject checkout-redirect banner inside modal if not already there
                     const modalContent = editModal.querySelector('.auth-modal-content');
                     if (modalContent && !modalContent.querySelector('#checkoutRedirectBanner')) {
@@ -442,8 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.showToast('Profile updated successfully!');
             
             // Auto-redirect back to cart if they were forced here by checkout guard
-            if (sessionStorage.getItem('chenari_return_to_cart') === 'true' && profileCompleted) {
-                sessionStorage.removeItem('chenari_return_to_cart');
+            if (sessionStorage.getItem('mymart_return_to_cart') === 'true' && profileCompleted) {
+                sessionStorage.removeItem('mymart_return_to_cart');
                 setTimeout(() => {
                     window.location.href = 'cart.html';
                 }, 800);

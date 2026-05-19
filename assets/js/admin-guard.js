@@ -21,7 +21,7 @@ const injectSecurityCurtain = () => {
     
     curtain.innerHTML = `
         <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+            <!-- MyMart Premium Logo with Custom Letter Coloring -->
             <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
                 <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
                 <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
@@ -167,7 +167,7 @@ const showAccessDeniedModal = (message, forceSignOut = false) => {
                 } catch(e) { console.warn('Signout error:', e); }
                 localStorage.clear();
                 sessionStorage.clear();
-                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
+                sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
             }
             setTimeout(() => {
                 window.location.href = 'login.html';
@@ -220,7 +220,7 @@ const showSecurityCuratorLoginModal = () => {
                 margin-bottom: 8px;
                 font-weight: 400;
                 text-transform: uppercase;
-            ">CHENARI Portal</h2>
+            ">MyMart Portal</h2>
             <p style="
                 color: #888;
                 font-size: 0.75rem;
@@ -243,7 +243,7 @@ const showSecurityCuratorLoginModal = () => {
                         font-family: 'Inter', sans-serif;
                         box-sizing: border-box;
                         transition: border-color 0.2s;
-                    " placeholder="curator@chenari.com">
+                    " placeholder="curator@mymart.com">
                 </div>
                 <div style="margin-bottom: 30px;">
                     <label style="display: block; color: #a0a0a0; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Password</label>
@@ -373,7 +373,7 @@ onAuthStateChanged(auth, async (user) => {
     curtain.style.visibility = 'visible';
     curtain.innerHTML = `
         <div style="text-align: center; font-family: 'Playfair Display', serif; color: #fff;">
-            <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+            <!-- MyMart Premium Logo with Custom Letter Coloring -->
             <div style="font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; display: inline-flex; margin-bottom: 25px; text-transform: uppercase;">
                 <span style="color: #4285F4; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.0s; display: inline-block;">C</span>
                 <span style="color: #ea4335; margin-left: 2px; animation: securityLetterGlow 2s infinite ease-in-out; animation-delay: 0.15s; display: inline-block;">H</span>
@@ -527,7 +527,7 @@ const showAdminLogoutConfirmationModal = () => {
                 font-size: 0.85rem;
                 line-height: 1.6;
                 margin-bottom: 30px;
-            ">Are you sure you want to fully log out of your administrative CHENARI session?</p>
+            ">Are you sure you want to fully log out of your administrative MyMart session?</p>
             <div style="display: flex; gap: 15px; justify-content: center;">
                 <button id="adminConfirmLogoutBtn" style="
                     flex: 1;
@@ -602,7 +602,7 @@ const showAdminLogoutConfirmationModal = () => {
                 sessionStorage.clear();
 
                 // 3. Set flag AFTER clearing — tells main site to NOT re-authenticate
-                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
+                sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
 
                 // 4. Smooth card scale-down and opacity fade-out
                 if (card) {
@@ -619,7 +619,7 @@ const showAdminLogoutConfirmationModal = () => {
 
             } catch (err) {
                 console.error("Administrative logout failure:", err);
-                sessionStorage.setItem('chenari_admin_just_logged_out', 'true');
+                sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
                 window.location.href = 'login.html';
             }
         };

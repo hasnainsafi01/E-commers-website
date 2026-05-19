@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         prodPriceEl.innerText = `PKR ${prod.price.toLocaleString()}`;
         descEl.innerText = prod.description;
         breadcrumbsEl.innerText = `${prod.category} / Premium Collection / ${prod.title}`;
-        document.title = `${prod.title} | CHENARI`;
+        document.title = `${prod.title} | MyMart`;
 
         // Render Main Image
         const mainImgUrl = prod.images && prod.images.length > 0 ? prod.images[0] : 'assets/images/default.png';
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (submitReviewForm) submitReviewForm.style.display = 'block';
             } else {
                 if (reviewLockMsg) {
-                    reviewLockMsg.innerHTML = `<i class="fas fa-lock" style="color: #a1a1a1; margin-right: 5px;"></i> Only verified owners of this exclusive piece from CHENARI can submit feedback.`;
+                    reviewLockMsg.innerHTML = `<i class="fas fa-lock" style="color: #a1a1a1; margin-right: 5px;"></i> Only verified owners of this exclusive piece from MyMart can submit feedback.`;
                     reviewLockMsg.style.display = 'block';
                 }
                 if (submitReviewForm) submitReviewForm.style.display = 'none';

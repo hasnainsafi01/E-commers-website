@@ -36,7 +36,7 @@ const syncUserToFirestore = async (user) => {
             welcomeShown: false,
             createdAt: serverTimestamp(),
             lastLogin: serverTimestamp(),
-            bio: 'Welcome to your premium CHENARI profile.'
+            bio: 'Welcome to your premium MyMart profile.'
         });
     } else {
         await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
@@ -247,8 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = loginForm.querySelector('button[type="submit"]');
 
             try {
-                if (window.showChenariLoader) {
-                    window.showChenariLoader("Authenticating Account...");
+                if (window.showMyMartLoader) {
+                    window.showMyMartLoader("Authenticating Account...");
                 }
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
                 submitBtn.disabled = true;
@@ -257,8 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
                 // Clear conflict flags
-                sessionStorage.removeItem('chenari_admin_just_logged_out');
-                sessionStorage.removeItem('chenari_logged_in_admin');
+                sessionStorage.removeItem('mymart_admin_just_logged_out');
+                sessionStorage.removeItem('mymart_logged_in_admin');
 
                 // 2. Failsafe Firestore Role Fetch (No Firestore issue will block successful auth login)
                 let role = 'user';
@@ -283,8 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Firebase Authentication Failure:", authError);
                 triggerCardShake(loginForm);
 
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
 
                 // Elegant resolving of generic credentials block by querying Firestore
@@ -385,8 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = signupForm.querySelector('button[type="submit"]');
 
             try {
-                if (window.showChenariLoader) {
-                    window.showChenariLoader("Creating Premium Profile...");
+                if (window.showMyMartLoader) {
+                    window.showMyMartLoader("Creating Premium Profile...");
                 }
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Profile...';
                 submitBtn.disabled = true;
@@ -394,8 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
                 // Clear conflict flags
-                sessionStorage.removeItem('chenari_admin_just_logged_out');
-                sessionStorage.removeItem('chenari_logged_in_admin');
+                sessionStorage.removeItem('mymart_admin_just_logged_out');
+                sessionStorage.removeItem('mymart_logged_in_admin');
 
                 await updateProfile(userCredential.user, { displayName: name });
                 await syncUserToFirestore(userCredential.user);
@@ -405,8 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Firebase Signup Failure:", error);
                 triggerCardShake(signupForm);
 
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
 
                 switch (error.code) {
@@ -435,8 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const originalHtml = googleBtn.innerHTML;
             try {
-                if (window.showChenariLoader) {
-                    window.showChenariLoader("Connecting Google Account...");
+                if (window.showMyMartLoader) {
+                    window.showMyMartLoader("Connecting Google Account...");
                 }
                 googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
                 googleBtn.disabled = true;
@@ -444,8 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await signInWithPopup(auth, googleProvider);
                 
                 // Clear conflict flags
-                sessionStorage.removeItem('chenari_admin_just_logged_out');
-                sessionStorage.removeItem('chenari_logged_in_admin');
+                sessionStorage.removeItem('mymart_admin_just_logged_out');
+                sessionStorage.removeItem('mymart_logged_in_admin');
                 
                 // Secure Firestore Role check: Google logins MUST be restricted to standard users ONLY
                 const userRef = doc(db, 'users', result.user.uid);
@@ -453,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (userSnap.exists() && userSnap.data().role === 'admin') {
                     await auth.signOut();
-                    if (window.hideChenariLoader) {
-                        window.hideChenariLoader();
+                    if (window.hideMyMartLoader) {
+                        window.hideMyMartLoader();
                     }
                     window.showToast('Google logins are prohibited for curator access. Please sign in using your designated email and password credentials.', 'error');
                     googleBtn.disabled = false;
@@ -465,8 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 await syncUserToFirestore(result.user);
                 window.location.href = 'index.html';
             } catch (error) {
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
                 if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                     window.showToast('Google authentication failed. Please try again.', 'error');

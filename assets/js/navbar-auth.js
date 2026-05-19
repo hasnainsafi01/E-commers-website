@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // STEP 1: Synchronous Initial Render from LocalStorage Cache to completely eliminate flickering
-    const cachedUserString = localStorage.getItem('chenari_logged_in_user');
-    const isLogoutFlagActive = sessionStorage.getItem('chenari_admin_just_logged_out') === 'true';
+    const cachedUserString = localStorage.getItem('mymart_logged_in_user');
+    const isLogoutFlagActive = sessionStorage.getItem('mymart_admin_just_logged_out') === 'true';
 
     if (cachedUserString && !isLogoutFlagActive) {
         try {
@@ -100,13 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             // A user successfully authenticated! Clear the admin logout conflict flags
-            sessionStorage.removeItem('chenari_admin_just_logged_out');
-            sessionStorage.removeItem('chenari_logged_in_admin');
+            sessionStorage.removeItem('mymart_admin_just_logged_out');
+            sessionStorage.removeItem('mymart_logged_in_admin');
         }
 
         // If admin just logged out, force guest UI immediately
-        if (sessionStorage.getItem('chenari_admin_just_logged_out') === 'true') {
-            localStorage.removeItem('chenari_logged_in_user');
+        if (sessionStorage.getItem('mymart_admin_just_logged_out') === 'true') {
+            localStorage.removeItem('mymart_logged_in_user');
             if (unsubscribeFirestore) {
                 unsubscribeFirestore();
                 unsubscribeFirestore = null;
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             // Safely write to cache
-            localStorage.setItem('chenari_logged_in_user', JSON.stringify(activeUserSession));
+            localStorage.setItem('mymart_logged_in_user', JSON.stringify(activeUserSession));
 
             // Render right away
             renderProfileUI(activeUserSession);
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
 
                     // Persist updated values in cache
-                    localStorage.setItem('chenari_logged_in_user', JSON.stringify(updatedUserSession));
+                    localStorage.setItem('mymart_logged_in_user', JSON.stringify(updatedUserSession));
 
                     // Update live visual nodes smoothly without recreating HTML
                     const navAvatar = document.getElementById('globalNavAvatar');
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else {
             // Clean up session state
-            localStorage.removeItem('chenari_logged_in_user');
+            localStorage.removeItem('mymart_logged_in_user');
             if (unsubscribeFirestore) {
                 unsubscribeFirestore();
                 unsubscribeFirestore = null;
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmBtn.disabled = true;
                 
                 // Clear active user session
-                localStorage.removeItem('chenari_logged_in_user');
+                localStorage.removeItem('mymart_logged_in_user');
                 
                 try {
                     await signOut(auth);

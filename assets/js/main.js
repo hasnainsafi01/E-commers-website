@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : `Welcome Back to MyMart, ${userName}`;
 
         const popupHTML = `
-            <div id="chenariWelcomeOverlay" style="
+            <div id="mymartWelcomeOverlay" style="
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -87,22 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <style>
-                [data-theme="dark"] #chenariWelcomeOverlay .welcome-card {
+                [data-theme="dark"] #mymartWelcomeOverlay .welcome-card {
                     background: rgba(18, 18, 18, 0.85) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important;
                     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
                 }
-                [data-theme="dark"] #chenariWelcomeOverlay h2 {
+                [data-theme="dark"] #mymartWelcomeOverlay h2 {
                     color: #fff !important;
                 }
-                [data-theme="dark"] #chenariWelcomeOverlay p {
+                [data-theme="dark"] #mymartWelcomeOverlay p {
                     color: #aaa !important;
                 }
             </style>
         `;
 
         document.body.insertAdjacentHTML('beforeend', popupHTML);
-        const overlay = document.getElementById('chenariWelcomeOverlay');
+        const overlay = document.getElementById('mymartWelcomeOverlay');
         const card = overlay.querySelector('.welcome-card');
 
         // Trigger smooth fade and scale in
@@ -129,18 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             // A user successfully authenticated! Clear the admin logout conflict flags
-            sessionStorage.removeItem('chenari_admin_just_logged_out');
-            sessionStorage.removeItem('chenari_logged_in_admin');
+            sessionStorage.removeItem('mymart_admin_just_logged_out');
+            sessionStorage.removeItem('mymart_logged_in_admin');
         }
 
         currentUser = user;
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Authenticating Account...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Authenticating Account...");
         }
 
         // If admin just logged out, suppress all auth-side effects and hide loader only
-        if (sessionStorage.getItem('chenari_admin_just_logged_out') === 'true') {
-            if (window.hideChenariLoader) window.hideChenariLoader();
+        if (sessionStorage.getItem('mymart_admin_just_logged_out') === 'true') {
+            if (window.hideMyMartLoader) window.hideMyMartLoader();
             return;
         }
 
@@ -151,9 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (user) {
             // Check for pending action in localStorage
-            const pending = localStorage.getItem('chenari_pending_action');
+            const pending = localStorage.getItem('mymart_pending_action');
             if (pending) {
-                localStorage.removeItem('chenari_pending_action');
+                localStorage.removeItem('mymart_pending_action');
                 try {
                     const action = JSON.parse(pending);
                     console.log("Found pending action to execute post-login:", action);
@@ -182,11 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Prevent repeated popups during the same active browser session
-            const sessionKey = `chenari_greeted_${user.uid}`;
+            const sessionKey = `mymart_greeted_${user.uid}`;
             if (sessionStorage.getItem(sessionKey)) {
                 console.log("User already greeted this session - Greet Blocked. UID:", user.uid);
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
                 return;
             }
@@ -239,19 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 console.error("Welcome popup system trigger failed:", e);
             } finally {
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
             }
         } else {
             console.log("Auth State Changed: Guest user (No authenticated session).");
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
             
             // Trigger login modal if requested by a redirect
-            if (sessionStorage.getItem('chenari_trigger_login_modal') === 'true') {
-                sessionStorage.removeItem('chenari_trigger_login_modal');
+            if (sessionStorage.getItem('mymart_trigger_login_modal') === 'true') {
+                sessionStorage.removeItem('mymart_trigger_login_modal');
                 setTimeout(() => {
                     if (window.showLoginRequiredModal) {
                         window.showLoginRequiredModal({ type: 'nav', data: { url: 'cart.html' } });
@@ -689,13 +689,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         modal.querySelector('#modalLoginBtn').onclick = () => {
-            localStorage.setItem('chenari_pending_action', JSON.stringify(action));
+            localStorage.setItem('mymart_pending_action', JSON.stringify(action));
             closeModal();
             setTimeout(() => window.location.href = 'login.html', 300);
         };
 
         modal.querySelector('#modalSignupBtn').onclick = () => {
-            localStorage.setItem('chenari_pending_action', JSON.stringify(action));
+            localStorage.setItem('mymart_pending_action', JSON.stringify(action));
             closeModal();
             setTimeout(() => window.location.href = 'signup.html', 300);
         };
@@ -844,8 +844,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `).join('');
 
-            if (window.updateChenariLoaderText) {
-                window.updateChenariLoaderText("Curating Premium Collection...");
+            if (window.updateMyMartLoaderText) {
+                window.updateMyMartLoaderText("Curating Premium Collection...");
             }
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(3));
@@ -858,8 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Error loading featured:", error);
             } finally {
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
             }
         };
@@ -883,8 +883,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `).join('');
 
-            if (window.updateChenariLoaderText) {
-                window.updateChenariLoaderText("Curating Premium Collection...");
+            if (window.updateMyMartLoaderText) {
+                window.updateMyMartLoaderText("Curating Premium Collection...");
             }
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
@@ -895,8 +895,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Error loading all:", error);
             } finally {
-                if (window.hideChenariLoader) {
-                    window.hideChenariLoader();
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
                 }
             }
         };

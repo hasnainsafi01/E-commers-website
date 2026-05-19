@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Protect Favorites page access
             if (window.location.pathname.includes('favorites.html')) {
                 window.showToast("Please login first", "error");
-                sessionStorage.setItem('chenari_trigger_login_modal', 'true');
+                sessionStorage.setItem('mymart_trigger_login_modal', 'true');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const startFavListener = (uid) => {
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Recalling Saved Timepieces...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Recalling Saved Timepieces...");
         }
         const favRef = collection(db, `favorites/${uid}/items`);
         favUnsubscribe = onSnapshot(favRef, (snapshot) => {
@@ -45,13 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             updateUI(items);
             syncHeartIcons();
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }, (err) => {
             console.error("Favorites fetch error:", err);
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         });
     };
@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (window.updateChenariLoaderText) {
-            window.updateChenariLoaderText("Updating wishlist...");
+        if (window.updateMyMartLoaderText) {
+            window.updateMyMartLoaderText("Updating wishlist...");
         }
 
         const favRef = doc(db, `favorites/${currentUser.uid}/items`, product.id);
@@ -216,8 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Wishlist operation failed:", e);
             window.showToast("Failed to save Favorite", "error");
         } finally {
-            if (window.hideChenariLoader) {
-                window.hideChenariLoader();
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
             }
         }
     };
