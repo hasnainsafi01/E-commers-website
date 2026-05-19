@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Welcome Popup Implementation (Declared at the top to prevent temporal dead zone ReferenceErrors)
     const showWelcomePopup = (userName, isFirstVisit) => {
         const greeting = isFirstVisit 
-            ? `Welcome to CHENARI, ${userName}`
-            : `Welcome Back to CHENARI, ${userName}`;
+            ? `Welcome to MyMart, ${userName}`
+            : `Welcome Back to MyMart, ${userName}`;
 
         const popupHTML = `
             <div id="chenariWelcomeOverlay" style="
@@ -58,15 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     opacity: 0;
                     box-sizing: border-box;
                 ">
-                    <!-- CHENARI Premium Logo with Custom Letter Coloring -->
+                    <!-- MyMart Premium Logo with Custom Letter Coloring -->
                     <div style="font-size: 2.6rem; font-weight: 700; letter-spacing: 6px; display: inline-flex; margin-bottom: 25px; font-family: 'Playfair Display', serif;">
-                        <span style="color: #4285F4;">C</span>
-                        <span style="color: #ea4335; margin-left: 2px;">H</span>
-                        <span style="color: #34a853; margin-left: 2px;">E</span>
-                        <span style="color: #fbbc05; margin-left: 2px;">N</span>
-                        <span style="color: #ff5a5f; margin-left: 2px;">A</span>
-                        <span style="color: #1b5e20; margin-left: 2px;">R</span>
-                        <span style="color: #1565c0; margin-left: 2px;">I</span>
+                        <span style="color: #4285F4;">M</span><span style="color: #ea4335; margin-left: 2px;">y</span><span style="color: #34a853; margin-left: 2px;">M</span><span style="color: #fbbc05; margin-left: 2px;">a</span><span style="color: #ff5a5f; margin-left: 2px;">r</span><span style="color: #1b5e20; margin-left: 2px;">t</span>
                     </div>
 
                     <!-- Welcome Title -->
@@ -283,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="mobile-drawer-content">
                     <div class="drawer-header">
                         <a href="index.html" class="logo">
-                            <span>C</span><span>H</span><span>E</span><span>N</span><span>A</span><span>R</span><span>I</span>
+                            <span style="color:var(--primary-blue);">M</span><span style="color:var(--primary-red);">y</span><span style="color:var(--primary-green);">M</span><span style="color:var(--primary-orange);">a</span><span style="color:var(--light-red);">r</span><span style="color:var(--dark-green);">t</span>
                         </a>
                         <button class="drawer-close-btn" id="drawerCloseBtn">
                             <i class="fas fa-times"></i>
@@ -479,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="auth-modal-content">
                     <button class="modal-close-btn">&times;</button>
                     <div class="auth-modal-header">
-                        <h2 class="serif">Join the CHENARI Circle</h2>
+                        <h2 class="serif">Join the MyMart Circle</h2>
                         <p>Authenticate to continue your premium shopping experience and sync your selections across all devices.</p>
                     </div>
                     <div class="auth-modal-options">

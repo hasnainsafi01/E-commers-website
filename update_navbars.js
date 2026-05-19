@@ -1,17 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <script src="assets/js/loader.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Wishlist | CHENARI</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
+const fs = require('fs');
 
-    <!-- Navbar -->
-    <header>
+const files = fs.readdirSync('.').filter(f => f.endsWith('.html'));
+const headerContent = `<header>
         <nav class="navbar">
             <div class="mobile-toggle"><i class="fas fa-bars"></i></div>
             <!-- Logo -->
@@ -53,32 +43,15 @@
                 <div id="navbarAuth" class="nav-auth-group"></div>
             </div>
         </nav>
-    </header>
+    </header>`;
 
-    <!-- Favorites Container -->
-    <main class="favorites-container">
-        <div class="favorites-header">
-            <h1 class="serif">Your Wishlist</h1>
-            <p id="favCountDisplay">0 ITEMS SAVED</p>
-        </div>
-
-        <!-- Empty State UI -->
-        <div id="emptyFavoritesUI" class="empty-favorites-ui hidden">
-            <i class="far fa-heart"></i>
-            <h2 class="serif">Nothing saved yet</h2>
-            <p>Save items you love to your wishlist to review or buy them later.</p>
-            <a href="products.html" class="explore-btn">Discover Items</a>
-        </div>
-
-        <!-- Favorites Grid -->
-        <div id="favoritesGrid" class="product-grid hidden">
-            <!-- Dynamic favorite cards will be injected here -->
-        </div>
-    </main>
-
-    <script type="module" src="assets/js/main.js"></script>
-    <script type="module" src="assets/js/cart.js"></script>
-    <script type="module" src="assets/js/favorites.js"></script>
-    <script type="module" src="assets/js/navbar-auth.js"></script>
-</body>
-</html>
+files.forEach(f => {
+    let content = fs.readFileSync(f, 'utf8');
+    // Replace anything from <header> to </header>
+    const regex = /<header>[\s\S]*?<\/header>/i;
+    if (regex.test(content)) {
+        content = content.replace(regex, headerContent);
+        fs.writeFileSync(f, content);
+        console.log('Updated ' + f);
+    }
+});

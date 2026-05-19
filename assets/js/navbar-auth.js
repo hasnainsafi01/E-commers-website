@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="auth-modal-header" style="margin-bottom: 20px;">
                         <i class="fas fa-sign-out-alt" style="font-size: 3rem; color: var(--primary-blue); margin-bottom: 20px; opacity: 0.8;"></i>
                         <h2 class="serif">Confirm Logout</h2>
-                        <p>Are you sure you want to logout from your premium CHENARI account?</p>
+                        <p>Are you sure you want to logout from your premium MyMart account?</p>
                     </div>
                     <div class="auth-modal-options" style="flex-direction: row; justify-content: center; gap: 15px;">
                         <button id="confirmLogoutBtn" class="btn-primary" style="background: var(--primary-red); border: none; padding: 12px 30px;">Logout</button>
