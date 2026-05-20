@@ -870,24 +870,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const featuredContainer = document.getElementById('featuredProducts');
     if (featuredContainer) {
         const loadFeatured = async () => {
-            // Immediately show skeleton placeholders for featured products only
-            featuredContainer.innerHTML = Array(3).fill(0).map(() => `
-                <div class="skeleton-card">
-                    <div class="skeleton-img"></div>
-                    <div class="skeleton-info">
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-text short"></div>
-                        <div class="skeleton-text medium"></div>
-                    </div>
-                </div>
-            `).join('');
+            let isLoaded = false;
+            const skeletonTimer = setTimeout(() => {
+                if (!isLoaded) {
+                    featuredContainer.innerHTML = Array(3).fill(0).map(() => `
+                        <div class="skeleton-card">
+                            <div class="skeleton-img"></div>
+                            <div class="skeleton-info">
+                                <div class="skeleton-text"></div>
+                                <div class="skeleton-text short"></div>
+                                <div class="skeleton-text medium"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }, 300);
 
-            if (window.updateMyMartLoaderText) {
-                window.updateMyMartLoaderText("Curating Premium Collection...");
-            }
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'), limit(3));
                 const snapshot = await getDocs(q);
+                isLoaded = true;
+                clearTimeout(skeletonTimer);
                 featuredContainer.innerHTML = '';
                 snapshot.forEach(doc => {
                     featuredContainer.innerHTML += renderProductCard({ id: doc.id, ...doc.data() });
@@ -928,21 +931,27 @@ document.addEventListener('DOMContentLoaded', () => {
         let isListView = false;
 
         const loadAll = async () => {
-            productsListContainer.innerHTML = Array(6).fill(0).map(() => `
-                <div class="skeleton-card">
-                    <div class="skeleton-img"></div>
-                    <div class="skeleton-info">
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-text short"></div>
-                        <div class="skeleton-text medium"></div>
-                    </div>
-                </div>
-            `).join('');
+            let isLoaded = false;
+            const skeletonTimer = setTimeout(() => {
+                if (!isLoaded) {
+                    productsListContainer.innerHTML = Array(6).fill(0).map(() => `
+                        <div class="skeleton-card">
+                            <div class="skeleton-img"></div>
+                            <div class="skeleton-info">
+                                <div class="skeleton-text"></div>
+                                <div class="skeleton-text short"></div>
+                                <div class="skeleton-text medium"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }, 300);
 
-            if (window.updateMyMartLoaderText) window.updateMyMartLoaderText("Curating Collection...");
             try {
                 const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(q);
+                isLoaded = true;
+                clearTimeout(skeletonTimer);
                 allProducts = [];
                 snapshot.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
                 
