@@ -26,6 +26,40 @@
                 <span>Inventory Control</span>
             </div>
 
+            <!-- Admin Profile Card in Sidebar -->
+            <div class="sidebar-profile-card" style="
+                padding: 15px;
+                margin: 0 15px 25px 15px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                text-align: center;
+            ">
+                <img id="sidebarAdminAvatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.15);">
+                <div style="display: flex; flex-direction: column; gap: 2px; width: 100%; overflow: hidden;">
+                    <span id="sidebarAdminName" style="font-weight: 600; font-size: 0.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Admin User</span>
+                    <span id="sidebarAdminEmail" style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">admin@gmail.com</span>
+                    <div style="margin-top: 3px;">
+                        <span id="sidebarAdminRole" style="
+                            font-size: 0.6rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            background: rgba(255, 255, 255, 0.06);
+                            color: #fff;
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            padding: 2px 8px;
+                            border-radius: 10px;
+                            display: inline-block;
+                        ">Chief Curator</span>
+                    </div>
+                </div>
+            </div>
+
             <nav class="sidebar-nav">
                 <a href="admin.html" class="nav-item active">
                     <i class="fas fa-th-large"></i> Dashboard
@@ -48,10 +82,10 @@
                 <a href="reviews.html" class="nav-item">
                     <i class="fas fa-star"></i> Reviews
                 </a>
-
+ 
                 <a href="add-product.html" class="add-product-btn" style="display: block; text-align: center; text-decoration: none;">Add Product</a>
             </nav>
-
+ 
             <div class="sidebar-footer">
                 <a href="#" class="nav-item">
                     <i class="far fa-question-circle"></i> Support
@@ -61,7 +95,7 @@
                 </a>
             </div>
         </aside>
-
+ 
         <!-- Main Content -->
         <main class="admin-main">
             <!-- Header -->
@@ -70,15 +104,28 @@
                     <h1 class="serif">Performance Overview</h1>
                     <p>Metrics for the current fiscal period.</p>
                 </div>
-
+ 
                 <div class="header-actions">
                     <div class="notification-bell">
                         <i class="far fa-bell"></i>
                     </div>
                     <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
-                        <div class="profile-info" style="text-align: right;">
-                            <span class="name" id="adminName">Admin User</span>
-                            <span class="role" id="adminRole">Chief Curator</span>
+                        <div class="profile-info" style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                            <span class="name" id="adminName" style="font-weight: 600; font-size: 0.85rem; color: var(--admin-text-primary);">Admin User</span>
+                            <span class="email" id="adminEmail" style="font-size: 0.72rem; color: var(--admin-text-secondary); display: block;">admin@gmail.com</span>
+                            <span class="role" id="adminRole" style="
+                                font-size: 0.6rem;
+                                font-weight: 700;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                background: var(--admin-sidebar-bg);
+                                color: var(--admin-text-primary);
+                                border: 1px solid var(--admin-border);
+                                padding: 2px 8px;
+                                border-radius: 10px;
+                                display: inline-block;
+                                margin-top: 2px;
+                            ">Chief Curator</span>
                         </div>
                         <label for="adminAvatarInput" style="cursor: pointer; display: inline-block; position: relative;">
                             <img id="adminAvatarImg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover;">
@@ -88,6 +135,27 @@
                         </label>
                         <input type="file" id="adminAvatarInput" accept="image/jpeg, image/png, image/webp" style="display: none;">
                     </div>
+                    <button class="admin-logout-btn" id="headerLogoutBtn" style="
+                        background: transparent;
+                        border: 1px solid var(--admin-border);
+                        color: var(--admin-text-primary);
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        font-family: var(--admin-font-sans);
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                        text-transform: uppercase;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        transition: all 0.3s ease;
+                        margin-left: 10px;
+                    " onmouseover="this.style.background='var(--admin-border)';" onmouseout="this.style.background='transparent';">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </header>
 

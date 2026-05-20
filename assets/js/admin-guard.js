@@ -279,6 +279,35 @@ const showSecurityCuratorLoginModal = () => {
     }
 };
 
+const syncAdminProfileUI = (user, userData) => {
+    const name = userData.name || userData.displayName || user.displayName || 'Admin User';
+    const email = userData.email || user.email || 'admin@gmail.com';
+    const role = userData.role || 'Chief Curator';
+    const photoURL = userData.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
+
+    // Sidebar elements
+    const sidebarAvatar = document.getElementById('sidebarAdminAvatar');
+    const sidebarName = document.getElementById('sidebarAdminName');
+    const sidebarEmail = document.getElementById('sidebarAdminEmail');
+    const sidebarRole = document.getElementById('sidebarAdminRole');
+
+    if (sidebarAvatar) sidebarAvatar.src = photoURL;
+    if (sidebarName) sidebarName.innerText = name;
+    if (sidebarEmail) sidebarEmail.innerText = email;
+    if (sidebarRole) sidebarRole.innerText = role;
+
+    // Header elements
+    const headerName = document.getElementById('adminName');
+    const headerEmail = document.getElementById('adminEmail');
+    const headerRole = document.getElementById('headerAdminRole') || document.getElementById('adminRole');
+    const headerAvatar = document.getElementById('adminAvatarImg');
+
+    if (headerName) headerName.innerText = name;
+    if (headerEmail) headerEmail.innerText = email;
+    if (headerRole) headerRole.innerText = role;
+    if (headerAvatar) headerAvatar.src = photoURL;
+};
+
 // Route Protection Logic
 onAuthStateChanged(auth, async (user) => {
     // The loader/curtain was already shown by injectSecurityCurtain() above.
@@ -378,6 +407,10 @@ onAuthStateChanged(auth, async (user) => {
             
             if (userData.role === 'admin') {
                 console.log("Navigating to dashboard");
+                
+                // Synchronize profile details in the DOM automatically
+                syncAdminProfileUI(user, userData);
+
                 // Admin authorized -> Add authenticated reveal class to body
                 document.body.classList.add('authenticated-admin');
                 
@@ -587,13 +620,13 @@ const showAdminLogoutConfirmationModal = () => {
     }
 };
 
-// Bind to DOMContentLoaded to capture all admin sidebar footer logout button clicks programmatically
+// Bind to DOMContentLoaded to capture all admin sidebar footer and header logout button clicks programmatically
 document.addEventListener('DOMContentLoaded', () => {
-    const logoutBtn = document.querySelector('.sidebar-footer a[href="index.html"]');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+        const logoutTrigger = e.target.closest('.admin-logout-btn, .sidebar-footer a[href="index.html"], #headerLogoutBtn, #sidebarLogoutBtn');
+        if (logoutTrigger) {
             e.preventDefault();
             showAdminLogoutConfirmationModal();
-        });
-    }
+        }
+    });
 });

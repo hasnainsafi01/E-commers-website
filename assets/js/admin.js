@@ -75,16 +75,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snap.exists()) {
                 currentAdminDoc = snap.data();
                 const name = currentAdminDoc.name || currentAdminDoc.displayName || user.displayName || 'Admin User';
+                const email = currentAdminDoc.email || user.email || 'admin@gmail.com';
                 const role = currentAdminDoc.role || 'Chief Curator';
                 const photoURL = currentAdminDoc.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
 
+                // Sync header info
                 const nameElem = document.getElementById('adminName');
-                const roleElem = document.getElementById('adminRole');
+                const emailElem = document.getElementById('adminEmail');
+                const roleElem = document.getElementById('headerAdminRole') || document.getElementById('adminRole');
                 const avatarImg = document.getElementById('adminAvatarImg');
 
                 if (nameElem) nameElem.innerText = name;
+                if (emailElem) emailElem.innerText = email;
                 if (roleElem) roleElem.innerText = role;
                 if (avatarImg) avatarImg.src = photoURL;
+
+                // Sync sidebar info
+                const sidebarAvatar = document.getElementById('sidebarAdminAvatar');
+                const sidebarName = document.getElementById('sidebarAdminName');
+                const sidebarEmail = document.getElementById('sidebarAdminEmail');
+                const sidebarRole = document.getElementById('sidebarAdminRole');
+
+                if (sidebarAvatar) sidebarAvatar.src = photoURL;
+                if (sidebarName) sidebarName.innerText = name;
+                if (sidebarEmail) sidebarEmail.innerText = email;
+                if (sidebarRole) sidebarRole.innerText = role;
             }
         });
 

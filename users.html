@@ -24,6 +24,40 @@
                 <span>Inventory Control</span>
             </div>
 
+            <!-- Admin Profile Card in Sidebar -->
+            <div class="sidebar-profile-card" style="
+                padding: 15px;
+                margin: 0 15px 25px 15px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                text-align: center;
+            ">
+                <img id="sidebarAdminAvatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Admin" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.15);">
+                <div style="display: flex; flex-direction: column; gap: 2px; width: 100%; overflow: hidden;">
+                    <span id="sidebarAdminName" style="font-weight: 600; font-size: 0.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Admin User</span>
+                    <span id="sidebarAdminEmail" style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">admin@gmail.com</span>
+                    <div style="margin-top: 3px;">
+                        <span id="sidebarAdminRole" style="
+                            font-size: 0.6rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            background: rgba(255, 255, 255, 0.06);
+                            color: #fff;
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            padding: 2px 8px;
+                            border-radius: 10px;
+                            display: inline-block;
+                        ">Chief Curator</span>
+                    </div>
+                </div>
+            </div>
+
             <nav class="sidebar-nav">
                 <a href="admin.html" class="nav-item">
                     <i class="fas fa-th-large"></i> Dashboard
