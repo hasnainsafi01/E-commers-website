@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (window.hideMyMartLoader) {
                         window.hideMyMartLoader();
                     }
+                    window.location.href = 'admin.html';
                     return;
                 }
             } catch (err) {

@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         unsubscribeFirestore = null;
                     }
                     renderGuestUI();
+                    window.location.href = 'admin.html';
                     return;
                 }
             } catch (err) {

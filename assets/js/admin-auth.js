@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
+        let isSuccess = false;
+
         try {
             // 1. Prevent Auth Conflict: Log out any active sessions before starting new admin login
             if (auth.currentUser) {
@@ -38,48 +40,32 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear any old session storage before attempting login
             sessionStorage.removeItem('mymart_admin_session');
 
-            let user;
-            try {
-                // 2. Perform Firebase Authentication login
-                const credential = await signInWithEmailAndPassword(auth, email, password);
-                user = credential.user;
-                console.log("Firebase login success");
-                console.log("UID:", user.uid);
-            } catch (authErr) {
-                console.error("Admin Auth Credentials Failure:", authErr);
-                let msg = "Invalid email or password";
-                if (authErr.code === 'auth/too-many-requests') {
-                    msg = "Security hold: Too many attempts. Please try again later.";
-                }
-                showError(msg);
-                return;
-            }
+            // 2. Perform Firebase Authentication login
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            const user = credential.user;
+            const uid = user.uid;
 
-            let userSnap;
-            try {
-                // 3. Fetch User Document from Firestore to verify role-based permissions
-                const userRef = doc(db, 'users', user.uid);
-                userSnap = await getDoc(userRef);
-            } catch (firestoreErr) {
-                console.error("Admin Auth Firestore Failure:", firestoreErr);
-                await signOut(auth);
-                showError("Unable to verify admin account.");
-                return;
-            }
+            console.log("Firebase login success");
+            console.log("UID:", uid);
+
+            // 3. Fetch User Document from Firestore to verify role-based permissions
+            const userRef = doc(db, 'users', uid);
+            const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-                // User document doesn't exist in Firestore, sign out and error
                 await signOut(auth);
-                showError("Unable to verify admin account.");
+                showError("Access denied. Admin privileges required.");
                 return;
             }
 
-            console.log("Firestore doc found");
+            console.log("Firestore document found");
             const userData = userSnap.data();
-            console.log("Role:", userData.role);
+            const role = userData.role;
+            console.log("Role:", role);
 
             // 4. Role validation
-            if (userData.role === 'admin') {
+            if (role === 'admin') {
+                isSuccess = true;
                 // Success! Set session indicator and redirect
                 sessionStorage.setItem('mymart_admin_session', 'true');
                 
@@ -88,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.showToast("Portal unlocked. Welcome, Admin.");
                 }
 
-                console.log("Redirecting to dashboard");
+                console.log("Navigating to dashboard");
                 submitBtn.innerHTML = '<i class="fas fa-check"></i> Redirecting...';
                 setTimeout(() => {
                     window.location.href = 'admin.html';
@@ -100,15 +86,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (err) {
-            console.error("Unexpected Admin Authentication Failure:", err);
-            showError("Unable to verify admin account.");
+            console.error("Admin Authentication Failure:", err);
+            let msg = "Invalid email or password";
+            if (err.code === 'auth/too-many-requests') {
+                msg = "Security hold: Too many attempts. Please try again later.";
+            } else if (err.code && err.code.startsWith('auth/')) {
+                msg = "Invalid email or password";
+            } else {
+                msg = "Unable to verify admin account.";
+            }
+            showError(msg);
+        } finally {
+            // Only restore credentials button state if login was not successful
+            if (!isSuccess) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Verify Credentials';
+            }
         }
     };
 
     function showError(message) {
         errorBox.innerText = message;
         errorBox.style.display = 'block';
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Verify Credentials';
     }
 });

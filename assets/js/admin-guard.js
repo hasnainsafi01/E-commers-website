@@ -377,7 +377,7 @@ onAuthStateChanged(auth, async (user) => {
             console.log("Role:", userData.role);
             
             if (userData.role === 'admin') {
-                console.log("Redirecting to dashboard");
+                console.log("Navigating to dashboard");
                 // Admin authorized -> Add authenticated reveal class to body
                 document.body.classList.add('authenticated-admin');
                 
@@ -387,6 +387,11 @@ onAuthStateChanged(auth, async (user) => {
                 // Trigger success event
                 window.dispatchEvent(new CustomEvent('admin-auth-success', { detail: user }));
                 
+                // Hide the shared loader if it was shown to prevent infinite loading screen
+                if (window.hideMyMartLoader) {
+                    window.hideMyMartLoader();
+                }
+
                 // Fade out security curtain
                 if (curtain) {
                     curtain.style.opacity = '0';
