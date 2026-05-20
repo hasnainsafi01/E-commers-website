@@ -209,13 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const itemSnap = await getDoc(itemRef);
             const currentQtyInCart = itemSnap.exists() ? itemSnap.data().quantity : 0;
-            if (currentQtyInCart + 1 > availableStock) {
+            const addedQty = product.quantity || 1;
+            if (currentQtyInCart + addedQty > availableStock) {
                 window.showToast(`Not enough stock available. Only ${availableStock} remaining.`, "error");
                 return;
             }
 
             if (itemSnap.exists()) {
-                await setDoc(itemRef, { quantity: currentQtyInCart + 1 }, { merge: true });
+                await setDoc(itemRef, { quantity: currentQtyInCart + addedQty }, { merge: true });
             } else {
                 // Fetch full product details if only ID/Title provided
                 let fullProduct = product;
@@ -229,9 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             title: pData.title,
                             name: pData.title,
                             price: pData.price,
-                            category: pData.category,
-                            image: pData.images[0],
-                            quantity: 1,
+                            category: pData.category || 'Uncategorized',
+                            image: (pData.images && pData.images.length > 0) ? pData.images[0] : 'assets/images/default.png',
+                            quantity: addedQty,
                             createdAt: serverTimestamp(),
                             addedAt: serverTimestamp()
                         };
@@ -243,9 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         title: product.title || product.name,
                         name: product.title || product.name,
                         price: product.price,
-                        category: product.category,
-                        image: product.image,
-                        quantity: product.quantity || 1,
+                        category: product.category || 'Uncategorized',
+                        image: product.image || 'assets/images/default.png',
+                        quantity: addedQty,
                         createdAt: serverTimestamp(),
                         addedAt: serverTimestamp()
                     };

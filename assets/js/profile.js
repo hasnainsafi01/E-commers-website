@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, setDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, setDoc, collection, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const CLOUD_NAME = "dqsvcn94y";
 const UPLOAD_PRESET = "E-commerce";
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Prefer strictly requested 'name', fallback to displayName
             const displayName = currentUserDoc.name || currentUserDoc.displayName || user.displayName || 'Luxury Connoisseur';
-            const photoURL = currentUserDoc.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`;
+            const photoURL = currentUserDoc.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
 
             // 2. Update Basic Info Real-Time
             if (document.getElementById('userProfileName')) document.getElementById('userProfileName').innerText = displayName;
@@ -61,12 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('userProfileImage')) document.getElementById('userProfileImage').src = photoURL;
             
             // Check Profile Completion logic
-            const requiredFields = ['phone', 'country', 'city', 'streetAddress', 'houseNumber'];
             let filledCount = 0;
-            requiredFields.forEach(field => {
-                if (currentUserDoc[field] && currentUserDoc[field].trim() !== '') filledCount++;
-            });
-            const completionPercentage = Math.round((filledCount / requiredFields.length) * 100);
+            if (displayName && displayName !== 'Luxury Connoisseur' && displayName.trim() !== '') filledCount++;
+            if (photoURL && !photoURL.includes('ui-avatars.com')) filledCount++;
+            if (currentUserDoc.phone && currentUserDoc.phone.trim() !== '') filledCount++;
+            if (currentUserDoc.country && currentUserDoc.country.trim() !== '') filledCount++;
+            if (currentUserDoc.city && currentUserDoc.city.trim() !== '') filledCount++;
+            if (currentUserDoc.streetAddress && currentUserDoc.streetAddress.trim() !== '') filledCount++;
+            
+            const completionPercentage = Math.round((filledCount / 6) * 100);
             
             // Update UI Sidebar Progress
             if (document.getElementById('profileProgressText')) {
@@ -212,9 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const favSnap = await getDocs(collection(db, `favorites/${user.uid}/items`));
             if (document.getElementById('favStatCount')) document.getElementById('favStatCount').innerText = favSnap.size;
 
-            const ordersSnap = await getDocs(collection(db, 'orders'));
+            const ordersQuery = query(collection(db, 'orders'), where('customerUid', '==', user.uid));
+            const ordersSnap = await getDocs(ordersQuery);
             const userOrders = ordersSnap.docs
-                .filter(d => d.data().customerUid === user.uid)
                 .map(d => ({ id: d.id, ...d.data() }))
                 .sort((a, b) => {
                     const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
@@ -295,7 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyUI.style.display = '';
             }
         } catch(e) {
-            console.log("Stats fetch issue:", e);
+            console.error("Stats fetch issue:", e);
+        } finally {
+            if (window.hideMyMartLoader) {
+                window.hideMyMartLoader();
+            }
         }
     });
 
