@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('mymart_admin_just_logged_out');
             sessionStorage.removeItem('mymart_logged_in_admin');
 
-            // Failsafe role check to ensure admin doesn't get treated as customer
+            // Failsafe role check to ensure admin doesn't get treated as customer on storefront
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         unsubscribeFirestore = null;
                     }
                     renderGuestUI();
-                    window.location.href = 'admin.html';
                     return;
                 }
             } catch (err) {

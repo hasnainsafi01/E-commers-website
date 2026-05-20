@@ -74,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
         onSnapshot(adminRef, (snap) => {
             if (snap.exists()) {
                 currentAdminDoc = snap.data();
-                const name = currentAdminDoc.name || currentAdminDoc.displayName || user.displayName || 'Admin User';
-                const email = currentAdminDoc.email || user.email || 'admin@gmail.com';
+                const name = currentAdminDoc.name || currentAdminDoc.displayName || user.displayName || 'Admin';
+                const email = currentAdminDoc.email || user.email || '';
                 const role = currentAdminDoc.role || 'Chief Curator';
-                const photoURL = currentAdminDoc.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
+                const photoURL = currentAdminDoc.photoURL || user.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a1a1a'/%3E%3Ccircle cx='50' cy='35' r='20' fill='%23ffffff' opacity='0.3'/%3E%3Cpath d='M20 80c0-15 12-25 30-25s30 10 30 25' fill='%23ffffff' opacity='0.3'/%3E%3C/svg%3E";
 
                 // Sync header info
                 const nameElem = document.getElementById('adminName');

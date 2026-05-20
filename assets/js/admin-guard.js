@@ -2,6 +2,12 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Instant failsafe back-button and guest block check (runs immediately after module load in head)
+if (!sessionStorage.getItem('mymart_admin_session')) {
+    document.documentElement.style.display = 'none';
+    window.location.replace('admin-login.html');
+}
+
 // Immediately show the shared MyMart auth-grade loader to prevent flash of restricted content
 const injectSecurityCurtain = () => {
     let curtain = document.getElementById('adminSecurityCurtain');
@@ -280,10 +286,10 @@ const showSecurityCuratorLoginModal = () => {
 };
 
 const syncAdminProfileUI = (user, userData) => {
-    const name = userData.name || userData.displayName || user.displayName || 'Admin User';
-    const email = userData.email || user.email || 'admin@gmail.com';
+    const name = userData.name || userData.displayName || user.displayName || 'Admin';
+    const email = userData.email || user.email || '';
     const role = userData.role || 'Chief Curator';
-    const photoURL = userData.photoURL || user.photoURL || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80';
+    const photoURL = userData.photoURL || user.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a1a1a'/%3E%3Ccircle cx='50' cy='35' r='20' fill='%23ffffff' opacity='0.3'/%3E%3Cpath d='M20 80c0-15 12-25 30-25s30 10 30 25' fill='%23ffffff' opacity='0.3'/%3E%3C/svg%3E";
 
     // Sidebar elements
     const sidebarAvatar = document.getElementById('sidebarAdminAvatar');
@@ -437,19 +443,32 @@ onAuthStateChanged(auth, async (user) => {
             console.warn("Firestore user document not found for UID:", user.uid);
         }
         
-        // Non-admin or doc not found -> Show modern Access Denied modal
-        showAccessDeniedModal(
-            "Access denied. Admin privileges required.",
-            true // Force sign out standard users from active Firebase session
-        );
+        // Non-admin or doc not found -> Force immediate signout, clear storage, and redirect strictly to admin login
+        console.warn("Unauthorized access attempt by non-admin UID:", user.uid);
+        try {
+            await signOut(auth);
+        } catch(e) {
+            console.warn('Signout error:', e);
+        }
+        localStorage.clear();
+        sessionStorage.clear();
+        sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
+        window.location.replace('admin-login.html');
+        return;
         
     } catch (error) {
         clearTimeout(fetchTimeout);
         console.error("Route Guard Security Error:", error);
-        showAccessDeniedModal(
-            "Unable to load admin dashboard.",
-            true
-        );
+        try {
+            await signOut(auth);
+        } catch(e) {
+            console.warn('Signout error in catch:', e);
+        }
+        localStorage.clear();
+        sessionStorage.clear();
+        sessionStorage.setItem('mymart_admin_just_logged_out', 'true');
+        window.location.replace('admin-login.html');
+        return;
     }
 });
 

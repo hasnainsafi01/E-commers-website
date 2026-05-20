@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('mymart_admin_just_logged_out');
             sessionStorage.removeItem('mymart_logged_in_admin');
 
-            // Failsafe check: if user is admin, hide loader and let navbar-auth handle redirect
+            // Failsafe check: if user is admin, hide loader
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
@@ -161,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (window.hideMyMartLoader) {
                         window.hideMyMartLoader();
                     }
-                    window.location.href = 'admin.html';
                     return;
                 }
             } catch (err) {
