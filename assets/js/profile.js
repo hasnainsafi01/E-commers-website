@@ -246,13 +246,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     `).join('');
                     const moreCount = (order.items?.length || 0) > 3 ? `<span style="font-size:0.75rem;color:#888;margin-left:6px;">+${order.items.length - 3} more</span>` : '';
 
-                    const hoursSinceOrder = (Date.now() - date.getTime()) / (1000 * 60 * 60);
-                    const canCancel = hoursSinceOrder <= 24 && (order.status === 'Pending' || order.status === 'Processing');
-                    const cancelBtnHTML = canCancel ? `
-                        <button onclick="window.cancelUserOrder('${order.id}')" style="margin-top: 12px; background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c'">
-                            <i class="fas fa-times-circle" style="margin-right: 4px;"></i> Cancel Order
-                        </button>
-                    ` : '';
+                    let cancelBtnHTML = '';
+                    if (order.status === 'Pending' || order.status === 'Processing') {
+                        const safeTitle = (order.items && order.items[0]) ? order.items[0].title.replace(/'/g, "\\'") : 'Order';
+                        const safeImage = (order.items && order.items[0]) ? order.items[0].image : '';
+                        if (hoursSinceOrder <= 24) {
+                            cancelBtnHTML = `
+                                <button onclick="window.showCancelOrderModal('${order.id}', '${order.orderId}', '${safeTitle}', '${safeImage}', ${order.total || 0})" style="margin-top: 12px; background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c'">
+                                    <i class="fas fa-times-circle" style="margin-right: 4px;"></i> Cancel Order
+                                </button>
+                            `;
+                        } else {
+                            cancelBtnHTML = `
+                                <button disabled style="margin-top: 12px; background: #f9f9f9; border: 1px solid #ddd; color: #999; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: not-allowed;">
+                                    <i class="fas fa-ban" style="margin-right: 4px;"></i> Cancellation period expired
+                                </button>
+                            `;
+                        }
+                    }
 
                     const card = document.createElement('div');
                     card.innerHTML = `
@@ -286,10 +297,111 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Cancel Order Atomic Transaction
-    window.cancelUserOrder = async (orderId) => {
-        if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) return;
+    // Cancel Order Modal Logic
+    const injectCancelOrderModal = () => {
+        if (document.getElementById('cancelOrderModal')) return;
+        const modalHTML = `
+            <div id="cancelOrderModal" class="auth-modal-overlay" style="z-index: 10000; backdrop-filter: blur(8px);">
+                <div class="auth-modal-content" style="max-width: 400px; text-align: center; border-radius: 16px; padding: 30px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); animation: cancelModalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <style>
+                        @keyframes cancelModalPop {
+                            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                            to { opacity: 1; transform: scale(1) translateY(0); }
+                        }
+                        .co-btn {
+                            flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+                        }
+                        .co-btn-left {
+                            background: transparent; border: 1px solid #ccc; color: #555;
+                        }
+                        .co-btn-left:hover {
+                            background: #f5f5f5; color: #333;
+                        }
+                        .co-btn-right {
+                            background: #e74c3c; border: 1px solid #e74c3c; color: white;
+                        }
+                        .co-btn-right:hover {
+                            background: #c0392b; border-color: #c0392b;
+                        }
+                    </style>
+                    <div style="font-size: 3rem; color: #e74c3c; margin-bottom: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 class="serif" style="margin-bottom: 10px; font-size: 1.5rem; color: #1a1a1a;">Cancel This Order?</h2>
+                    <p style="color: #666; margin-bottom: 25px; font-size: 0.9rem; line-height: 1.5;">
+                        Are you sure you want to cancel this order? This action cannot be undone after confirmation.
+                    </p>
+                    
+                    <div style="background: #fafafa; border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 25px; display: flex; align-items: center; text-align: left; gap: 15px;">
+                        <img id="coModalImg" src="" alt="Order Item" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                        <div>
+                            <div id="coModalName" style="font-weight: 700; font-size: 0.95rem; color: #333; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;"></div>
+                            <div id="coModalId" style="font-size: 0.75rem; color: #888; margin-bottom: 4px;"></div>
+                            <div id="coModalPrice" style="font-weight: 700; font-size: 0.9rem; color: #1a1a1a;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button class="co-btn co-btn-left" id="coKeepBtn">Keep Order</button>
+                        <button class="co-btn co-btn-right" id="coCancelBtn">Cancel Order</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        document.getElementById('coKeepBtn').onclick = () => {
+            document.getElementById('cancelOrderModal').classList.remove('active');
+        };
+    };
+
+    window.showCancelOrderModal = (id, orderId, name, image, price) => {
+        injectCancelOrderModal();
+        document.getElementById('coModalImg').src = image || 'assets/images/default.png';
+        document.getElementById('coModalName').innerText = name || 'Luxury Item';
+        document.getElementById('coModalId').innerText = `ID: ${orderId}`;
+        document.getElementById('coModalPrice').innerText = `PKR ${Number(price).toLocaleString()}`;
         
+        const modal = document.getElementById('cancelOrderModal');
+        
+        document.getElementById('coCancelBtn').onclick = () => {
+            modal.classList.remove('active');
+            window.executeOrderCancellation(id);
+        };
+        
+        setTimeout(() => modal.classList.add('active'), 50);
+    };
+
+    const showCancelSuccessToast = (msg) => {
+        const toastId = 'successCancelToast';
+        let toast = document.getElementById(toastId);
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = toastId;
+            toast.style.cssText = `
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+                background: #27ae60; color: white; padding: 12px 24px; border-radius: 8px;
+                font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px;
+                box-shadow: 0 10px 30px rgba(39,174,96,0.3); z-index: 10001; opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            `;
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = \`<i class="fas fa-check-circle"></i> \${msg}\`;
+        
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.transform = 'translateX(-50%) translateY(100px)';
+            toast.style.opacity = '0';
+        }, 2500);
+    };
+
+    // Cancel Order Atomic Transaction
+    window.executeOrderCancellation = async (orderId) => {
         if (window.updateMyMartLoaderText) {
             window.updateMyMartLoaderText("Cancelling Order...");
         }
@@ -349,10 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             await batch.commit();
-            window.showToast("Order cancelled successfully.");
+            showCancelSuccessToast("Order cancelled successfully");
             
             // Reload page to reflect changes
-            setTimeout(() => window.location.reload(), 1500);
+            setTimeout(() => window.location.reload(), 2000);
             
         } catch (error) {
             console.error("Cancellation error:", error);
