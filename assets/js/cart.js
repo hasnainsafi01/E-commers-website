@@ -316,6 +316,113 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Checkout Success Modals and Toasts
+    const showCheckoutSuccessToast = (msg) => {
+        const toastId = 'checkoutSuccessToast';
+        let toast = document.getElementById(toastId);
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = toastId;
+            toast.style.cssText = `
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+                background: #27ae60; color: white; padding: 12px 24px; border-radius: 8px;
+                font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px;
+                box-shadow: 0 10px 30px rgba(39,174,96,0.3); z-index: 10001; opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            `;
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = \`<i class="fas fa-check-circle"></i> \${msg}\`;
+        
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.transform = 'translateX(-50%) translateY(100px)';
+            toast.style.opacity = '0';
+        }, 3000);
+    };
+
+    const showCheckoutSuccessPopup = (orderId, grandTotal) => {
+        let modal = document.getElementById('checkoutSuccessModal');
+        if (!modal) {
+            const modalHTML = \`
+                <div id="checkoutSuccessModal" class="auth-modal-overlay" style="z-index: 10000; backdrop-filter: blur(8px);">
+                    <div class="auth-modal-content" style="max-width: 400px; width: 90%; text-align: center; border-radius: 16px; padding: 35px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); animation: checkoutModalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: white;">
+                        <style>
+                            @keyframes checkoutModalPop {
+                                from { opacity: 0; transform: scale(0.9) translateY(20px); }
+                                to { opacity: 1; transform: scale(1) translateY(0); }
+                            }
+                            @keyframes checkmarkAnim {
+                                0% { transform: scale(0); }
+                                50% { transform: scale(1.2); }
+                                100% { transform: scale(1); }
+                            }
+                            .chk-btn {
+                                flex: 1; padding: 14px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; width: 100%; margin-bottom: 10px; display: block; box-sizing: border-box; text-align: center;
+                            }
+                            .chk-btn-primary {
+                                background: #27ae60; border: none; color: white;
+                            }
+                            .chk-btn-primary:hover {
+                                background: #219653; box-shadow: 0 4px 15px rgba(39,174,96,0.3); color: white;
+                            }
+                            .chk-btn-secondary {
+                                background: transparent; border: 1px solid #ccc; color: #555;
+                            }
+                            .chk-btn-secondary:hover {
+                                background: #f5f5f5; color: #333;
+                            }
+                        </style>
+                        <div style="font-size: 4rem; color: #27ae60; margin-bottom: 20px; animation: checkmarkAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h2 class="serif" style="margin-bottom: 10px; font-size: 1.6rem; color: #1a1a1a; font-weight: 700;">Order Confirmed</h2>
+                        <p style="color: #666; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5;">
+                            Your order has been placed successfully and is now being processed.
+                        </p>
+                        
+                        <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 18px; margin-bottom: 25px; text-align: left;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85rem;">Order Number</span>
+                                <strong style="color: #333; font-size: 0.9rem;" id="chkModalOrderId"></strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee;">
+                                <span style="color: #888; font-size: 0.85rem;">Total Amount</span>
+                                <strong style="color: #1a1a1a; font-size: 1rem;" id="chkModalTotal"></strong>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; color: #2980b9; font-size: 0.85rem; font-weight: 600;">
+                                <i class="fas fa-truck"></i> Estimated delivery: 3–5 business days
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="chk-btn chk-btn-primary" id="chkTrackBtn" style="margin-bottom: 0;">Track Order</button>
+                            <button class="chk-btn chk-btn-secondary" id="chkShoppingBtn" style="margin-bottom: 0;">Continue Shopping</button>
+                        </div>
+                    </div>
+                </div>
+            \`;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            modal = document.getElementById('checkoutSuccessModal');
+            
+            document.getElementById('chkTrackBtn').onclick = () => {
+                window.location.href = 'profile.html';
+            };
+            document.getElementById('chkShoppingBtn').onclick = () => {
+                window.location.href = 'index.html';
+            };
+        }
+        
+        document.getElementById('chkModalOrderId').innerText = orderId;
+        document.getElementById('chkModalTotal').innerText = \`PKR \${Number(grandTotal).toLocaleString()}\`;
+        
+        setTimeout(() => modal.classList.add('active'), 50);
+    };
+
     // Atomic Checkout and Stock Deduction Listener
     const checkoutBtn = document.querySelector('.checkout-btn');
     if (checkoutBtn) {
@@ -453,12 +560,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 await batch.commit();
 
                 // STEP 7: Success
-                window.showToast('Order Placed Successfully! Thank you.');
                 document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge').forEach(badge => {
                     badge.innerText = '0';
                     badge.style.display = 'none';
                 });
-                setTimeout(() => { window.location.href = 'profile.html'; }, 2000);
+                
+                showCheckoutSuccessToast('Order placed successfully');
+                showCheckoutSuccessPopup(orderIdStr, grandTotal);
 
             } catch (error) {
                 console.error("Checkout Failure:", error);

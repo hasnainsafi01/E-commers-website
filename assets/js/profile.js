@@ -221,6 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
                     return bDate - aDate;
                 });
+                
+            window.currentUserOrders = userOrders;
 
             if (document.getElementById('orderStatCount')) document.getElementById('orderStatCount').innerText = userOrders.length;
 
@@ -246,13 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     `).join('');
                     const moreCount = (order.items?.length || 0) > 3 ? `<span style="font-size:0.75rem;color:#888;margin-left:6px;">+${order.items.length - 3} more</span>` : '';
 
+                    const hoursSinceOrder = (Date.now() - date.getTime()) / (1000 * 60 * 60);
                     let cancelBtnHTML = '';
                     if (order.status === 'Pending' || order.status === 'Processing') {
-                        const safeTitle = (order.items && order.items[0]) ? order.items[0].title.replace(/'/g, "\\'") : 'Order';
-                        const safeImage = (order.items && order.items[0]) ? order.items[0].image : '';
                         if (hoursSinceOrder <= 24) {
                             cancelBtnHTML = `
-                                <button onclick="window.showCancelOrderModal('${order.id}', '${order.orderId}', '${safeTitle}', '${safeImage}', ${order.total || 0})" style="margin-top: 12px; background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c'">
+                                <button id="order-cancel-btn-${order.id}" onclick="window.showCancelOrderModal('${order.id}')" style="margin-top: 12px; background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#e74c3c'">
                                     <i class="fas fa-times-circle" style="margin-right: 4px;"></i> Cancel Order
                                 </button>
                             `;
@@ -266,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const card = document.createElement('div');
+                    card.id = `order-card-${order.id}`;
                     card.innerHTML = `
                         <div style="border:1px solid #eee;border-radius:14px;padding:18px 20px;margin-bottom:14px;background:#fafafa;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 18px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='none'">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
@@ -274,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="font-size:0.78rem;color:#888;margin:3px 0 0;">${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                                 </div>
                                 <div style="display:flex;align-items:center;gap:12px;">
-                                    <span style="background:${sc.bg};color:${sc.color};padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">${order.status}</span>
+                                    <span id="order-status-${order.id}" style="background:${sc.bg};color:${sc.color};padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">${order.status}</span>
                                     <strong style="font-size:1rem;">PKR ${(order.total || 0).toLocaleString()}</strong>
                                 </div>
                             </div>
@@ -355,18 +357,32 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    window.showCancelOrderModal = (id, orderId, name, image, price) => {
+    window.showCancelOrderModal = (orderId) => {
+        const order = window.currentUserOrders?.find(o => o.id === orderId);
+        if (!order) return;
+
         injectCancelOrderModal();
-        document.getElementById('coModalImg').src = image || 'assets/images/default.png';
-        document.getElementById('coModalName').innerText = name || 'Luxury Item';
-        document.getElementById('coModalId').innerText = `ID: ${orderId}`;
-        document.getElementById('coModalPrice').innerText = `PKR ${Number(price).toLocaleString()}`;
+        const safeTitle = (order.items && order.items[0]) ? order.items[0].title : 'Luxury Item';
+        const safeImage = (order.items && order.items[0]) ? order.items[0].image : 'assets/images/default.png';
+
+        document.getElementById('coModalImg').src = safeImage;
+        document.getElementById('coModalName').innerText = safeTitle;
+        document.getElementById('coModalId').innerText = `ID: ${order.orderId}`;
+        document.getElementById('coModalPrice').innerText = `PKR ${(order.total || 0).toLocaleString()}`;
         
         const modal = document.getElementById('cancelOrderModal');
+        const keepBtn = document.getElementById('coKeepBtn');
+        const cancelBtn = document.getElementById('coCancelBtn');
         
-        document.getElementById('coCancelBtn').onclick = () => {
-            modal.classList.remove('active');
-            window.executeOrderCancellation(id);
+        keepBtn.disabled = false;
+        cancelBtn.disabled = false;
+        cancelBtn.innerHTML = 'Cancel Order';
+
+        cancelBtn.onclick = () => {
+            cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+            cancelBtn.disabled = true;
+            keepBtn.disabled = true;
+            window.executeOrderCancellation(orderId, modal, cancelBtn, keepBtn);
         };
         
         setTimeout(() => modal.classList.add('active'), 50);
@@ -401,20 +417,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Cancel Order Atomic Transaction
-    window.executeOrderCancellation = async (orderId) => {
-        if (window.updateMyMartLoaderText) {
-            window.updateMyMartLoaderText("Cancelling Order...");
-        }
-
+    window.executeOrderCancellation = async (orderId, modal, cancelBtn, keepBtn) => {
         try {
-            const { writeBatch, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-            const batch = writeBatch(db);
+            const { updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
             const orderRef = doc(db, 'orders', orderId);
             const orderSnap = await getDoc(orderRef);
             
             if (!orderSnap.exists()) {
                 window.showToast("Order not found.", "error");
-                return;
+                throw new Error("Order not found");
             }
             
             const orderData = orderSnap.data();
@@ -424,12 +435,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const hoursSinceOrder = (Date.now() - date.getTime()) / (1000 * 60 * 60);
             if (hoursSinceOrder > 24) {
                 window.showToast("Cancellation period (24 hours) has expired.", "error");
-                return;
+                throw new Error("Cancellation expired");
             }
             if (orderData.status !== 'Pending' && orderData.status !== 'Processing') {
                 window.showToast("This order can no longer be cancelled.", "error");
-                return;
+                throw new Error("Invalid status");
             }
+
+            const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+            // Update order status first using updateDoc
+            await updateDoc(orderRef, { 
+                status: 'Cancelled',
+                cancelledAt: serverTimestamp(),
+                cancelledBy: currentAuthUser ? currentAuthUser.uid : 'user',
+                cancellationAllowed: false
+            });
 
             // Restore Stock
             if (orderData.items && Array.isArray(orderData.items)) {
@@ -442,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const currentSold = productData.sold || 0;
                         const currentSoldCount = productData.soldCount || currentSold || 0;
                         
-                        batch.update(productRef, {
+                        await updateDoc(productRef, {
                             stock: currentStock + item.qty,
                             sold: Math.max(0, currentSold - item.qty),
                             soldCount: Math.max(0, currentSoldCount - item.qty)
@@ -450,27 +471,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-
-            // Update order status and tracking fields
-            const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-            batch.update(orderRef, { 
-                status: 'Cancelled',
-                cancelledAt: serverTimestamp(),
-                cancelledBy: currentAuthUser ? currentAuthUser.uid : 'user',
-                cancellationAllowed: false
-            });
             
-            await batch.commit();
+            modal.classList.remove('active');
             showCancelSuccessToast("Order cancelled successfully");
-            
-            // Reload page to reflect changes
-            setTimeout(() => window.location.reload(), 2000);
+
+            // UI INSTANT UPDATE
+            const statusBadge = document.getElementById(\`order-status-\${orderId}\`);
+            if (statusBadge) {
+                statusBadge.innerText = 'Cancelled';
+                statusBadge.style.background = '#f8d7da';
+                statusBadge.style.color = '#721c24';
+            }
+            const cancelBtnInList = document.getElementById(\`order-cancel-btn-\${orderId}\`);
+            if (cancelBtnInList) {
+                cancelBtnInList.disabled = true;
+                cancelBtnInList.style.cssText = "margin-top: 12px; background: #f9f9f9; border: 1px solid #ddd; color: #999; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: not-allowed;";
+                cancelBtnInList.innerHTML = '<i class="fas fa-ban" style="margin-right: 4px;"></i> Cancelled';
+            }
             
         } catch (error) {
             console.error("Cancellation error:", error);
-            window.showToast("Failed to cancel order.", "error");
-        } finally {
-            if (window.hideMyMartLoader) window.hideMyMartLoader();
+            window.showToast("Unable to cancel order. Please try again.", "error");
+            
+            // Restore button state
+            if (cancelBtn) {
+                cancelBtn.innerHTML = 'Cancel Order';
+                cancelBtn.disabled = false;
+            }
+            if (keepBtn) keepBtn.disabled = false;
         }
     };
 
