@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
+        console.log("Current UID:", user ? user.uid : "NOT LOGGED IN");
         if (user) {
             startCartListener(user.uid);
         } else {
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Protect Cart page access
             if (window.location.pathname.includes('cart.html')) {
-                window.showToast("Please login first", "error");
+                if (window.showToast) window.showToast("Please login first", "error");
                 sessionStorage.setItem('mymart_trigger_login_modal', 'true');
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -67,33 +68,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const startCartListener = (uid) => {
-        if (window.updateMyMartLoaderText) {
-            window.updateMyMartLoaderText("Curating Shopping Collection...");
+        console.log("Starting cart listener for UID:", uid);
+        try {
+            const cartRef = collection(db, `cart/${uid}/items`);
+            cartUnsubscribe = onSnapshot(cartRef, (snapshot) => {
+                try {
+                    const items = [];
+                    snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+                    console.log("Cart loaded:", items.length, "items");
+                    updateUI(items);
+                } catch (renderErr) {
+                    console.error("Cart render error:", renderErr);
+                    showEmptyCartFallback();
+                } finally {
+                    if (window.hideMyMartLoader) window.hideMyMartLoader();
+                }
+            }, (err) => {
+                console.error("Cart fetch error:", err);
+                showEmptyCartFallback();
+                if (window.hideMyMartLoader) window.hideMyMartLoader();
+            });
+        } catch (setupErr) {
+            console.error("Cart listener setup error:", setupErr);
+            showEmptyCartFallback();
+            if (window.hideMyMartLoader) window.hideMyMartLoader();
         }
-        const cartRef = collection(db, `cart/${uid}/items`);
-        cartUnsubscribe = onSnapshot(cartRef, (snapshot) => {
-            const items = [];
-            snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-            updateUI(items);
-            if (window.hideMyMartLoader) {
-                window.hideMyMartLoader();
-            }
-        }, (err) => {
-            console.error("Cart fetch error:", err);
-            if (window.hideMyMartLoader) {
-                window.hideMyMartLoader();
-            }
-        });
+    };
+
+    const showEmptyCartFallback = () => {
+        if (emptyCartUI) {
+            emptyCartUI.classList.remove('hidden');
+            emptyCartUI.style.display = '';
+        }
+        if (cartContent) {
+            cartContent.classList.add('hidden');
+        }
     };
 
     const updateUI = (items) => {
-        updateCartBadge(items);
-        if (cartItemsList) renderCart(items);
+        const safeItems = Array.isArray(items) ? items : [];
+        updateCartBadge(safeItems);
+        if (cartItemsList) renderCart(safeItems);
     };
 
     const updateCartBadge = (items) => {
         const badges = document.querySelectorAll('.fa-shopping-cart + .badge, .fa-shopping-bag + .badge');
-        const count = items.reduce((sum, item) => sum + item.quantity, 0);
+        const count = items?.reduce?.((sum, item) => sum + (item?.quantity || 0), 0) || 0;
         badges.forEach(badge => {
             const oldCount = parseInt(badge.innerText) || 0;
             badge.innerText = count;
@@ -114,32 +134,39 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderCart = (items) => {
-        if (items.length === 0) {
-            emptyCartUI?.classList.remove('hidden');
-            cartContent?.classList.add('hidden');
+        if (!items || items?.length === 0) {
+            if (emptyCartUI) emptyCartUI.classList.remove('hidden');
+            if (cartContent) cartContent.classList.add('hidden');
+            if (emptyCartUI) emptyCartUI.innerHTML = `<div style="text-align: center; padding: 40px;"><i class="fas fa-shopping-cart" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i><h3 class="serif" style="color: #666;">Your cart is empty</h3></div>`;
             return;
         }
 
-        emptyCartUI?.classList.add('hidden');
-        cartContent?.classList.remove('hidden');
+        if (emptyCartUI) emptyCartUI.classList.add('hidden');
+        if (cartContent) cartContent.classList.remove('hidden');
         cartItemsList.innerHTML = '';
 
         items.forEach(item => {
+            const itemPrice = item?.price || 0;
+            const itemQty = item?.quantity || 1;
+            const itemTitle = item?.title || item?.name || 'Unknown Item';
+            const itemImage = item?.image || 'assets/images/default.png';
+            const itemCategory = item?.category || 'Authentic Piece';
+            
             const itemHTML = `
                 <div class="cart-item" data-id="${item.id}">
                     <div class="cart-item-image">
-                        <img src="${item.image}" alt="${item.title || item.name}">
+                        <img src="${itemImage}" alt="${itemTitle}">
                     </div>
                     <div class="cart-item-info">
                         <div class="cart-item-header">
-                            <h3 class="serif">${item.title || item.name}</h3>
-                            <span class="cart-item-price">PKR ${item.price.toLocaleString()}</span>
+                            <h3 class="serif">${itemTitle}</h3>
+                            <span class="cart-item-price">PKR ${itemPrice.toLocaleString()}</span>
                         </div>
-                        <span class="cart-item-details">${item.category} / Authentic Piece</span>
+                        <span class="cart-item-details">${itemCategory}</span>
                         <div class="cart-item-actions">
                             <div class="quantity-selector">
                                 <button class="qty-btn minus" data-id="${item.id}" data-delta="-1"><i class="fas fa-minus"></i></button>
-                                <span class="qty-val">${item.quantity}</span>
+                                <span class="qty-val">${itemQty}</span>
                                 <button class="qty-btn plus" data-id="${item.id}" data-delta="1"><i class="fas fa-plus"></i></button>
                             </div>
                             <button class="remove-btn" data-id="${item.id}"><i class="fas fa-trash-alt"></i> REMOVE</button>
@@ -162,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateSummary = (items) => {
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const subtotal = items?.reduce?.((sum, item) => sum + ((item?.price || 0) * (item?.quantity || 1)), 0) || 0;
         const tax = subtotal * 0.08;
         const shipping = subtotal > 0 ? 45 : 0;
         const total = subtotal + tax + shipping;

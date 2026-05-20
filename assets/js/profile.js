@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, setDoc, collection, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, setDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const CLOUD_NAME = "dqsvcn94y";
 const UPLOAD_PRESET = "E-commerce";
@@ -208,16 +208,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 3. Fetch Real Stats & Render Order History
+        console.log("Profile loaded for UID:", user.uid);
         try {
             const cartSnap = await getDocs(collection(db, `cart/${user.uid}/items`));
+            console.log("Cart loaded:", cartSnap.size, "items");
             if (document.getElementById('cartStatCount')) document.getElementById('cartStatCount').innerText = cartSnap.size;
 
             const favSnap = await getDocs(collection(db, `favorites/${user.uid}/items`));
+            console.log("Wishlist loaded:", favSnap.size, "items");
             if (document.getElementById('favStatCount')) document.getElementById('favStatCount').innerText = favSnap.size;
 
-            const ordersQuery = query(collection(db, 'orders'), where('customerUid', '==', user.uid));
-            const ordersSnap = await getDocs(ordersQuery);
+            const ordersSnap = await getDocs(collection(db, 'orders'));
             const userOrders = ordersSnap.docs
+                .filter(d => d.data().userId === user.uid || d.data().customerUid === user.uid)
                 .map(d => ({ id: d.id, ...d.data() }))
                 .sort((a, b) => {
                     const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
@@ -225,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return bDate - aDate;
                 });
                 
+            console.log("Orders loaded:", userOrders.length, "orders");
             window.currentUserOrders = userOrders;
 
             if (document.getElementById('orderStatCount')) document.getElementById('orderStatCount').innerText = userOrders.length;
